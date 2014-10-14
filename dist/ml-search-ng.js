@@ -39,38 +39,50 @@ angular.module('ml.search', ['ml.common']);
     };
   }
 
+  angular.extend(MLSearchContext.prototype, {
+    defaults: {
+      //TODO: rename?
+      queryOptions: 'all',
+      pageLength: 10,
+      snippet: 'compact',
+      //TODO: rename
+      multiFacetUnion: false,
+      params: {
+        separator: ':',
+        qtext: 'q',
+        facets: 'f',
+        sort: 's',
+        page: 'p'
+        //TODO: options?
+      }
+    }
+  });
+
   function MLSearchContext($q, mlRest, options) {
-    var defaults = {
-          //TODO: rename?
-          queryOptions: 'all',
-          pageLength: 10,
-          snippet: 'compact',
-          //TODO: rename
-          multiFacetUnion: false
-        },
-        service = {},
-        response = {},
+    var service = {},
+        results = {},
         facetSelections = {},
         boostQueries = [],
         qtext = null,
         sort = null,
         start = 1;
 
-    options = angular.extend(defaults, options);
-
-  //MLSearchContext.prototype
+    options = _.merge(_.cloneDeep(this.defaults), options);
 
     service = {
       search: search,
 
-      getResponse: getResponse,
+      getResults: getResults,
       getText: getText,
       setText: setText,
       getPage: getPage,
       setPage: setPage,
+      getPageLength: getPageLength,
       setPageLength: setPageLength,
+      getSort: getSort,
       setSort: setSort,
       clearSort: clearSort,
+      getSnippet: getSnippet,
       setSnippet: setSnippet,
       clearSnippet: clearSnippet,
       getQueryOptions: getQueryOptions,
@@ -80,13 +92,20 @@ angular.module('ml.search', ['ml.common']);
       clearFacet: clearFacet,
       clearAllFacets: clearAllFacets,
 
-      getStructuredQuery: getStructuredQuery,
-      serializeStructuredQuery: serializeStructuredQuery,
-      parseStructuredQuery: parseStructuredQuery
+      getQuery: getQuery,
+      parseStructuredQuery: parseStructuredQuery,
+
+      getParams: getParams,
+      getParamsConfig: getParamsConfig,
+      fromParams: fromParams,
+
+      //DEPRECATED: todo: remove
+      getStructuredQuery: getQuery,
+      serializeStructuredQuery: getParams
     };
 
-    function getResponse() {
-      return response;
+    function getResults() {
+      return results;
     }
 
     function getText() {
@@ -103,9 +122,9 @@ angular.module('ml.search', ['ml.common']);
       return this;
     }
 
-    //TODO: ??
     function getPage() {
-      return null;
+      var page = Math.floor(start / options.pageLength) + 1;
+      return page;
     }
 
     function setPage(page) {
@@ -113,9 +132,17 @@ angular.module('ml.search', ['ml.common']);
       return this;
     }
 
+    function getPageLength() {
+      return options.pageLength;
+    }
+
     function setPageLength(pageLength) {
       options.pageLength = pageLength;
       return this;
+    }
+
+    function getSort() {
+      return sort;
     }
 
     function setSort(sortField) {
@@ -126,6 +153,10 @@ angular.module('ml.search', ['ml.common']);
     function clearSort() {
       sort = null;
       return this;
+    }
+
+    function getSnippet() {
+      return options.snippet;
     }
 
     function setSnippet(snippet) {
@@ -166,7 +197,7 @@ angular.module('ml.search', ['ml.common']);
     function clearAllFacets() {
       facetSelections = {};
       //TODO: check
-      _.forIn( response.facets, function(facet, name) {
+      _.forIn( results.facets, function(facet, name) {
         if ( facet.selected ) {
           _.chain(facet.facetValues)
             .where({ selected: true })
@@ -197,7 +228,7 @@ angular.module('ml.search', ['ml.common']);
     }
 
     function toggleFacet(name, value) {
-      var facet = response.facets[name];
+      var facet = results.facets[name];
 
       if ( toggleFacetProperties(facet, value) ) {
         selectFacet(name, value, facet.type);
@@ -247,16 +278,16 @@ angular.module('ml.search', ['ml.common']);
 
       mlRest.search({
         options: options.queryOptions,
-        structuredQuery: getStructuredQuery(),
+        structuredQuery: getQuery(),
         start: start,
         pageLength: options.pageLength
       })
       .then(
-        function(data) {
-          _.each(data.results, transformMetadata);
-          parseSelectedFacets(data.facets);
-          response = data;
-          d.resolve(data);
+        function(response) {
+          results = response.data;
+          _.each(results.results, transformMetadata);
+          parseSelectedFacets(results.facets);
+          d.resolve(results);
         },
         function(reason) {
           d.reject(reason);
@@ -273,6 +304,7 @@ angular.module('ml.search', ['ml.common']);
       } else {
         queries.push( constraintFn( values ) );
       }
+      return queries;
     }
 
     function builderFactory(facetName, facetValues, queries) {
@@ -369,7 +401,7 @@ angular.module('ml.search', ['ml.common']);
       return structured;
     }
 
-    function getStructuredQuery() {
+    function getQuery() {
       var queries = buildFacetQuery(),
           structured = {};
 
@@ -406,45 +438,7 @@ angular.module('ml.search', ['ml.common']);
       return structured;
     }
 
-    function serializeFacetQuery() {
-      var queries = buildFacetQuery(),
-          facets = [];
-
-      _.each(queries, function(query) {
-        var constraint = query[ _.keys(query)[0] ];
-
-        _.each( constraint.value || constraint.uri, function(value) {
-          if (/\s+/.test(value)) {
-            value = '"' + value + '"';
-          }
-          facets.push( constraint['constraint-name'] + ':' + value );
-        });
-      });
-
-      return facets.join(' ');
-    }
-
-    function serializeStructuredQuery() {
-      var facets = serializeFacetQuery(),
-          response = {};
-
-      //TODO: property query, boosting, snippet/other operators, anything else?
-
-      if ( facets ) {
-        response.facets = facets;
-      }
-
-      if ( qtext ) {
-        response.q = qtext;
-      }
-
-      if ( sort ) {
-        response.sort = sort;
-      }
-
-      return response;
-    }
-
+    //TODO: remove. likely obsolete
     function setFacetFromQuery(query) {
       var constraintQuery, values, type;
 
@@ -471,6 +465,7 @@ angular.module('ml.search', ['ml.common']);
       }
     }
 
+    //TODO: remove. likely obsolete
     function parseStructuredQuery( q ) {
       //TODO: other query types (not-query, and-not-query, etc.)
       q = q['and-query'] || q['or-query'] || q;
@@ -482,6 +477,92 @@ angular.module('ml.search', ['ml.common']);
       } else {
         setFacetFromQuery( q );
       }
+    }
+
+    function getParamsConfig() {
+      return options.params;
+    }
+
+    //TODO: setParamsConfig?
+
+    function getFacetParams() {
+      var queries = buildFacetQuery(),
+          facets = [];
+
+      _.each(queries, function(query) {
+        var constraint = query[ _.keys(query)[0] ],
+            name = constraint['constraint-name'];
+
+        _.each( constraint.value || constraint.uri, function(value) {
+          if (/\s+/.test(value)) {
+            value = '"' + value + '"';
+          }
+          facets.push( name + options.params.separator + value );
+        });
+      });
+
+      return facets;
+    }
+
+    function getParams() {
+      var facets = getFacetParams(),
+          page = getPage(),
+          params = {};
+
+      if (facets.length) {
+        params[ options.params.facets ] = facets;
+      }
+
+      if (page > 1) {
+        params[ options.params.page ] = page;
+      }
+
+      if (qtext) {
+        params[ options.params.qtext ] = qtext;
+      }
+
+      if (sort) {
+        params[ options.params.sort ] = sort;
+      }
+
+      return params;
+    }
+
+    function decodeParam(value) {
+      return decodeURIComponent(value.replace(/\+/g, '%20'));
+    }
+
+    function fromFacetParam(param) {
+      if (!_.isArray(param)) {
+        param = [param];
+      }
+      _.chain(param)
+        .map(decodeParam)
+        .each(function(value) {
+          var tokens = value.split(options.params.separator);
+          selectFacet(tokens[0], tokens[1]);
+        });
+    }
+
+    function fromParams(params) {
+      _.forIn(params, function(param, name) {
+        switch(name) {
+          case options.params.qtext:
+            setText( decodeParam(param) );
+            break;
+          case options.params.page:
+            setPage( parseInt(decodeParam(param)) );
+            break;
+          case options.params.sort:
+            setSort( decodeParam(param) );
+            break;
+          case options.params.facets:
+            fromFacetParam(param);
+            break;
+          default:
+            console.error('unknown param: ' + name);
+        }
+      });
     }
 
     return service;

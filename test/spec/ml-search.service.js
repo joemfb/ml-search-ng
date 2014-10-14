@@ -14,6 +14,89 @@ describe('MLRest', function () {
     factory = $injector.get('MLSearchFactory', $q, $httpBackend);
   }));
 
+  it('returns a search object', function() {
+    var mlSearch = factory.newContext();
+    expect(mlSearch.search()).toBeDefined;
+  });
+
+  it('sets the query text', function() {
+    var mlSearch = factory.newContext();
+
+    expect(mlSearch.getQuery().query.queries[0]['and-query'].queries.length).toEqual(0);
+    expect(mlSearch.setText('test')).toBe(mlSearch);
+    expect(mlSearch.getQuery().query.queries[0]['and-query'].queries.length).toEqual(1);
+    expect(mlSearch.getQuery().query.queries[0]['and-query'].queries[0].qtext).toEqual('test');
+  });
+
+  it('gets the query text', function() {
+    var mlSearch = factory.newContext();
+    expect(mlSearch.getText()).toBe(null);
+    expect(mlSearch.setText('test')).toBe(mlSearch);
+    expect(mlSearch.getText()).toEqual('test');
+  });
+
+  it('sets and gets page number and page length', function() {
+    var mlSearch = factory.newContext();
+
+    expect(mlSearch.getPageLength()).toEqual(10);
+    expect(mlSearch.setPage(4)).toBe(mlSearch);
+    expect(mlSearch.getPage()).toEqual(4);
+
+    expect(mlSearch.setPageLength(20)).toBe(mlSearch);
+    expect(mlSearch.getPageLength()).toEqual(20);
+    expect(mlSearch.setPage(9).getPage()).toEqual(9);
+
+    expect(mlSearch.setPageLength(18).getPageLength()).toEqual(18);
+    expect(mlSearch.setPage(7).getPage()).toEqual(7);
+    expect(mlSearch.setPage(1).getPage()).toEqual(1);
+  });
+
+  it('gets, sets, and clears sort', function() {
+    // this test assumes that the sort operator is called "sort"; the service code
+    // makes this assumption as well.
+
+    var mlSearch = factory.newContext();
+
+    expect(mlSearch.getSort()).toBe(null);
+    expect(mlSearch.setSort('date')).toBe(mlSearch);
+    expect(mlSearch.getSort()).toEqual('date');
+
+    var operator = _.chain(mlSearch.getStructuredQuery().query.queries)
+      .filter(function(obj) {
+        return !!obj['operator-state'];
+      }).filter(function(obj) {
+        return obj['operator-state']['operator-name'] === 'sort';
+      })
+      .valueOf();
+
+    expect(operator.length).toEqual(1);
+    expect(operator[0]['operator-state']['state-name']).not.toBeUndefined();
+    expect(operator[0]['operator-state']['state-name']).toEqual('date');
+    expect(mlSearch.clearSort()).toBe(mlSearch);
+    expect(mlSearch.getSort()).toBe(null);
+  });
+
+  it('gets, sets, and clears snipped', function() {
+    var mlSearch = factory.newContext();
+
+    expect(mlSearch.getSnippet()).toBe('compact');
+    expect(mlSearch.setSnippet('full').getSnippet()).toBe('full');
+    expect(mlSearch.clearSnippet().getSnippet()).toBe('compact');
+  });
+
+  it('initializes and gets queryOptions', function() {
+    var mlSearch = factory.newContext();
+
+    expect(mlSearch.getQueryOptions()).toBe('all');
+
+    mlSearch = factory.newContext({ queryOptions: 'some' });
+    expect(mlSearch.getQueryOptions()).toBe('some');
+
+    mlSearch = factory.newContext({ queryOptions: null });
+    expect(mlSearch.getQueryOptions()).toBeNull();
+  });
+
+
   it('rewrites search results metadata correctly', function() {
     $httpBackend
       .expectGET(/\/v1\/search\?format=json&options=all&pageLength=10&start=1&structuredQuery=.*/)
@@ -79,16 +162,6 @@ describe('MLRest', function () {
     expect(actual.start).toEqual(6);
     expect(actual['page-length']).toEqual(5);
 
-  });
-
-  it('sets the sort operator correctly', function() {
-    // this test assumes that the sort operator is called "sort"; the service code
-    // makes this assumption as well.
-    var searchContext = factory.newContext(),
-        actual;
-
-    actual = searchContext.setSort('blah').getStructuredQuery();
-    expect(actual).toMatch({'operator-state':{'operator-name':'sort','state-name':'blah'}});
   });
 
   it('selects facets correctly', function() {
@@ -160,5 +233,90 @@ describe('MLRest', function () {
     expect(cartoonQuery).toBeNull();
 
   });
+
+  it('should populate from search parameters', function() {
+    var search = factory.newContext();
+
+    expect(search.setText('blah').getParams().q).toEqual('blah');
+    expect(search.setSort('yesterday').getParams().s).toEqual('yesterday');
+
+    var search = factory.newContext({
+      params: {
+        qtext: 'qtext',
+        sort: 'orderby'
+     }
+    });
+
+    expect(search.setText('blah').getParams().qtext).toEqual('blah');
+    expect(search.setSort('yesterday').getParams().orderby).toEqual('yesterday');
+    expect(search.selectFacet('name', 'value')).toBe(search);
+    expect(search.getParams().f.length).toEqual(1);
+    expect(search.getParams().f[0]).toEqual('name:value');
+    expect(search.selectFacet('name', 'value2')).toBe(search);
+    expect(search.getParams().f.length).toEqual(2);
+    expect(search.getParams().f[1]).toEqual('name:value2');
+  });
+
+  it('should populate from search parameters', function() {
+    var search = factory.newContext({
+      params: { separator: '*_*' }
+    });
+
+    search.fromParams({
+      q: 'blah',
+      s: 'backwards',
+      p: '3',
+      f : [ 'my-facet2*_*facetvalue' ]
+    });
+
+    expect(search.getText()).toEqual('blah');
+    expect(search.getSort()).toEqual('backwards');
+    expect(search.getPage()).toEqual(3);
+
+    var sort = _.chain(search.getStructuredQuery().query.queries)
+      .filter(function(obj) {
+        return !!obj['operator-state'];
+      }).filter(function(obj) {
+        return obj['operator-state']['operator-name'] === 'sort';
+      })
+      .valueOf();
+
+    expect(sort[0]).toEqual({
+      'operator-state': {
+        'operator-name': 'sort',
+        'state-name': 'backwards'
+      }
+    });
+
+    search.clearAllFacets();
+
+    search.fromParams({
+      q: 'blah2',
+      s: 'backwards',
+      p: '4',
+      f : [ 'my-facet*_*facetvalue' ]
+    });
+
+    expect(search.getText()).toEqual('blah2');
+    expect(search.getSort()).toEqual('backwards');
+    expect(search.getPage()).toEqual(4);
+    expect(search.getStructuredQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
+
+    search.clearAllFacets();
+
+    search.fromParams({
+      q: 'blah2',
+      p: '4',
+      f : [
+        'my-facet*_*facetvalue',
+        'my-facet*_*facetvalue2'
+      ]
+    });
+    expect(search.getText()).toEqual('blah2');
+    expect(search.getSort()).toEqual('backwards');
+    expect(search.getPage()).toEqual(4);
+    expect(search.getStructuredQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
+  });
+
 
 });
