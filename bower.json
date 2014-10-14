@@ -1,6 +1,8 @@
 {
   "name": "ml-search-ng",
   "version": "0.0.1",
+  "description": "An angular module for common search-app use cases",
+  "main": "/dist/ml-search-ng.min.js",
   "dependencies": {
     "angular": "1.2.14",
     "lodash": "~2.4.1",
@@ -8,5 +10,26 @@
   },
   "devDependencies": {
     "angular-mocks": "1.2.14"
-  }
+  },
+  "homepage": "https://github.com/joemfb/ml-search-ng",
+  "authors": [
+    "joemfb"
+  ],
+  "keywords": [
+    "angular",
+    "angularjs",
+    "marklogic",
+    "search"
+  ],
+  "license": "Apache v2",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "gulpfile.js",
+    "karma.conf.js",
+    "package.json"
+  ]
 }
