@@ -8,6 +8,8 @@
     "gulp-concat": "^2.2.0",
     "gulp-jshint": "^1.5.5",
     "gulp-karma": "0.0.4",
+    "gulp-minify-html": "^0.1.6",
+    "gulp-ng-html2js": "^0.1.8",
     "gulp-rename": "^1.2.0",
     "gulp-uglify": "^0.2.1",
     "karma-jasmine": "^0.1.5",

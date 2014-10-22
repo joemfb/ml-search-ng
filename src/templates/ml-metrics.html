@@ -1,0 +1,6 @@
+<div ng-show="total > 0" class="search-metrics" style="padding-bottom: 10px; font-style: italic;">
+  Showing {{ start }}-{{ pageEnd }} of {{ total }}<span ng-hide="showDuration">.</span>
+  <span ng-show="showDuration" ml-duration="metrics['total-time']">
+    <span>in {{ duration.seconds | number:3 }} seconds.</span>
+  </span>
+</div>
