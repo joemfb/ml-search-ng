@@ -42,7 +42,7 @@ gulp.task('templates', ['test'], function() {
     }))
     // TODO: ? prefix: '/ml-search'
     .pipe(html2Js({
-      moduleName: 'MLSearchTemplates',
+      moduleName: 'ml.search.tpls',
       prefix: '/'
     }))
     .pipe(concat('ml-search-ng-tpls.min.js'))
