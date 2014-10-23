@@ -18,7 +18,7 @@ module.exports = function(config) {
       'bower_components/angular/angular.js',
       'bower_components/lodash/dist/lodash.min.js',
 
-      'bower_components/ml-common-ng/src/ml-rest.service.js',
+      'bower_components/ml-common-ng/dist/ml-common-ng.js',
 
       // App under test
       'src/ml-search.js',
@@ -32,6 +32,16 @@ module.exports = function(config) {
       'test/helpers.js',
       'test/spec/**/*.js',
     ],
+
+   reporters: ['progress', 'coverage'],
+
+   preprocessors: {
+      'src/*.js': ['coverage']
+    },
+
+    coverageReporter: {
+      type : 'text-summary'
+    },
 
     // list of files / patterns to exclude
     exclude: [],
