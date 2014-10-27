@@ -2,12 +2,15 @@
   'use strict';
 
   // capture injected services for access throughout this module
-  var $q = null, qb = null, mlRest = null;
+  var $q = null,
+      $location = null,
+      mlRest = null,
+      qb = null;
 
   angular.module('ml.search')
     .factory('MLSearchFactory', MLSearchFactory);
 
-  MLSearchFactory.$inject = ['$q', 'MLRest', 'MLQueryBuilder'];
+  MLSearchFactory.$inject = ['$q', '$location', 'MLRest', 'MLQueryBuilder'];
 
   /**
    * Creates a new instance of MLSearchFactory
@@ -15,10 +18,11 @@
    * @constructor
    * @this {MLSearchFactory}
    */
-  function MLSearchFactory($injectQ, $injectMlRest, $injectQb) {
+  function MLSearchFactory($injectQ, $injectLocation, $injectMlRest, $injectQb) {
     var cache = {};
 
     $q = $injectQ;
+    $location = $injectLocation;
     mlRest = $injectMlRest;
     qb = $injectQb;
 
@@ -697,6 +701,20 @@
       }
 
       return d.promise;
+    },
+
+    initCtrlFromParams: function initCtrlFromParams($scope, updateCallback) {
+      var self = this;
+
+      self.fromParams( $location.search() ).then(function() {
+        self.search().then(updateCallback);
+      });
+
+      $scope.$on('$locationChangeSuccess', function(e, newUrl, oldUrl){
+        self.locationChange( newUrl, oldUrl, $location.search() ).then(function() {
+          self.search().then(updateCallback);
+        });
+      });
     },
 
     /************************************************************/
