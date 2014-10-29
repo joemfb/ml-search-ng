@@ -3,13 +3,14 @@
 describe('MLSearch', function () {
   'use strict';
 
-  var factory, $httpBackend, $q;
+  var factory, $httpBackend, $q, $location;
 
   beforeEach(module('ml.search'));
 
   beforeEach(inject(function ($injector) {
     $q = $injector.get('$q');
     $httpBackend = $injector.get('$httpBackend');
+    $location = $injector.get('$location');
 
     factory = $injector.get('MLSearchFactory', $q, $httpBackend);
   }));
@@ -312,7 +313,7 @@ describe('MLSearch', function () {
 
   });
 
-  it('should populate from search parameters', function() {
+  it('should set search parameters', function() {
     var search = factory.newContext();
 
     expect(search.setText('blah').getParams().q).toEqual('blah');
@@ -340,12 +341,14 @@ describe('MLSearch', function () {
       params: { separator: '*_*' }
     });
 
-    search.fromParams({
+    $location.search({
       q: 'blah',
       s: 'backwards',
       p: '3',
       f : [ 'my-facet2*_*facetvalue' ]
     });
+
+    search.fromParams();
 
     expect(search.getText()).toEqual('blah');
     expect(search.getSort()).toEqual('backwards');
@@ -368,12 +371,14 @@ describe('MLSearch', function () {
 
     search.clearAllFacets();
 
-    search.fromParams({
+    $location.search({
       q: 'blah2',
       s: 'backwards',
       p: '4',
       f : [ 'my-facet*_*facetvalue' ]
     });
+
+    search.fromParams();
 
     expect(search.getText()).toEqual('blah2');
     expect(search.getSort()).toEqual('backwards');
@@ -383,7 +388,7 @@ describe('MLSearch', function () {
 
     search.clearAllFacets();
 
-    search.fromParams({
+    $location.search({
       q: 'blah2',
       p: '4',
       f : [
@@ -391,6 +396,8 @@ describe('MLSearch', function () {
         'my-facet*_*facetvalue2'
       ]
     });
+
+    search.fromParams();
 
     expect(search.getText()).toEqual('blah2');
     expect(search.getSort()).toEqual('backwards');
