@@ -19,7 +19,19 @@
   }
 
   function template(element, attrs) {
-    var url = '/templates/ml-input.html';
+    var url;
+
+    if (attrs.template) {
+      if (attrs.template === 'fa') {
+        url = '/templates/ml-input-fa.html';
+      } else {
+        url = attrs.template;
+      }
+    }
+    else {
+      url = '/templates/ml-input.html';
+    }
+
     return url;
   }
 

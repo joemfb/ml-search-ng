@@ -14,9 +14,18 @@
         searchCtrl: '@',
         template: '@'
       },
-      template: '<ml-input qtext="qtext" search="search(qtext)" ' +
-                'suggest="suggest(val)" template="{{ template }}"></ml-input>'
+      template: template
     };
+  }
+
+  function template(element, attrs) {
+    var tpl = '';
+
+    if ( attrs.template ) {
+      tpl = ' template="' + attrs.template + '"';
+    }
+    return '<ml-input qtext="qtext" search="search(qtext)" ' +
+           'suggest="suggest(val)"' + tpl + '></ml-input>';
   }
 
   MLRemoteInputController.$inject = ['$scope', '$location', '$route', 'MLSearchFactory', 'MLRemoteInputService'];
