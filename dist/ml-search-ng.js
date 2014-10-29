@@ -747,9 +747,10 @@
      * @param {params} a URL query params object
      * @return a {Promise} resolved once the params have been applied
      */
-    fromParams: function fromParams(params) {
+    fromParams: function fromParams() {
       var self = this,
           d = $q.defer(),
+          params = $location.search(),
           qtextP =  params[ this.options.params.qtext ] || null,
           facetsP = params[ this.options.params.facets ],
           pageP =   params[ this.options.params.page ],
@@ -757,9 +758,17 @@
 
       self.setText(qtextP);
 
-      if (pageP) {
-        //TODO: try/catch
-        self.setPage( parseInt(decodeParam(pageP)) );
+      if ( pageP ) {
+        try {
+          pageP = parseInt(pageP);
+        } catch(e) {
+          // console.error
+          pageP = 1;
+        }
+
+        self.setPage( pageP );
+      } else if ( this.options.params.page ) {
+        self.setPage(1);
       }
 
       if (sortP) {
@@ -821,14 +830,13 @@
      *
      * @return a {Promise} resolved after calling {this.fromParams} (if a new search is needed)
      */
-    locationChange: function locationChange(newUrl, oldUrl, params) {
+    locationChange: function locationChange(newUrl, oldUrl) {
       var d = $q.defer(),
-          samePage = pathEquals(newUrl, oldUrl),
-          sameQuery = _.isEqual( this.getParams(), params),
-          shouldUpdate = samePage && !sameQuery;
+          samePage = pathsEqual(newUrl, oldUrl),
+          sameQuery = _.isEqual( this.getParams(), $location.search() );
 
-      if ( shouldUpdate ) {
-        this.fromParams( params ).then(d.resolve);
+      if ( samePage && !sameQuery ) {
+        this.fromParams().then(d.resolve);
       } else {
         d.reject();
       }
@@ -839,12 +847,12 @@
     initCtrlFromParams: function initCtrlFromParams($scope, updateCallback) {
       var self = this;
 
-      self.fromParams( $location.search() ).then(function() {
+      self.fromParams().then(function() {
         self.search().then(updateCallback);
       });
 
       $scope.$on('$locationChangeSuccess', function(e, newUrl, oldUrl){
-        self.locationChange( newUrl, oldUrl, $location.search() ).then(function() {
+        self.locationChange( newUrl, oldUrl ).then(function() {
           self.search().then(updateCallback);
         });
       });
@@ -1042,7 +1050,7 @@
     return decodeURIComponent(value.replace(/\+/g, '%20'));
   }
 
-  function pathEquals(newUrl, oldUrl) {
+  function pathsEqual(newUrl, oldUrl) {
     // TODO: use $$urlUtils.urlResolve(), once it's available
     // see: https://github.com/angular/angular.js/pull/3302
     // from: https://stackoverflow.com/questions/21516891
@@ -1249,7 +1257,19 @@
   }
 
   function template(element, attrs) {
-    var url = '/templates/ml-input.html';
+    var url;
+
+    if (attrs.template) {
+      if (attrs.template === 'fa') {
+        url = '/templates/ml-input-fa.html';
+      } else {
+        url = attrs.template;
+      }
+    }
+    else {
+      url = '/templates/ml-input.html';
+    }
+
     return url;
   }
 
@@ -1332,9 +1352,18 @@
         searchCtrl: '@',
         template: '@'
       },
-      template: '<ml-input qtext="qtext" search="search(qtext)" ' +
-                'suggest="suggest(val)" template="{{ template }}"></ml-input>'
+      template: template
     };
+  }
+
+  function template(element, attrs) {
+    var tpl = '';
+
+    if ( attrs.template ) {
+      tpl = ' template="' + attrs.template + '"';
+    }
+    return '<ml-input qtext="qtext" search="search(qtext)" ' +
+           'suggest="suggest(val)"' + tpl + '></ml-input>';
   }
 
   MLRemoteInputController.$inject = ['$scope', '$location', '$route', 'MLSearchFactory', 'MLRemoteInputService'];
