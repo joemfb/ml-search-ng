@@ -844,20 +844,6 @@
       return d.promise;
     },
 
-    initCtrlFromParams: function initCtrlFromParams($scope, updateCallback) {
-      var self = this;
-
-      self.fromParams().then(function() {
-        self.search().then(updateCallback);
-      });
-
-      $scope.$on('$locationChangeSuccess', function(e, newUrl, oldUrl){
-        self.locationChange( newUrl, oldUrl ).then(function() {
-          self.search().then(updateCallback);
-        });
-      });
-    },
-
     /************************************************************/
     /********** MLSearchContext data retrieval methods **********/
     /************************************************************/
