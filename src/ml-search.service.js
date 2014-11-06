@@ -19,34 +19,14 @@
    * @this {MLSearchFactory}
    */
   function MLSearchFactory($injectQ, $injectLocation, $injectMlRest, $injectQb) {
-    var cache = {};
-
     $q = $injectQ;
     $location = $injectLocation;
     mlRest = $injectMlRest;
     qb = $injectQb;
 
     return {
-      newContext: function newContext(name, options) {
-        var context;
-
-        if (_.isObject(name) && !options) {
-          options = name;
-          name = null;
-        }
-
-        //TDOO: get named if exists?
-        context = new MLSearchContext(options);
-
-        if (name) {
-          cache[name] = context;
-        }
-
-        return context;
-      },
-
-      getNamedContext: function getNamedContext(name) {
-        return cache[name];
+      newContext: function newContext(options) {
+        return new MLSearchContext(options);
       }
     };
   }
