@@ -51,6 +51,9 @@
     // active facet selections
     this.activeFacets = {};
 
+    // namespace uri / prefix hash for results metadata transformation
+    this.namespaces = {};
+
     // boosting queries to be added to the current query
     this.boostQueries = [];
 
@@ -120,6 +123,78 @@
      */
     getActiveFacets: function getActiveFacets() {
       return this.activeFacets;
+    },
+
+    /**
+     * Get namspace prefix by URI
+     *
+     * @param {string} uri
+     * @return {string} prefix
+     */
+    getNamespacePrefix: function getNamespacePrefix(uri) {
+      return this.namespaces[ uri ];
+    },
+
+    /**
+     * Get namspace URI by prefix
+     *
+     * @param {string} prefix
+     * @return {string} uri
+     */
+    getNamespaceUri: function getNamespacePrefix(prefix) {
+      return _.chain(this.namespaces)
+        .map(function(nsPrefix, uri) {
+          if (prefix === nsPrefix) {
+            return uri;
+          }
+        })
+        .compact()
+        .valueOf()[0];
+    },
+
+    /**
+     * Gets namespace objects
+     *
+     * @return {array} namespace objects
+     */
+    getNamespaces: function getNamespaces() {
+      var namespaces = [];
+      _.forIn(this.namespaces, function(prefix, uri) {
+        namespaces.push({ prefix: prefix, uri: uri });
+      });
+      return namespaces;
+    },
+
+    /**
+     * Sets namespace objects
+     *
+     * @param {array} namespace objects
+     * @return {this}
+     */
+    setNamespaces: function setNamespaces(namespaces) {
+      _.each(namespaces, this.addNamespace, this);
+      return this;
+    },
+
+    /**
+     * Adds a namespace object
+     *
+     * @param {object} namespace
+     * @return {this}
+     */
+    addNamespace: function addNamespace(namespace) {
+      this.namespaces[ namespace.uri ] = namespace.prefix;
+      return this;
+    },
+
+    /**
+     * Clears namespaces
+     *
+     * @return {this}
+     */
+    clearNamespaces: function clearNamespaces() {
+      this.namespaces = {};
+      return this;
     },
 
     /**
@@ -793,7 +868,6 @@
       .then(
         function(response) {
           self.results = response.data;
-          // _.each(self.results.results, transformMetadata);
           self.transformMetadata();
           self.annotateActiveFacets();
           d.resolve(self.results);
@@ -836,12 +910,13 @@
      * @param {object} results [this.results.results]
      */
     transformMetadata: function transformMetadata(result) {
-      var metadata;
+      var self = this,
+          metadata;
 
       result = result || this.results.results;
 
       if ( _.isArray(result) ) {
-        _.each(result, this.transformMetadata);
+        _.each(result, this.transformMetadata, self);
         return;
       }
 
@@ -851,13 +926,26 @@
       _.each(metadata, function(obj) {
         var key = _.without(_.keys(obj), 'metadata-type')[0],
             type = obj[ 'metadata-type' ],
-            value = obj[ key ];
+            value = obj[ key ],
+            shortKey = null,
+            prefix = null,
+            ns = null;
 
-        if (!_.contains(result.metadata, key)) {
-          result.metadata[ key ] = { 'metadata-type': type, values: [] };
+        ns = key.replace(/^\{([^}]+)\}.*$/, '$1');
+        prefix = self.getNamespacePrefix(ns);
+
+
+        if ( prefix ) {
+          shortKey = key.replace(/\{[^}]+\}/, prefix + ':');
+        } else {
+          shortKey = key;
         }
 
-        result.metadata[ key ].values.push(value);
+        if (!_.contains(result.metadata, key)) {
+          result.metadata[ shortKey ] = { 'metadata-type': type, values: [] };
+        }
+
+        result.metadata[ shortKey ].values.push(value);
       });
     },
 

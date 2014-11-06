@@ -18,15 +18,11 @@ describe('MLSearch', function () {
   it('returns a search object', function() {
     var mlSearch = factory.newContext();
     expect(mlSearch.search()).toBeDefined;
-
-    // console.log(_.keys( Object.getPrototypeOf(mlSearch) ))
   });
 
   it('has a query builder', function() {
-    var mlSearch = factory.newContext(),
-        qb = mlSearch.qb;
-
-    expect(qb).not.toBeNull;
+    var mlSearch = factory.newContext();
+    expect(mlSearch.qb).not.toBeNull;
   });
 
   it('gets active facets', function() {
@@ -39,6 +35,57 @@ describe('MLSearch', function () {
     expect(actual.name).toBeDefined;
     expect(actual.name.values.length).toEqual(1);
     expect(actual.name.values[0]).toEqual('value');
+  });
+
+  it('gets namespace prefix', function() {
+    var mlSearch = factory.newContext();
+    mlSearch.setNamespaces([{ prefix: 'ex', uri: 'http://example.com' }]);
+
+    expect(mlSearch.getNamespacePrefix('http://example.com')).toEqual('ex');
+  });
+
+  it('gets namespace uri', function() {
+    var mlSearch = factory.newContext();
+    mlSearch.setNamespaces([{ prefix: 'ex', uri: 'http://example.com' }]);
+
+    expect(mlSearch.getNamespaceUri('ex')).toEqual('http://example.com');
+  });
+
+  it('gets namespaces', function() {
+    var mlSearch = factory.newContext();
+    mlSearch.setNamespaces([{ prefix: 'ex', uri: 'http://example.com' }]);
+
+    expect(mlSearch.getNamespaces().length).toEqual(1);
+    expect(mlSearch.getNamespaces()[0].prefix).toEqual('ex');
+    expect(mlSearch.getNamespaces()[0].uri).toEqual('http://example.com');
+  });
+
+  it('adds namespace', function() {
+    var mlSearch = factory.newContext();
+    mlSearch.addNamespace({ prefix: 'ex', uri: 'http://example.com' });
+
+    expect(mlSearch.getNamespaces().length).toEqual(1);
+    expect(mlSearch.getNamespaces()[0].prefix).toEqual('ex');
+    expect(mlSearch.getNamespaces()[0].uri).toEqual('http://example.com');
+
+
+    mlSearch.addNamespace({ prefix: 'ie', uri: 'http://example.com/ie' });
+
+    expect(mlSearch.getNamespaces().length).toEqual(2);
+    expect(mlSearch.getNamespaces()[1].prefix).toEqual('ie');
+    expect(mlSearch.getNamespaces()[1].uri).toEqual('http://example.com/ie');
+  });
+
+  it('clears namespaces', function() {
+    var mlSearch = factory.newContext();
+    mlSearch.setNamespaces([{ prefix: 'ex', uri: 'http://example.com' }]);
+
+    expect(mlSearch.getNamespaces().length).toEqual(1);
+    expect(mlSearch.getNamespaces()[0].prefix).toEqual('ex');
+    expect(mlSearch.getNamespaces()[0].uri).toEqual('http://example.com');
+
+    mlSearch.clearNamespaces();
+    expect(mlSearch.getNamespaces().length).toEqual(0);
   });
 
   it('gets and sets boostQueries', function() {
@@ -212,6 +259,17 @@ describe('MLSearch', function () {
     expect( _.isArray(actual.results[0].metadata.name.values) ).toBeTruthy();
     expect(actual.results[0].metadata.name.values[0]).toBe('Semantic News Search');
     expect(actual.results[0].metadata.name['metadata-type']).toEqual('element');
+  });
+
+  it('replaces Clark-notation namespaces with prefixes in search metadata', function() {
+    var result = { 'metadata': [{'{http://example.com/ns}name':'Semantic News Search','metadata-type':'element'}] },
+        mlSearch = factory.newContext();
+
+    mlSearch.addNamespace({ prefix: 'ex', uri: 'http://example.com/ns' });
+    mlSearch.transformMetadata(result);
+
+    expect(result.metadata['{http://example.com/ns}name']).not.toBeDefined();
+    expect(result.metadata['ex:name']).toBeDefined();
   });
 
   it('sets the page size correctly', function() {
