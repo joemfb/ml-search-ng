@@ -947,43 +947,4 @@
     return args;
   }
 
-  // //TODO: remove. likely obsolete
-  // function setFacetFromQuery(query) {
-  //   var constraintQuery, values, type;
-
-  //   if ( query['collection-constraint-query'] ) {
-  //     constraintQuery = query['collection-constraint-query'];
-  //     type = 'collection';
-  //   } else if ( query['custom-constraint-query'] ) {
-  //     constraintQuery = query['custom-constraint-query'];
-  //     type = 'custom';
-  //   } else {
-  //     constraintQuery = query['range-constraint-query'];
-  //     //TODO: get type from facet object (requires search:response to be saved in searchContext)
-  //   }
-
-  //   if ( constraintQuery ) {
-  //     values = constraintQuery.value || constraintQuery.uri;
-  //     if ( !_.isArray(values) ) {
-  //       values = [values];
-  //     }
-
-  //     _.each( values, function(value) {
-  //       selectFacet( constraintQuery['constraint-name'], value, type );
-  //     });
-  //   }
-  // }
-
-  // //TODO: remove. likely obsolete
-  // function parseStructuredQuery( q ) {
-  //   //TODO: other query types (not-query, and-not-query, etc.)
-  //   q = q['and-query'] || q['or-query'] || q;
-
-  //   if ( q.queries ) {
-  //     _.each( q.queries, parseStructuredQuery );
-  //   } else {
-  //     setFacetFromQuery( q );
-  //   }
-  // }
-
 })();
