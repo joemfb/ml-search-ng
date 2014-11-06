@@ -614,25 +614,21 @@
      * @param {params} a URL query params object
      * @return a {Promise} resolved once the params have been applied
      */
-    fromParams: function fromParams() {
+    fromParams: function fromParams(params) {
       var self = this,
           d = $q.defer(),
-          params = $location.search(),
-          qtextP =  params[ this.options.params.qtext ] || null,
-          facetsP = params[ this.options.params.facets ],
-          pageP =   params[ this.options.params.page ],
-          sortP =   params[ this.options.params.sort ];
+          qtextP, facetsP, pageP, sortP;
+
+      params = params || $location.search();
+      qtextP = params[ this.options.params.qtext ] || null;
+      pageP = params[ this.options.params.page ];
+      sortP = params[ this.options.params.sort ];
+      facetsP = params[ this.options.params.facets ];
 
       self.setText(qtextP);
 
       if ( pageP ) {
-        try {
-          pageP = parseInt(pageP);
-        } catch(e) {
-          // console.error
-          pageP = 1;
-        }
-
+        pageP = parseInt(pageP) || 1;
         self.setPage( pageP );
       } else if ( this.options.params.page ) {
         self.setPage(1);
