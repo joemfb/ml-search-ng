@@ -512,6 +512,10 @@
         return facetValue !== value;
       });
 
+      if ( !active.values.length ) {
+        delete this.activeFacets[name];
+      }
+
       return this;
     },
 

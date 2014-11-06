@@ -286,6 +286,8 @@ describe('MLSearch', function () {
     cartoonQuery = fullQuery.match(/"constraint-name":\s*"cartoon"/);
     expect(cartoonQuery).toBeNull();
 
+    expect(searchContext.activeFacets['cartoon']).not.toBeDefined();
+
   });
 
   it('clears all facets correctly', function() {
