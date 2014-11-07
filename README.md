@@ -19,7 +19,7 @@ attributes:
 - `qtext`: a reference to the model property containing the search phrase
 - `search`: a function reference. The function will be called with a parameter named `qtext`
 - `suggest`: a function reference. The function will be called with a parameter named `val`
-- `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used. If `"fa"`, a bootstrap/font-awesome template will be used.
+- `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used. If `"fa"`, a bootstrap/font-awesome template will be used. **Note: the `"fa"` template _requires_ bootstrap 3.2.0 or greater.**
 
 Example:
 
@@ -42,7 +42,7 @@ In the controller:
 
     remoteInput.initCtrl($scope, model, mlSearch, search);
 
-Note: Assumes mlSearch is an MLSearch context, search is a function, and model has a `qtext` property. If these assumptions don't hold, a more verbose approach is required:
+Note: this function assumes mlSearch is an MLSearch context, search is a function, and model has a `qtext` property. If these assumptions don't hold, a more verbose approach is required:
 
 `// TODO: complex example`
 
