@@ -542,6 +542,9 @@
      * return {object} this
      */
     selectFacet: function selectFacet(name, value, type) {
+      if (/^"(.*)"$/.test(value)) {
+        value = value.replace(/^"(.*)"$/, '$1');
+      }
       var active = this.activeFacets[name];
 
       if ( active && !_.contains(active.values, value) ) {
@@ -657,7 +660,7 @@
 
         _.each( constraint.value || constraint.uri, function(value) {
           // quote values with spaces
-          if (/\s+/.test(value)) {
+          if (/\s+/.test(value) && !/^"(.*)"$/.test(value)) {
             value = '"' + value + '"';
           }
           facets.push( name + self.options.params.separator + value );
