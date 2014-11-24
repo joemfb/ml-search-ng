@@ -373,6 +373,25 @@ describe('MLSearch', function () {
 
   });
 
+  it('sets quoted value facets from parameters correctly', function() {
+    var fullQuery, fooQuery, cartoonQuery;
+    var searchContext = factory.newContext();
+    searchContext.results = {facets: {cartoon: {type: 'string', values: ['bugs bunny']}}};
+    // select facet with space value
+    searchContext.selectFacet('cartoon', 'bugs bunny');
+
+    expect(searchContext.getParams().f[0]).toEqual('cartoon:"bugs bunny"');
+
+    searchContext.fromParams(searchContext.getParams());
+
+    expect(searchContext.getParams().f[0]).toEqual('cartoon:"bugs bunny"');
+
+    expect(searchContext.activeFacets.cartoon.values[0]).toEqual('bugs bunny');
+    // clear selections
+    searchContext.clearAllFacets();
+
+  });
+
   it('should set search parameters', function() {
     var search = factory.newContext();
 
