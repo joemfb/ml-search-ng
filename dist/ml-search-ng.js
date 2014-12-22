@@ -61,6 +61,11 @@
       service.callbacks.splice(idx);
     }
 
+    /**
+     * sets the service.input instance property and invokes the registered callbacks
+     *
+     * @param {string} input
+     */
     service.setInput = function setInput(val) {
       service.input = val;
       _.each(service.callbacks, function(callback) {
@@ -68,6 +73,12 @@
       });
     };
 
+    /**
+     * registers a callback, returning a de-registration function
+     *
+     * @param {function} callback
+     * @return {function} callback de-registration function
+     */
     service.subscribe = function subscribe(callback) {
       var idx = service.callbacks.length;
       service.callbacks.push(callback);
@@ -76,7 +87,16 @@
       };
     };
 
-    // helper function for mlRemoteInput directive
+    /**
+     * helper function for mlRemoteInput directive
+     * registers and de-registers a callback that
+     *   - updates the $scope parameter
+     *   - updates the mlSearch parameter with the mlSearch instance property
+     *     (if it exists)
+     *
+     * @param {object} $scope
+     * @param (object) mlSearch
+     */
     service.initInput = function initInput($scope, mlSearch) {
       var unsubscribe = service.subscribe(function(input) {
         $scope.qtext = input;
@@ -86,7 +106,21 @@
       $scope.$on('destroy', unsubscribe);
     };
 
-    // helper function for Search controller
+    /**
+     * helper function for Search controller
+     *
+     * - registers and de-registers a callback that
+     *   - updates the qtext property of the model parameter
+     *   - invokes the searchCallback
+     * - sets the mlSearch instance property
+     * - initializes the qtext property of the model parameter
+     *   (unless it's already set and the instance input property is not)
+     *
+     * @param {object} $scope
+     * @param {object} search ctrl model
+     * @param {MLSearchContext} ctrl mlSearch instance
+     * @param {function} search callback
+     */
     service.initCtrl = function initCtrl($scope, model, mlSearch, searchCallback) {
       var unsubscribe = service.subscribe(function(input) {
         if (model.qtext !== input) {
@@ -107,6 +141,12 @@
       }
     };
 
+    /**
+     * gets the path for a specified controller from the $route service
+     *
+     * @param {string} search ctrl name
+     * @return {string} search ctrl path
+     */
     service.getPath = function getPath(searchCtrl) {
       var matches = _.where($route.routes, { controller: searchCtrl }),
           route = { originalPath: '/' };
@@ -152,34 +192,14 @@
    * @this {MLSearchFactory}
    */
   function MLSearchFactory($injectQ, $injectLocation, $injectMlRest, $injectQb) {
-    var cache = {};
-
     $q = $injectQ;
     $location = $injectLocation;
     mlRest = $injectMlRest;
     qb = $injectQb;
 
     return {
-      newContext: function newContext(name, options) {
-        var context;
-
-        if (_.isObject(name) && !options) {
-          options = name;
-          name = null;
-        }
-
-        //TDOO: get named if exists?
-        context = new MLSearchContext(options);
-
-        if (name) {
-          cache[name] = context;
-        }
-
-        return context;
-      },
-
-      getNamedContext: function getNamedContext(name) {
-        return cache[name];
+      newContext: function newContext(options) {
+        return new MLSearchContext(options);
       }
     };
   }
@@ -203,6 +223,9 @@
 
     // active facet selections
     this.activeFacets = {};
+
+    // namespace uri / prefix hash for results metadata transformation
+    this.namespaces = {};
 
     // boosting queries to be added to the current query
     this.boostQueries = [];
@@ -273,6 +296,78 @@
      */
     getActiveFacets: function getActiveFacets() {
       return this.activeFacets;
+    },
+
+    /**
+     * Get namspace prefix by URI
+     *
+     * @param {string} uri
+     * @return {string} prefix
+     */
+    getNamespacePrefix: function getNamespacePrefix(uri) {
+      return this.namespaces[ uri ];
+    },
+
+    /**
+     * Get namspace URI by prefix
+     *
+     * @param {string} prefix
+     * @return {string} uri
+     */
+    getNamespaceUri: function getNamespacePrefix(prefix) {
+      return _.chain(this.namespaces)
+        .map(function(nsPrefix, uri) {
+          if (prefix === nsPrefix) {
+            return uri;
+          }
+        })
+        .compact()
+        .valueOf()[0];
+    },
+
+    /**
+     * Gets namespace objects
+     *
+     * @return {array} namespace objects
+     */
+    getNamespaces: function getNamespaces() {
+      var namespaces = [];
+      _.forIn(this.namespaces, function(prefix, uri) {
+        namespaces.push({ prefix: prefix, uri: uri });
+      });
+      return namespaces;
+    },
+
+    /**
+     * Sets namespace objects
+     *
+     * @param {array} namespace objects
+     * @return {this}
+     */
+    setNamespaces: function setNamespaces(namespaces) {
+      _.each(namespaces, this.addNamespace, this);
+      return this;
+    },
+
+    /**
+     * Adds a namespace object
+     *
+     * @param {object} namespace
+     * @return {this}
+     */
+    addNamespace: function addNamespace(namespace) {
+      this.namespaces[ namespace.uri ] = namespace.prefix;
+      return this;
+    },
+
+    /**
+     * Clears namespaces
+     *
+     * @return {this}
+     */
+    clearNamespaces: function clearNamespaces() {
+      this.namespaces = {};
+      return this;
     },
 
     /**
@@ -620,6 +715,9 @@
      * return {object} this
      */
     selectFacet: function selectFacet(name, value, type) {
+      if (/^"(.*)"$/.test(value)) {
+        value = value.replace(/^"(.*)"$/, '$1');
+      }
       var active = this.activeFacets[name];
 
       if ( active && !_.contains(active.values, value) ) {
@@ -644,6 +742,10 @@
       active.values = _.filter( active.values, function(facetValue) {
         return facetValue !== value;
       });
+
+      if ( !active.values.length ) {
+        delete this.activeFacets[name];
+      }
 
       return this;
     },
@@ -731,7 +833,7 @@
 
         _.each( constraint.value || constraint.uri, function(value) {
           // quote values with spaces
-          if (/\s+/.test(value)) {
+          if (/\s+/.test(value) && !/^"(.*)"$/.test(value)) {
             value = '"' + value + '"';
           }
           facets.push( name + self.options.params.separator + value );
@@ -747,25 +849,21 @@
      * @param {params} a URL query params object
      * @return a {Promise} resolved once the params have been applied
      */
-    fromParams: function fromParams() {
+    fromParams: function fromParams(params) {
       var self = this,
           d = $q.defer(),
-          params = $location.search(),
-          qtextP =  params[ this.options.params.qtext ] || null,
-          facetsP = params[ this.options.params.facets ],
-          pageP =   params[ this.options.params.page ],
-          sortP =   params[ this.options.params.sort ];
+          qtextP, facetsP, pageP, sortP;
+
+      params = params || $location.search();
+      qtextP = params[ this.options.params.qtext ] || null;
+      pageP = params[ this.options.params.page ];
+      sortP = params[ this.options.params.sort ];
+      facetsP = params[ this.options.params.facets ];
 
       self.setText(qtextP);
 
       if ( pageP ) {
-        try {
-          pageP = parseInt(pageP);
-        } catch(e) {
-          // console.error
-          pageP = 1;
-        }
-
+        pageP = parseInt(pageP) || 1;
         self.setPage( pageP );
       } else if ( this.options.params.page ) {
         self.setPage(1);
@@ -946,7 +1044,6 @@
       .then(
         function(response) {
           self.results = response.data;
-          // _.each(self.results.results, transformMetadata);
           self.transformMetadata();
           self.annotateActiveFacets();
           d.resolve(self.results);
@@ -989,12 +1086,13 @@
      * @param {object} results [this.results.results]
      */
     transformMetadata: function transformMetadata(result) {
-      var metadata;
+      var self = this,
+          metadata;
 
       result = result || this.results.results;
 
       if ( _.isArray(result) ) {
-        _.each(result, this.transformMetadata);
+        _.each(result, this.transformMetadata, self);
         return;
       }
 
@@ -1004,13 +1102,26 @@
       _.each(metadata, function(obj) {
         var key = _.without(_.keys(obj), 'metadata-type')[0],
             type = obj[ 'metadata-type' ],
-            value = obj[ key ];
+            value = obj[ key ],
+            shortKey = null,
+            prefix = null,
+            ns = null;
 
-        if (!_.contains(result.metadata, key)) {
-          result.metadata[ key ] = { 'metadata-type': type, values: [] };
+        ns = key.replace(/^\{([^}]+)\}.*$/, '$1');
+        prefix = self.getNamespacePrefix(ns);
+
+
+        if ( prefix ) {
+          shortKey = key.replace(/\{[^}]+\}/, prefix + ':');
+        } else {
+          shortKey = key;
         }
 
-        result.metadata[ key ].values.push(value);
+        if (!_.contains(result.metadata, key)) {
+          result.metadata[ shortKey ] = { 'metadata-type': type, values: [] };
+        }
+
+        result.metadata[ shortKey ].values.push(value);
       });
     },
 
@@ -1079,45 +1190,6 @@
 
     return args;
   }
-
-  // //TODO: remove. likely obsolete
-  // function setFacetFromQuery(query) {
-  //   var constraintQuery, values, type;
-
-  //   if ( query['collection-constraint-query'] ) {
-  //     constraintQuery = query['collection-constraint-query'];
-  //     type = 'collection';
-  //   } else if ( query['custom-constraint-query'] ) {
-  //     constraintQuery = query['custom-constraint-query'];
-  //     type = 'custom';
-  //   } else {
-  //     constraintQuery = query['range-constraint-query'];
-  //     //TODO: get type from facet object (requires search:response to be saved in searchContext)
-  //   }
-
-  //   if ( constraintQuery ) {
-  //     values = constraintQuery.value || constraintQuery.uri;
-  //     if ( !_.isArray(values) ) {
-  //       values = [values];
-  //     }
-
-  //     _.each( values, function(value) {
-  //       selectFacet( constraintQuery['constraint-name'], value, type );
-  //     });
-  //   }
-  // }
-
-  // //TODO: remove. likely obsolete
-  // function parseStructuredQuery( q ) {
-  //   //TODO: other query types (not-query, and-not-query, etc.)
-  //   q = q['and-query'] || q['or-query'] || q;
-
-  //   if ( q.queries ) {
-  //     _.each( q.queries, parseStructuredQuery );
-  //   } else {
-  //     setFacetFromQuery( q );
-  //   }
-  // }
 
 })();
 
@@ -1361,6 +1433,10 @@
     $scope.qtext = remoteInput.input;
     remoteInput.initInput($scope, mlSearch);
 
+    /**
+     * watch the `searchCtrl` property, and update search path
+     * (allows for instrumentation by a parent controller)
+     */
     $scope.$watch('searchCtrl', function(val) {
       var oldSearchPath = searchPath;
 
@@ -1372,11 +1448,32 @@
       }
     });
 
+    /**
+     * Search function for ml-input directive:
+     * redirects to the search ctrl if necessary,
+     * passes the input qtext to the remoteInput service
+     *
+     * @param {string} qtext
+     */
     $scope.search = function search(qtext) {
+      // TODO: clear params if not on the search path
+      // if ( $location.path() !== searchPath ) {
+      //   $location.search({});
+      //   $location.path( searchPath );
+      // }
+
       $location.path( searchPath );
       remoteInput.setInput(qtext);
     };
 
+    /**
+     * suggest function for the ml-input directive
+     * gets an MLSearchContext instance from the remoteInput service
+     * (if possible)
+     *
+     * @param {string} partial qtext
+     * @return {Promise} a promise to be resolved with search suggestions
+     */
     $scope.suggest = function suggest(val) {
       mlSearch = remoteInput.mlSearch || mlSearch;
       return mlSearch.suggest(val).then(function(res) {
