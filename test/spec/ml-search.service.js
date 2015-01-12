@@ -301,6 +301,35 @@ describe('MLSearch', function () {
 
   });
 
+  it('sets the transform correctly', function() {
+    $httpBackend
+      .expectGET(/\/v1\/search\?format=json&options=all&pageLength=5&start=6&structuredQuery=.*&transform=blah/)
+      .respond({
+        'total': 13,
+        'start': 6,
+        'page-length': 5,
+        'results':[
+          // not relevant to test
+        ],
+        'query': {'and-query':[]}
+      });
+
+
+    var searchContext = factory.newContext({
+          options: 'all',
+          pageLength: 5
+        }),
+        actual;
+
+    // Go to the second page, with 5 results per page
+    searchContext.setPage(2).setTransform('blah').search().then(function(response) { actual = response; });
+    $httpBackend.flush();
+
+    expect(actual.start).toEqual(6);
+    expect(actual['page-length']).toEqual(5);
+
+  });
+
   it('selects facets correctly', function() {
     var searchContext = factory.newContext();
     // turn the structured query into a JSON string...
