@@ -866,8 +866,7 @@
         options: self.options.queryOptions,
         structuredQuery: self.getQuery(),
         start: self.start,
-        pageLength: self.options.pageLength,
-        transform: self.searchTransform
+        pageLength: self.options.pageLength
       })
       .then(
         function(response) {
