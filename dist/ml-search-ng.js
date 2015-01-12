@@ -1039,7 +1039,8 @@
         options: self.options.queryOptions,
         structuredQuery: self.getQuery(),
         start: self.start,
-        pageLength: self.options.pageLength
+        pageLength: self.options.pageLength,
+        transform: self.searchTransform
       })
       .then(
         function(response) {
