@@ -91,15 +91,38 @@ describe('MLSearch', function () {
   it('gets and sets boostQueries', function() {
     var mlSearch = factory.newContext(),
         qb = mlSearch.qb,
-        boost = qb.boost(qb.and(), qb.and());
+        boost = qb.and();
+
     mlSearch.addBoostQuery(boost);
 
     expect(mlSearch.getBoostQueries().length).toEqual(1);
     expect(mlSearch.getBoostQueries()[0]).toEqual(boost);
 
+    expect( mlSearch.getQuery().query.queries[0]['boost-query']['boosting-query'][0] )
+      .toEqual(boost);
+
     mlSearch.clearBoostQueries();
 
     expect(mlSearch.getBoostQueries().length).toEqual(0);
+  });
+
+
+  it('gets and sets additionalQueries', function() {
+    var mlSearch = factory.newContext(),
+        qb = mlSearch.qb,
+        additional = qb.and();
+
+    mlSearch.addAdditionalQuery(additional);
+
+    expect(mlSearch.getAdditionalQueries().length).toEqual(1);
+    expect(mlSearch.getAdditionalQueries()[0]).toEqual(additional);
+
+    expect( mlSearch.getQuery().query.queries[0]['and-query'].queries[1][0] )
+      .toEqual(additional);
+
+    mlSearch.clearAdditionalQueries();
+
+    expect(mlSearch.getAdditionalQueries().length).toEqual(0);
   });
 
   it('gets and sets search transform', function() {
