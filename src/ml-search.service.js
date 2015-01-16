@@ -57,6 +57,9 @@
     // boosting queries to be added to the current query
     this.boostQueries = [];
 
+    // additional queries to be added to the current query
+    this.additionalQueries = [];
+
     // search results transformation name
     this.searchTransform = null;
 
@@ -224,6 +227,36 @@
      */
     clearBoostQueries: function clearBoostQueries() {
       this.boostQueries = [];
+      return this;
+    },
+
+    /**
+     * Gets the additional queries
+     *
+     * @return {object} this.additionalQueries
+     */
+    getAdditionalQueries: function getAdditionalQueries() {
+      return this.additionalQueries;
+    },
+
+    /**
+     * Adds a additional query
+     *
+     * @param {object} additional query
+     * @return {Object} this
+     */
+    addAdditionalQuery: function addAdditionalQuery(query) {
+      this.additionalQueries.push(query);
+      return this;
+    },
+
+    /**
+     * Clear the additional queries
+     *
+     * @return {Object} this
+     */
+    clearAdditionalQueries: function clearAdditionalQueries() {
+      this.additionalQueries = [];
       return this;
     },
 
@@ -441,6 +474,10 @@
 
       if ( this.boostQueries.length ) {
         query = qb.boost(query, this.boostQueries);
+      }
+
+      if ( this.additionalQueries.length ) {
+        query = qb.and(query, this.additionalQueries);
       }
 
       if ( this.options.includeProperties ) {
