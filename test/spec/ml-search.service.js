@@ -265,7 +265,11 @@ describe('MLSearch', function () {
             'mimetype': 'application/json',
             'format': 'json',
             'matches': [{'path':'fn:doc(\"/demos/17380453717445161293.json\")/jbasic:json','match-text':['Semantic News Search This use case aims to demonstrate a combination of MarkLogic\'s built-in full-text XQuery XML content search and SPARQL...']}],
-            'metadata': [{'name':'Semantic News Search','metadata-type':'element'}]
+            'metadata': [
+              {'name':'Semantic News Search','metadata-type':'element'},
+              {'series':'value1','metadata-type':'element'},
+              {'series':'value2','metadata-type':'element'}
+            ]
           }
         ],
         'query': {'and-query':[]}
@@ -279,9 +283,17 @@ describe('MLSearch', function () {
 
 
     expect(actual.results[0].metadata).toBeDefined();
+
     expect( _.isArray(actual.results[0].metadata.name.values) ).toBeTruthy();
-    expect(actual.results[0].metadata.name.values[0]).toBe('Semantic News Search');
     expect(actual.results[0].metadata.name['metadata-type']).toEqual('element');
+    expect(actual.results[0].metadata.name.values.length).toBe(1);
+    expect(actual.results[0].metadata.name.values[0]).toBe('Semantic News Search');
+
+    expect( _.isArray(actual.results[0].metadata.series.values) ).toBeTruthy();
+    expect(actual.results[0].metadata.series['metadata-type']).toEqual('element');
+    expect(actual.results[0].metadata.series.values.length).toBe(2);
+    expect(actual.results[0].metadata.series.values[0]).toBe('value1');
+    expect(actual.results[0].metadata.series.values[1]).toBe('value2');
   });
 
   it('replaces Clark-notation namespaces with prefixes in search metadata', function() {

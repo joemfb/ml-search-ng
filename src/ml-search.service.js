@@ -982,7 +982,7 @@
           shortKey = key;
         }
 
-        if (!_.contains(result.metadata, key)) {
+        if ( !result.metadata[ shortKey ] ) {
           result.metadata[ shortKey ] = { 'metadata-type': type, values: [] };
         }
 
