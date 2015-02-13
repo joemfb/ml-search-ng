@@ -1,6 +1,6 @@
 {
   "name": "ml-search-ng",
-  "version": "0.0.1",
+  "version": "0.0.10",
   "description": "An angular module for common search-app use cases",
   "dependencies": {},
   "devDependencies": {
@@ -41,5 +41,6 @@
   "bugs": {
     "url": "https://github.com/joemfb/ml-search-ng/issues"
   },
-  "homepage": "https://github.com/joemfb/ml-search-ng"
+  "homepage": "https://github.com/joemfb/ml-search-ng",
+  "private": true
 }

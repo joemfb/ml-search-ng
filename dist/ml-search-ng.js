@@ -46,6 +46,347 @@
   'use strict';
 
   angular.module('ml.search')
+    .directive('mlDuration', mlDuration);
+
+  function mlDuration() {
+    return {
+      restrict: 'A',
+      transclude: true,
+      scope: { mlDuration: '=' },
+      link: link
+    };
+  }
+
+  function link($scope, element, attrs, ctrl, transclude) {
+    $scope.$watch('mlDuration', function(newVal, oldVal) {
+      if (newVal) {
+        angular.extend($scope, {
+          duration: parseDuration(newVal)
+        });
+      }
+    });
+
+    transclude($scope, function(clone) {
+      element.append(clone);
+    });
+  }
+
+  function parseDuration(duration) {
+    // adapted from https://github.com/dordille/moment-isoduration
+    var pattern = [
+          'P(',
+            '(([0-9]*\\.?[0-9]*)Y)?',
+            '(([0-9]*\\.?[0-9]*)M)?',
+            '(([0-9]*\\.?[0-9]*)W)?',
+            '(([0-9]*\\.?[0-9]*)D)?',
+          ')?',
+          '(T',
+            '(([0-9]*\\.?[0-9]*)H)?',
+            '(([0-9]*\\.?[0-9]*)M)?',
+            '(([0-9]*\\.?[0-9]*)S)?',
+          ')?'
+        ],
+        regex = new RegExp(pattern.join('')),
+        matches = duration.match(regex);
+
+    return {
+      years:   parseFloat(matches[3])  || null,
+      months:  parseFloat(matches[5])  || null,
+      weeks:   parseFloat(matches[7])  || null,
+      days:    parseFloat(matches[9])  || null,
+      hours:   parseFloat(matches[12]) || null,
+      minutes: parseFloat(matches[14]) || null,
+      seconds: parseFloat(matches[16]) || null,
+      toString: function() {
+        return duration;
+      }
+    };
+  }
+
+}());
+
+(function () {
+
+  'use strict';
+
+  angular.module('ml.search')
+    .directive('mlFacets', mlFacets);
+
+  function mlFacets() {
+    return {
+      restrict: 'E',
+      scope: {
+        facets: '=',
+        toggle: '&'
+      },
+      templateUrl: template
+    };
+  }
+
+  function template(element, attrs) {
+    var url;
+
+    if (attrs.template) {
+      if (attrs.template === 'inline') {
+        url = '/templates/ml-facets-inline.html';
+      } else {
+        url = attrs.template;
+      }
+    }
+    else {
+      url = '/templates/ml-facets.html';
+    }
+
+    return url;
+  }
+
+}());
+
+(function () {
+
+  'use strict';
+
+  angular.module('ml.search')
+    .directive('mlInput', mlInput);
+
+  function mlInput() {
+    return {
+      restrict: 'E',
+      scope: {
+        qtext: '=',
+        search: '&',
+        suggest: '&'
+      },
+      templateUrl: template,
+      link: link
+    };
+  }
+
+  function template(element, attrs) {
+    var url;
+
+    if (attrs.template) {
+      if (attrs.template === 'fa') {
+        url = '/templates/ml-input-fa.html';
+      } else {
+        url = attrs.template;
+      }
+    }
+    else {
+      url = '/templates/ml-input.html';
+    }
+
+    return url;
+  }
+
+  function link($scope, element) {
+    $scope.clear = function() {
+      $scope.search({ qtext: '' });
+    };
+  }
+
+}());
+
+(function () {
+
+  'use strict';
+
+  angular.module('ml.search')
+    .directive('mlMetrics', mlMetrics);
+
+  var $window = null;
+
+  mlMetrics.$inject = ['$window'];
+
+  function mlMetrics($injectWindow) {
+    $window = $injectWindow;
+
+    return {
+      restrict: 'E',
+      replace: true,
+      transclude: true,
+      templateUrl: '/templates/ml-metrics.html',
+      scope: {
+        search: '=',
+        showDuration: '=?'
+      },
+      link: link
+    };
+  }
+
+  function link($scope, element, attrs, ctrl, transclude) {
+    if ($scope.showDuration === undefined) {
+      $scope.showDuration = true;
+    }
+
+    $scope.$watch('search', function(search) {
+      angular.extend($scope, parseSearch(search));
+    });
+
+    transclude($scope, function(clone) {
+      if (clone.length) {
+        element.replaceWith(clone);
+      }
+    });
+  }
+
+  function parseSearch(search) {
+    return {
+      total: search.total,
+      start: search.start,
+      pageLength: search['page-length'],
+      pageEnd: $window.Math.min(search.start + search['page-length'] - 1, search.total),
+      metrics: search.metrics
+    };
+  }
+
+}());
+
+(function () {
+
+  'use strict';
+
+  angular.module('ml.search')
+    .directive('mlRemoteInput', mlRemoteInput)
+    .controller('MLRemoteInputController', MLRemoteInputController);
+
+  function mlRemoteInput() {
+    return {
+      restrict: 'E',
+      controller: 'MLRemoteInputController',
+      scope: {
+        searchCtrl: '@',
+        template: '@'
+      },
+      template: template
+    };
+  }
+
+  function template(element, attrs) {
+    var tpl = '';
+
+    if ( attrs.template ) {
+      tpl = ' template="' + attrs.template + '"';
+    }
+    return '<ml-input qtext="qtext" search="search(qtext)" ' +
+           'suggest="suggest(val)"' + tpl + '></ml-input>';
+  }
+
+  MLRemoteInputController.$inject = ['$scope', '$location', '$route', 'MLSearchFactory', 'MLRemoteInputService'];
+
+  function MLRemoteInputController($scope, $location, $route, factory, remoteInput) {
+    var mlSearch = factory.newContext(),
+        searchPath;
+
+    $scope.qtext = remoteInput.input;
+    remoteInput.initInput($scope, mlSearch);
+
+    /**
+     * watch the `searchCtrl` property, and update search path
+     * (allows for instrumentation by a parent controller)
+     */
+    $scope.$watch('searchCtrl', function(val) {
+      var oldSearchPath = searchPath;
+
+      val = val || 'SearchCtrl';
+      searchPath = remoteInput.getPath( val );
+
+      if ( oldSearchPath && searchPath !== oldSearchPath ) {
+        $scope.search('');
+      }
+    });
+
+    /**
+     * Search function for ml-input directive:
+     * redirects to the search ctrl if necessary,
+     * passes the input qtext to the remoteInput service
+     *
+     * @param {string} qtext
+     */
+    $scope.search = function search(qtext) {
+      // TODO: clear params if not on the search path
+      // if ( $location.path() !== searchPath ) {
+      //   $location.search({});
+      //   $location.path( searchPath );
+      // }
+
+      $location.path( searchPath );
+      remoteInput.setInput(qtext);
+    };
+
+    /**
+     * suggest function for the ml-input directive
+     * gets an MLSearchContext instance from the remoteInput service
+     * (if possible)
+     *
+     * @param {string} partial qtext
+     * @return {Promise} a promise to be resolved with search suggestions
+     */
+    $scope.suggest = function suggest(val) {
+      mlSearch = remoteInput.mlSearch || mlSearch;
+      return mlSearch.suggest(val).then(function(res) {
+        return res.suggestions || [];
+      });
+    };
+  }
+
+}());
+
+(function () {
+
+  'use strict';
+
+  angular.module('ml.search')
+    .directive('mlResults', mlResults);
+
+  function mlResults() {
+    return {
+      restrict: 'E',
+      scope: {
+        results: '=',
+        link: '&'
+      },
+      templateUrl: template,
+      link: link
+    };
+  }
+
+  function template(element, attrs) {
+    var url;
+
+    if (attrs.template) {
+      url = attrs.template;
+    }
+    else {
+      url = '/templates/ml-results.html';
+    }
+
+    return url;
+  }
+
+  function link(scope, element, attrs) {
+    //default link fn
+    if (!attrs.link) {
+      scope.link = function(result) {
+        //weird object hierarchy because directive methods requiring objects (?)
+        return '/detail?uri=' + result.result.uri;
+      };
+    }
+
+    scope.$watch('results', function (newVal, oldVal) {
+      _.each(newVal, function(result) {
+        result.link = scope.link({ result: result });
+      });
+    });
+  }
+
+}());
+
+(function () {
+
+  'use strict';
+
+  angular.module('ml.search')
     .service('MLRemoteInputService', MLRemoteInputService);
 
   MLRemoteInputService.$inject = ['$route'];
@@ -1155,7 +1496,7 @@
           shortKey = key;
         }
 
-        if (!_.contains(result.metadata, key)) {
+        if ( !result.metadata[ shortKey ] ) {
           result.metadata[ shortKey ] = { 'metadata-type': type, values: [] };
         }
 
@@ -1230,344 +1571,3 @@
   }
 
 })();
-
-(function () {
-
-  'use strict';
-
-  angular.module('ml.search')
-    .directive('mlDuration', mlDuration);
-
-  function mlDuration() {
-    return {
-      restrict: 'A',
-      transclude: true,
-      scope: { mlDuration: '=' },
-      link: link
-    };
-  }
-
-  function link($scope, element, attrs, ctrl, transclude) {
-    $scope.$watch('mlDuration', function(newVal, oldVal) {
-      if (newVal) {
-        angular.extend($scope, {
-          duration: parseDuration(newVal)
-        });
-      }
-    });
-
-    transclude($scope, function(clone) {
-      element.append(clone);
-    });
-  }
-
-  function parseDuration(duration) {
-    // adapted from https://github.com/dordille/moment-isoduration
-    var pattern = [
-          'P(',
-            '(([0-9]*\\.?[0-9]*)Y)?',
-            '(([0-9]*\\.?[0-9]*)M)?',
-            '(([0-9]*\\.?[0-9]*)W)?',
-            '(([0-9]*\\.?[0-9]*)D)?',
-          ')?',
-          '(T',
-            '(([0-9]*\\.?[0-9]*)H)?',
-            '(([0-9]*\\.?[0-9]*)M)?',
-            '(([0-9]*\\.?[0-9]*)S)?',
-          ')?'
-        ],
-        regex = new RegExp(pattern.join('')),
-        matches = duration.match(regex);
-
-    return {
-      years:   parseFloat(matches[3])  || null,
-      months:  parseFloat(matches[5])  || null,
-      weeks:   parseFloat(matches[7])  || null,
-      days:    parseFloat(matches[9])  || null,
-      hours:   parseFloat(matches[12]) || null,
-      minutes: parseFloat(matches[14]) || null,
-      seconds: parseFloat(matches[16]) || null,
-      toString: function() {
-        return duration;
-      }
-    };
-  }
-
-}());
-
-(function () {
-
-  'use strict';
-
-  angular.module('ml.search')
-    .directive('mlFacets', mlFacets);
-
-  function mlFacets() {
-    return {
-      restrict: 'E',
-      scope: {
-        facets: '=',
-        toggle: '&'
-      },
-      templateUrl: template
-    };
-  }
-
-  function template(element, attrs) {
-    var url;
-
-    if (attrs.template) {
-      if (attrs.template === 'inline') {
-        url = '/templates/ml-facets-inline.html';
-      } else {
-        url = attrs.template;
-      }
-    }
-    else {
-      url = '/templates/ml-facets.html';
-    }
-
-    return url;
-  }
-
-}());
-
-(function () {
-
-  'use strict';
-
-  angular.module('ml.search')
-    .directive('mlInput', mlInput);
-
-  function mlInput() {
-    return {
-      restrict: 'E',
-      scope: {
-        qtext: '=',
-        search: '&',
-        suggest: '&'
-      },
-      templateUrl: template,
-      link: link
-    };
-  }
-
-  function template(element, attrs) {
-    var url;
-
-    if (attrs.template) {
-      if (attrs.template === 'fa') {
-        url = '/templates/ml-input-fa.html';
-      } else {
-        url = attrs.template;
-      }
-    }
-    else {
-      url = '/templates/ml-input.html';
-    }
-
-    return url;
-  }
-
-  function link($scope, element) {
-    $scope.clear = function() {
-      $scope.search({ qtext: '' });
-    };
-  }
-
-}());
-
-(function () {
-
-  'use strict';
-
-  angular.module('ml.search')
-    .directive('mlMetrics', mlMetrics);
-
-  var $window = null;
-
-  mlMetrics.$inject = ['$window'];
-
-  function mlMetrics($injectWindow) {
-    $window = $injectWindow;
-
-    return {
-      restrict: 'E',
-      replace: true,
-      transclude: true,
-      templateUrl: '/templates/ml-metrics.html',
-      scope: {
-        search: '=',
-        showDuration: '=?'
-      },
-      link: link
-    };
-  }
-
-  function link($scope, element, attrs, ctrl, transclude) {
-    if ($scope.showDuration === undefined) {
-      $scope.showDuration = true;
-    }
-
-    $scope.$watch('search', function(search) {
-      angular.extend($scope, parseSearch(search));
-    });
-
-    transclude($scope, function(clone) {
-      if (clone.length) {
-        element.replaceWith(clone);
-      }
-    });
-  }
-
-  function parseSearch(search) {
-    return {
-      total: search.total,
-      start: search.start,
-      pageLength: search['page-length'],
-      pageEnd: $window.Math.min(search.start + search['page-length'] - 1, search.total),
-      metrics: search.metrics
-    };
-  }
-
-}());
-
-(function () {
-
-  'use strict';
-
-  angular.module('ml.search')
-    .directive('mlRemoteInput', mlRemoteInput)
-    .controller('MLRemoteInputController', MLRemoteInputController);
-
-  function mlRemoteInput() {
-    return {
-      restrict: 'E',
-      controller: 'MLRemoteInputController',
-      scope: {
-        searchCtrl: '@',
-        template: '@'
-      },
-      template: template
-    };
-  }
-
-  function template(element, attrs) {
-    var tpl = '';
-
-    if ( attrs.template ) {
-      tpl = ' template="' + attrs.template + '"';
-    }
-    return '<ml-input qtext="qtext" search="search(qtext)" ' +
-           'suggest="suggest(val)"' + tpl + '></ml-input>';
-  }
-
-  MLRemoteInputController.$inject = ['$scope', '$location', '$route', 'MLSearchFactory', 'MLRemoteInputService'];
-
-  function MLRemoteInputController($scope, $location, $route, factory, remoteInput) {
-    var mlSearch = factory.newContext(),
-        searchPath;
-
-    $scope.qtext = remoteInput.input;
-    remoteInput.initInput($scope, mlSearch);
-
-    /**
-     * watch the `searchCtrl` property, and update search path
-     * (allows for instrumentation by a parent controller)
-     */
-    $scope.$watch('searchCtrl', function(val) {
-      var oldSearchPath = searchPath;
-
-      val = val || 'SearchCtrl';
-      searchPath = remoteInput.getPath( val );
-
-      if ( oldSearchPath && searchPath !== oldSearchPath ) {
-        $scope.search('');
-      }
-    });
-
-    /**
-     * Search function for ml-input directive:
-     * redirects to the search ctrl if necessary,
-     * passes the input qtext to the remoteInput service
-     *
-     * @param {string} qtext
-     */
-    $scope.search = function search(qtext) {
-      // TODO: clear params if not on the search path
-      // if ( $location.path() !== searchPath ) {
-      //   $location.search({});
-      //   $location.path( searchPath );
-      // }
-
-      $location.path( searchPath );
-      remoteInput.setInput(qtext);
-    };
-
-    /**
-     * suggest function for the ml-input directive
-     * gets an MLSearchContext instance from the remoteInput service
-     * (if possible)
-     *
-     * @param {string} partial qtext
-     * @return {Promise} a promise to be resolved with search suggestions
-     */
-    $scope.suggest = function suggest(val) {
-      mlSearch = remoteInput.mlSearch || mlSearch;
-      return mlSearch.suggest(val).then(function(res) {
-        return res.suggestions || [];
-      });
-    };
-  }
-
-}());
-
-(function () {
-
-  'use strict';
-
-  angular.module('ml.search')
-    .directive('mlResults', mlResults);
-
-  function mlResults() {
-    return {
-      restrict: 'E',
-      scope: {
-        results: '=',
-        link: '&'
-      },
-      templateUrl: template,
-      link: link
-    };
-  }
-
-  function template(element, attrs) {
-    var url;
-
-    if (attrs.template) {
-      url = attrs.template;
-    }
-    else {
-      url = '/templates/ml-results.html';
-    }
-
-    return url;
-  }
-
-  function link(scope, element, attrs) {
-    //default link fn
-    if (!attrs.link) {
-      scope.link = function(result) {
-        //weird object hierarchy because directive methods requiring objects (?)
-        return '/detail?uri=' + result.result.uri;
-      };
-    }
-
-    scope.$watch('results', function (newVal, oldVal) {
-      _.each(newVal, function(result) {
-        result.link = scope.link({ result: result });
-      });
-    });
-  }
-
-}());
