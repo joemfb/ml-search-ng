@@ -7,6 +7,10 @@
 
   MLRemoteInputService.$inject = ['$route'];
 
+  /**
+   * @class MLRemoteInputService
+   * @classdesc angular service for working with {@link ml-remote-input}
+   */
   function MLRemoteInputService($route) {
     var service = this;
 
@@ -20,11 +24,13 @@
 
     /**
      * sets the service.input instance property and invokes the registered callbacks
+     * @method MLRemoteInputService#setInput
      *
      * @param {string} input
      */
     service.setInput = function setInput(val) {
       service.input = val;
+      // TODO: Object.observe service.input?
       _.each(service.callbacks, function(callback) {
         callback(service.input);
       });
@@ -32,8 +38,9 @@
 
     /**
      * registers a callback, returning a de-registration function
+     * @method MLRemoteInputService#subscribe
      *
-     * @param {function} callback
+     * @param {function} callback - a callback to be invoked when `this.input` is changed
      * @return {function} callback de-registration function
      */
     service.subscribe = function subscribe(callback) {
@@ -50,9 +57,10 @@
      *   - updates the $scope parameter
      *   - updates the mlSearch parameter with the mlSearch instance property
      *     (if it exists)
+     * @method MLRemoteInputService#initInput
      *
-     * @param {object} $scope
-     * @param (object) mlSearch
+     * @param {object} $scope - search controller scope
+     * @param {MLSearchContext} mlSearch - controller mlSearch instance
      */
     service.initInput = function initInput($scope, mlSearch) {
       var unsubscribe = service.subscribe(function(input) {
@@ -72,10 +80,11 @@
      * - sets the mlSearch instance property
      * - initializes the qtext property of the model parameter
      *   (unless it's already set and the instance input property is not)
+     * @method MLRemoteInputService#initCtrl
      *
-     * @param {object} $scope
-     * @param {object} search ctrl model
-     * @param {MLSearchContext} ctrl mlSearch instance
+     * @param {object} $scope - search controller scope
+     * @param {object} model - search controller model
+     * @param {MLSearchContext} mlSearch - controller mlSearch instance
      * @param {function} search callback
      */
     service.initCtrl = function initCtrl($scope, model, mlSearch, searchCallback) {
@@ -99,10 +108,11 @@
     };
 
     /**
-     * gets the path for a specified controller from the $route service
+     * gets the path for a specified controller from the `$route` service
+     * @method MLRemoteInputService#getPath
      *
-     * @param {string} search ctrl name
-     * @return {string} search ctrl path
+     * @param {string} searchCtrl - search controller name
+     * @return {string} search controller path
      */
     service.getPath = function getPath(searchCtrl) {
       var matches = _.where($route.routes, { controller: searchCtrl }),
