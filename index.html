@@ -28,9 +28,24 @@
           <article>
             <h3>ml-search-ng</h3>
             <p>An angular module of services and directives for common use cases in MarkLogic search applications. Based on components from ealier versions of <a href="https://github.com/marklogic/slush-marklogic-node">https://github.com/marklogic/slush-marklogic-node</a>.</p>
-            <h4>MLSearch service</h4>
-            <p><a href="#MLSearchContext">API docs</a>.</p>
-            <p>To get an instance, inject <code>MLSearchFactory</code>, and invoke <code>searchFactory.newContext()</code>.</p>
+            <p>depends on <a href="https://github.com/joemfb/ml-common-ng">https://github.com/joemfb/ml-common-ng</a>.</p>
+            <h4>getting started</h4><pre class="prettyprint source"><code>bower install ml-search-ng</code></pre>
+            <h4>services</h4>
+            <ul>
+              <li><code>MLSearchFactory</code>: factory for generating instances of <code>MLSearchContext</code> (which manages search config/query state, and provides APIs for searches)</li>
+              <li><code>MLRemoteInputService</code>: for communicating with the ml-remote-input (search input outside of controller scope)</li>
+            </ul>
+            <h4>directives</h4>
+            <ul>
+              <li><code>ml-duration</code>: parse ISO duration strings</li>
+              <li><code>ml-facets</code>: display facets</li>
+              <li><code>ml-input</code>: search input with auto-suggest</li>
+              <li><code>ml-metrics</code>: display search metrics</li>
+              <li><code>ml-remote-input</code>: remote wrapper for <code>ml-input</code></li>
+              <li><code>ml-results</code>: display search results / snippets / highlights</li>
+            </ul>
+            <p>See <a href="https://joemfb.github.io/ml-search-ng/">https://joemfb.github.io/ml-search-ng/</a> for API docs and directive examples.</p>
+            <p>See <a href="https://github.com/marklogic/slush-marklogic-node">https://github.com/marklogic/slush-marklogic-node</a> for a quick way to get started with an angular search application on top of the MarkLogic REST API.</p>
           </article>
           <div class="symbol-index">
             <section>
