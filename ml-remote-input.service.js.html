@@ -1,0 +1,194 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta name="generator" content="JSDoc 3.3.0-beta3">
+  <meta charset="utf-8">
+  <title>Source: ml-remote-input.service.js</title>
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
+  <link href="css/baseline.css" rel="stylesheet">
+</head>
+
+<body onload="prettyPrint()">
+  <nav id="jsdoc-navbar" role="navigation" class="jsdoc-navbar">
+    <div id="jsdoc-navbar-container">
+      <div id="jsdoc-navbar-content">
+        <a href="index.html" class="jsdoc-navbar-package-name">Home</a>
+      </div>
+    </div>
+  </nav>
+  <div id="jsdoc-body-container">
+    <div id="jsdoc-content">
+      <div id="jsdoc-content-container">
+        <div id="jsdoc-banner" role="banner">
+        </div>
+        <div id="jsdoc-main" role="main">
+          <header class="page-header">
+            <h1>Source: ml-remote-input.service.js</h1>
+          </header>
+          <article>
+            <pre class="prettyprint linenums"><code>(function () {
+
+  &#x27;use strict&#x27;;
+
+  angular.module(&#x27;ml.search&#x27;)
+    .service(&#x27;MLRemoteInputService&#x27;, MLRemoteInputService);
+
+  MLRemoteInputService.$inject = [&#x27;$route&#x27;];
+
+  /**
+   * @class MLRemoteInputService
+   * @classdesc angular service for working with {@link ml-remote-input}
+   */
+  function MLRemoteInputService($route) {
+    var service = this;
+
+    service.input = &#x27;&#x27;;
+    service.mlSearch = null;
+    service.callbacks = [];
+
+    function unsubscribe(idx) {
+      service.callbacks.splice(idx);
+    }
+
+    /**
+     * sets the service.input instance property and invokes the registered callbacks
+     * @method MLRemoteInputService#setInput
+     *
+     * @param {string} input
+     */
+    service.setInput = function setInput(val) {
+      service.input = val;
+      // TODO: Object.observe service.input?
+      _.each(service.callbacks, function(callback) {
+        callback(service.input);
+      });
+    };
+
+    /**
+     * registers a callback, returning a de-registration function
+     * @method MLRemoteInputService#subscribe
+     *
+     * @param {function} callback - a callback to be invoked when &#x60;this.input&#x60; is changed
+     * @return {function} callback de-registration function
+     */
+    service.subscribe = function subscribe(callback) {
+      var idx = service.callbacks.length;
+      service.callbacks.push(callback);
+      return function() {
+        unsubscribe(idx);
+      };
+    };
+
+    /**
+     * helper function for mlRemoteInput directive
+     * registers and de-registers a callback that
+     *   - updates the $scope parameter
+     *   - updates the mlSearch parameter with the mlSearch instance property
+     *     (if it exists)
+     * @method MLRemoteInputService#initInput
+     *
+     * @param {object} $scope - search controller scope
+     * @param {MLSearchContext} mlSearch - controller mlSearch instance
+     */
+    service.initInput = function initInput($scope, mlSearch) {
+      var unsubscribe = service.subscribe(function(input) {
+        $scope.qtext = input;
+        mlSearch = service.mlSearch || mlSearch;
+      });
+
+      $scope.$on(&#x27;destroy&#x27;, unsubscribe);
+    };
+
+    /**
+     * helper function for Search controller
+     *
+     * - registers and de-registers a callback that
+     *   - updates the qtext property of the model parameter
+     *   - invokes the searchCallback
+     * - sets the mlSearch instance property
+     * - initializes the qtext property of the model parameter
+     *   (unless it&#x27;s already set and the instance input property is not)
+     * @method MLRemoteInputService#initCtrl
+     *
+     * @param {object} $scope - search controller scope
+     * @param {object} model - search controller model
+     * @param {MLSearchContext} mlSearch - controller mlSearch instance
+     * @param {function} search callback
+     */
+    service.initCtrl = function initCtrl($scope, model, mlSearch, searchCallback) {
+      var unsubscribe = service.subscribe(function(input) {
+        if (model.qtext !== input) {
+          model.qtext = input;
+
+          searchCallback();
+        }
+      });
+
+      $scope.$on(&#x27;$destroy&#x27;, unsubscribe);
+
+      service.mlSearch = mlSearch;
+
+      if ( model.qtext.length &amp;amp;&amp;amp; !service.input.length ) {
+        service.setInput( model.qtext );
+      } else {
+        model.qtext = service.input;
+      }
+    };
+
+    /**
+     * gets the path for a specified controller from the &#x60;$route&#x60; service
+     * @method MLRemoteInputService#getPath
+     *
+     * @param {string} searchCtrl - search controller name
+     * @return {string} search controller path
+     */
+    service.getPath = function getPath(searchCtrl) {
+      var matches = _.where($route.routes, { controller: searchCtrl }),
+          route = { originalPath: &#x27;/&#x27; };
+
+      if ( matches.length === 0 ) {
+        // TODO: get route from attr, or throw Error(&#x27;can\t find Search controller&#x27;) ?
+        console.error(&#x27;can\t find Search controller: &#x27; + searchCtrl);
+      }
+      else {
+        route = matches[0];
+
+        if ( matches.length &gt; 1 ) {
+          console.log(&#x27;multiple Search controller routes; choosing \&#x27;&#x27; +
+                      route.originalPath + &#x27;\&#x27;&#x27;);
+        }
+      }
+
+      return route.originalPath;
+    };
+
+  }
+
+}());
+</code></pre>
+          </article>
+        </div>
+      </div>
+      <nav id="jsdoc-toc-nav" role="navigation"></nav>
+    </div>
+  </div>
+  <footer id="jsdoc-footer" class="jsdoc-footer">
+    <div id="jsdoc-footer-container">
+      <p>
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.0-beta3 on April 26, 2015.
+      </p>
+    </div>
+  </footer>
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/jquery.cookie.js"></script>
+  <script src="scripts/tree.jquery.js"></script>
+  <script src="scripts/prettify.js"></script>
+  <script src="scripts/jsdoc-toc.js"></script>
+  <script src="scripts/linenumber.js"></script>
+  <script src="scripts/scrollanchor.js"></script>
+</body>
+
+</html>

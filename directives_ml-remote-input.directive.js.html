@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta name="generator" content="JSDoc 3.3.0-beta3">
+  <meta charset="utf-8">
+  <title>Source: directives/ml-remote-input.directive.js</title>
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
+  <link href="css/baseline.css" rel="stylesheet">
+</head>
+
+<body onload="prettyPrint()">
+  <nav id="jsdoc-navbar" role="navigation" class="jsdoc-navbar">
+    <div id="jsdoc-navbar-container">
+      <div id="jsdoc-navbar-content">
+        <a href="index.html" class="jsdoc-navbar-package-name">Home</a>
+      </div>
+    </div>
+  </nav>
+  <div id="jsdoc-body-container">
+    <div id="jsdoc-content">
+      <div id="jsdoc-content-container">
+        <div id="jsdoc-banner" role="banner">
+        </div>
+        <div id="jsdoc-main" role="main">
+          <header class="page-header">
+            <h1>Source: directives/ml-remote-input.directive.js</h1>
+          </header>
+          <article>
+            <pre class="prettyprint linenums"><code>(function () {
+
+  &#x27;use strict&#x27;;
+
+  /**
+   * angular element directive; creates a search-input form, outside of the scope of a controller.
+   *
+   * Uses {@link MLRemoteInputService} to communicate with a controller. Wraps {@link ml-input}.
+   *
+   * attributes:
+   *
+   * - &#x60;searchCtrl&#x60;: the name of the controller to interface with. defaults to &#x60;&#x27;SearchCtrl&#x27;&#x60;
+   * - &#x60;template&#x60;: passed to &#x60;ml-input&#x60;
+   *
+   * Example:
+   *
+   * &#x60;&#x60;&#x60;
+   * &amp;lt;ml-remote-input search-ctrl=&quot;MySearchCtrl&quot; template=&quot;fa&quot;&gt;&amp;lt;/ml-remote-input&gt;&#x60;&#x60;&#x60;
+   *
+   * In the controller:
+   *
+   * &#x60;&#x60;&#x60;javascript
+   * remoteInput.initCtrl($scope, model, mlSearch, search);&#x60;&#x60;&#x60;
+   *
+   * Note: this function assumes &#x60;mlSearch&#x60; is an instance of {@link MLSearchContext}, &#x60;search&#x60; is a function, and &#x60;model&#x60; has a &#x60;qtext&#x60; property. If these assumptions don&#x27;t hold, a more verbose approach is required:
+   *
+   * &#x60;// TODO: complex example&#x60;
+   *
+   * @namespace ml-remote-input
+   */
+  angular.module(&#x27;ml.search&#x27;)
+    .directive(&#x27;mlRemoteInput&#x27;, mlRemoteInput)
+    .controller(&#x27;MLRemoteInputController&#x27;, MLRemoteInputController);
+
+  function mlRemoteInput() {
+    return {
+      restrict: &#x27;E&#x27;,
+      controller: &#x27;MLRemoteInputController&#x27;,
+      scope: {
+        searchCtrl: &#x27;@&#x27;,
+        template: &#x27;@&#x27;
+      },
+      template: template
+    };
+  }
+
+  function template(element, attrs) {
+    var tpl = &#x27;&#x27;;
+
+    if ( attrs.template ) {
+      tpl = &#x27; template=&quot;&#x27; + attrs.template + &#x27;&quot;&#x27;;
+    }
+    return &#x27;&amp;lt;ml-input qtext=&quot;qtext&quot; search=&quot;search(qtext)&quot; &#x27; +
+           &#x27;suggest=&quot;suggest(val)&quot;&#x27; + tpl + &#x27;&gt;&amp;lt;/ml-input&gt;&#x27;;
+  }
+
+  MLRemoteInputController.$inject = [&#x27;$scope&#x27;, &#x27;$location&#x27;, &#x27;$route&#x27;, &#x27;MLSearchFactory&#x27;, &#x27;MLRemoteInputService&#x27;];
+
+  function MLRemoteInputController($scope, $location, $route, factory, remoteInput) {
+    var mlSearch = factory.newContext(),
+        searchPath;
+
+    $scope.qtext = remoteInput.input;
+    remoteInput.initInput($scope, mlSearch);
+
+    /**
+     * watch the &#x60;searchCtrl&#x60; property, and update search path
+     * (allows for instrumentation by a parent controller)
+     */
+    $scope.$watch(&#x27;searchCtrl&#x27;, function(val) {
+      var oldSearchPath = searchPath;
+
+      val = val || &#x27;SearchCtrl&#x27;;
+      searchPath = remoteInput.getPath( val );
+
+      if ( oldSearchPath &amp;amp;&amp;amp; searchPath !== oldSearchPath ) {
+        $scope.search(&#x27;&#x27;);
+      }
+    });
+
+    /**
+     * Search function for ml-input directive:
+     * redirects to the search ctrl if necessary,
+     * passes the input qtext to the remoteInput service
+     *
+     * @param {string} qtext
+     */
+    $scope.search = function search(qtext) {
+      // TODO: clear params if not on the search path
+      // if ( $location.path() !== searchPath ) {
+      //   $location.search({});
+      //   $location.path( searchPath );
+      // }
+
+      $location.path( searchPath );
+      remoteInput.setInput(qtext);
+    };
+
+    /**
+     * suggest function for the ml-input directive
+     * gets an MLSearchContext instance from the remoteInput service
+     * (if possible)
+     *
+     * @param {string} partial qtext
+     * @return {Promise} a promise to be resolved with search suggestions
+     */
+    $scope.suggest = function suggest(val) {
+      mlSearch = remoteInput.mlSearch || mlSearch;
+      return mlSearch.suggest(val).then(function(res) {
+        return res.suggestions || [];
+      });
+    };
+  }
+
+}());
+</code></pre>
+          </article>
+        </div>
+      </div>
+      <nav id="jsdoc-toc-nav" role="navigation"></nav>
+    </div>
+  </div>
+  <footer id="jsdoc-footer" class="jsdoc-footer">
+    <div id="jsdoc-footer-container">
+      <p>
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.0-beta3 on April 26, 2015.
+      </p>
+    </div>
+  </footer>
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/jquery.cookie.js"></script>
+  <script src="scripts/tree.jquery.js"></script>
+  <script src="scripts/prettify.js"></script>
+  <script src="scripts/jsdoc-toc.js"></script>
+  <script src="scripts/linenumber.js"></script>
+  <script src="scripts/scrollanchor.js"></script>
+</body>
+
+</html>

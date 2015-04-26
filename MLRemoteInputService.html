@@ -1,0 +1,342 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta name="generator" content="JSDoc 3.3.0-beta3">
+  <meta charset="utf-8">
+  <title>Class: MLRemoteInputService</title>
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
+  <link href="css/baseline.css" rel="stylesheet">
+</head>
+
+<body onload="prettyPrint()">
+  <nav id="jsdoc-navbar" role="navigation" class="jsdoc-navbar">
+    <div id="jsdoc-navbar-container">
+      <div id="jsdoc-navbar-content">
+        <a href="index.html" class="jsdoc-navbar-package-name">Home</a>
+      </div>
+    </div>
+  </nav>
+  <div id="jsdoc-body-container">
+    <div id="jsdoc-content">
+      <div id="jsdoc-content-container">
+        <div id="jsdoc-main" role="main">
+          <header class="page-header">
+            <h1><div class="symbol-detail-labels"><span class="label label-kind">class</span></div><small></small><span class="symbol-name">MLRemoteInputService</span></h1>
+            <p class="source-link">Source: <a href="ml-remote-input.service.js.html#source-line-10">ml-remote-input.<wbr>service.<wbr>js:10</a></p>
+            <div class="symbol-classdesc">
+              <p>angular service for working with <a href="ml-remote-input.html">ml-remote-input</a></p>
+            </div>
+            <dl class="dl-compact">
+            </dl>
+          </header>
+          <section id="summary">
+            <div class="summary-callout">
+              <h2 class="summary-callout-heading">Methods</h2>
+              <div class="summary-content">
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="MLRemoteInputService.html#getPath">getPath(searchCtrl)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="MLRemoteInputService.html#initCtrl">initCtrl($scope, model, mlSearch, search)</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="MLRemoteInputService.html#initInput">initInput($scope, mlSearch)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="MLRemoteInputService.html#setInput">setInput(input)</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="MLRemoteInputService.html#subscribe">subscribe(callback)</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section>
+            <h2 id="MLRemoteInputService">new&nbsp;<span class="symbol-name">MLRemoteInputService</span><span class="signature"><span class="signature-params">()</span></span></h2>
+            <dl class="dl-compact">
+            </dl>
+          </section>
+          <section>
+            <h2>Methods</h2>
+            <section>
+              <h3 id="getPath"><span class="symbol-name">getPath</span><span class="signature"><span class="signature-params">(searchCtrl)</span>&nbsp;&rarr; <span class="signature-returns"> string</span></span></h3>
+              <p>gets the path for a specified controller from the <code>$route</code> service</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>searchCtrl</p>
+                      </td>
+                      <td>
+                        <p>string</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>search controller name</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>string</code>&nbsp;search controller path</p>
+                </dd>
+              </dl>
+              <h3 id="initCtrl"><span class="symbol-name">initCtrl</span><span class="signature"><span class="signature-params">($scope, model, mlSearch, search)</span></span></h3>
+              <p>helper function for Search controller</p>
+              <ul>
+                <li>registers and de-registers a callback that
+                  <ul>
+                    <li>updates the qtext property of the model parameter</li>
+                    <li>invokes the searchCallback</li>
+                  </ul>
+                </li>
+                <li>sets the mlSearch instance property</li>
+                <li>initializes the qtext property of the model parameter (unless it's already set and the instance input property is not)</li>
+              </ul>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>$scope</p>
+                      </td>
+                      <td>
+                        <p>object</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>search controller scope</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>model</p>
+                      </td>
+                      <td>
+                        <p>object</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>search controller model</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>mlSearch</p>
+                      </td>
+                      <td>
+                        <p><a href="MLSearchContext.html">MLSearchContext</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>controller mlSearch instance</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>search</p>
+                      </td>
+                      <td>
+                        <p>function()</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>callback</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+              </dl>
+              <h3 id="initInput"><span class="symbol-name">initInput</span><span class="signature"><span class="signature-params">($scope, mlSearch)</span></span></h3>
+              <p>helper function for mlRemoteInput directive registers and de-registers a callback that</p>
+              <ul>
+                <li>updates the $scope parameter</li>
+                <li>updates the mlSearch parameter with the mlSearch instance property (if it exists)</li>
+              </ul>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>$scope</p>
+                      </td>
+                      <td>
+                        <p>object</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>search controller scope</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>mlSearch</p>
+                      </td>
+                      <td>
+                        <p><a href="MLSearchContext.html">MLSearchContext</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>controller mlSearch instance</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+              </dl>
+              <h3 id="setInput"><span class="symbol-name">setInput</span><span class="signature"><span class="signature-params">(input)</span></span></h3>
+              <p>sets the service.input instance property and invokes the registered callbacks</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>input</p>
+                      </td>
+                      <td>
+                        <p>string</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+              </dl>
+              <h3 id="subscribe"><span class="symbol-name">subscribe</span><span class="signature"><span class="signature-params">(callback)</span>&nbsp;&rarr; <span class="signature-returns"> function()</span></span></h3>
+              <p>registers a callback, returning a de-registration function</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>callback</p>
+                      </td>
+                      <td>
+                        <p>function()</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>a callback to be invoked when <code>this.input</code> is changed</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>function()</code>&nbsp;callback de-registration function</p>
+                </dd>
+              </dl>
+            </section>
+          </section>
+        </div>
+      </div>
+      <nav id="jsdoc-toc-nav" role="navigation"></nav>
+    </div>
+  </div>
+  <footer id="jsdoc-footer" class="jsdoc-footer">
+    <div id="jsdoc-footer-container">
+      <p>
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.0-beta3 on April 26, 2015.
+      </p>
+    </div>
+  </footer>
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/jquery.cookie.js"></script>
+  <script src="scripts/tree.jquery.js"></script>
+  <script src="scripts/prettify.js"></script>
+  <script src="scripts/jsdoc-toc.js"></script>
+  <script src="scripts/linenumber.js"></script>
+  <script src="scripts/scrollanchor.js"></script>
+</body>
+
+</html>
