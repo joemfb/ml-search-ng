@@ -2,6 +2,18 @@
 
   'use strict';
 
+  /**
+   * angular attribute directive; parses ISO duration (`xs:duration`) strings.
+   *
+   * Transcludes markup, and creates a new scope with the following properties:
+   *
+   * - `years`, `months`, `weeks`, `days`, `hours`, `minutes`, `seconds`
+   * - `toString`: a function that returns the original text serialization of the duration
+   *
+   * see {@link ml-metrics} for an example
+   *
+   * @namespace ml-duration
+   */
   angular.module('ml.search')
     .directive('mlDuration', mlDuration);
 

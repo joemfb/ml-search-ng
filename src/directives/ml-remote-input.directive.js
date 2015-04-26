@@ -2,6 +2,32 @@
 
   'use strict';
 
+  /**
+   * angular element directive; creates a search-input form, outside of the scope of a controller.
+   *
+   * Uses {@link MLRemoteInputService} to communicate with a controller. Wraps {@link ml-input}.
+   *
+   * attributes:
+   *
+   * - `searchCtrl`: the name of the controller to interface with. defaults to `'SearchCtrl'`
+   * - `template`: passed to `ml-input`
+   *
+   * Example:
+   *
+   * ```
+   * <ml-remote-input search-ctrl="MySearchCtrl" template="fa"></ml-remote-input>```
+   *
+   * In the controller:
+   *
+   * ```javascript
+   * remoteInput.initCtrl($scope, model, mlSearch, search);```
+   *
+   * Note: this function assumes `mlSearch` is an instance of {@link MLSearchContext}, `search` is a function, and `model` has a `qtext` property. If these assumptions don't hold, a more verbose approach is required:
+   *
+   * `// TODO: complex example`
+   *
+   * @namespace ml-remote-input
+   */
   angular.module('ml.search')
     .directive('mlRemoteInput', mlRemoteInput)
     .controller('MLRemoteInputController', MLRemoteInputController);

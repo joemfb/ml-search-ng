@@ -2,6 +2,38 @@
 
   'use strict';
 
+  /**
+   * angular element directive; displays search metrics.
+   *
+   * attributes:
+   *
+   * - `search`: a reference to the search results object from {@link MLSearchContext#search}
+   * - `showDuration`: optional boolean. defaults to `true`
+   *
+   * Transcludes markup, and creates a new scope with the following properties:
+   *
+   * - `total`: The total number of search results
+   * - `start`: The index of the first displayed search result
+   * - `pageLength`: The length of the search results page
+   * - `pageEnd`: the index of the last displayed search result
+   * - `metrics`: a reference to the `metrics` property of the search results object passed to the `search` attribute
+   *
+   * Example:
+   *
+   * ```
+   * <ml-metrics search="model.search"></ml-metrics>```
+   *
+   * Transclusion Example:
+   *
+   * ```
+   * <ml-metrics search="model.search">
+   *   Showing {{ pageLength }} results in
+   *   <span ml-duration="metrics['total-time']">{{ duration.seconds | number:2 }}</span>
+   *   seconds.
+   * </ml-metrics>```
+   *
+   * @namespace ml-metrics
+   */
   angular.module('ml.search')
     .directive('mlMetrics', mlMetrics);
 

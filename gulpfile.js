@@ -10,7 +10,10 @@ var gulp = require('gulp'),
     minifyHtml = require('gulp-minify-html'),
     path = require('path'),
     rename = require('gulp-rename'),
-    uglify = require('gulp-uglify');
+    uglify = require('gulp-uglify'),
+    rm = require('gulp-rm'),
+    ghpages = require('gulp-gh-pages'),
+    cp = require('child_process');
 
 gulp.task('jshint', function() {
   gulp.src([
@@ -69,6 +72,26 @@ gulp.task('autotest', function() {
     console.log('Karma has exited with ' + exitCode);
     process.exit(exitCode);
   });
+});
+
+gulp.task('docs', function() {
+  cp.exec('./node_modules/.bin/jsdoc -c jsdoc.conf.json', function(err) {
+    if (err) return console.log(err);
+
+    gulp.src([ './docs/generated/css/baseline.css', './docs/custom-styles.css' ])
+    .pipe(concat('baseline.css'))
+    .pipe(gulp.dest('./docs/generated/css'));
+  });
+});
+
+gulp.task('clean-docs', function() {
+  return gulp.src('./docs/generated/**/*', { read: false })
+  .pipe(rm({async: false}));
+});
+
+gulp.task('publish-docs', function() {
+  return gulp.src([ './docs/generated/**/*.*' ])
+  .pipe(ghpages());
 });
 
 gulp.task('default', ['jshint', 'scripts', 'templates']);
