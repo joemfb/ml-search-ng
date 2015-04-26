@@ -40,7 +40,7 @@
    * @class MLSearchContext
    * @classdesc class for maintaining and manipulating the state of a search context
    *
-   * @param {Object} options - provided object properties will override defaults
+   * @param {Object} options - provided object properties will override {@link MLSearchContext.defaults}
    *
    * @prop {MLQueryBuilder} qb - query builder service from `ml.common`
    * @prop {Object} results - search results
@@ -65,6 +65,8 @@
     this.searchTransform = null;
     this.qtext = null;
     this.start = 1;
+
+    // TODO: validate options
     this.options = _.merge( _.cloneDeep(this.defaults), options );
   }
 
@@ -82,18 +84,18 @@
      * @memberof MLSearchContext
      * @static
      *
-     * @prop {String} defaults.queryOptions - stored search options name ('all')
-     * @prop {Number} defaults.pageLength - results page length (10)
-     * @prop {String} defaults.snippet - results transform operator state-name ('compact')
-     * @prop {String} defaults.sort - sort operator state-name (null)
-     * @prop {String} defaults.facetMode - combine facets with an `and-query` or an `or-query` ('and')
-     * @prop {Boolean} defaults.includeProperties - include document properties in queries (false)
+     * @prop {String} defaults.queryOptions - stored search options name (`'all'`)
+     * @prop {Number} defaults.pageLength - results page length (`10`)
+     * @prop {String} defaults.snippet - results transform operator state-name (`'compact'`)
+     * @prop {String} defaults.sort - sort operator state-name (`null`)
+     * @prop {String} defaults.facetMode - combine facets with an `and-query` or an `or-query` (`'and'`)
+     * @prop {Boolean} defaults.includeProperties - include document properties in queries (`false`)
      * @prop {Object} defaults.params - URL params settings
-     * @prop {String} defaults.params.separator - constraint-name and value separator (':')
-     * @prop {String} defaults.params.qtext - qtext parameter name ('qtext')
-     * @prop {String} defaults.params.facets - facets parameter name ('f')
-     * @prop {String} defaults.params.sort - sort parameter name ('s')
-     * @prop {String} defaults.params.page - page parameter name ('p')
+     * @prop {String} defaults.params.separator - constraint-name and value separator (`':'`)
+     * @prop {String} defaults.params.qtext - qtext parameter name (`'qtext'`)
+     * @prop {String} defaults.params.facets - facets parameter name (`'f'`)
+     * @prop {String} defaults.params.sort - sort parameter name (`'s'`)
+     * @prop {String} defaults.params.page - page parameter name (`'p'`)
      */
     defaults: {
       queryOptions: 'all',
@@ -251,7 +253,7 @@
      * Adds a additional query
      * @method MLSearchContext#addAdditionalQuery
      *
-     * @param {Object} additional query
+     * @param {Object} query - additional query
      * @return {MLSearchContext} `this`
      */
     addAdditionalQuery: function addAdditionalQuery(query) {
@@ -284,7 +286,7 @@
      * Sets the search transform name
      * @method MLSearchContext#setTransform
      *
-     * @param {String} transform name
+     * @param {String} transform - transform name
      * @return {MLSearchContext} `this`
      */
     setTransform: function setTransform(transform) {
@@ -306,7 +308,7 @@
      * Sets the current search phrase
      * @method MLSearchContext#setText
      *
-     * @param {String} search phrase
+     * @param {String} text - search phrase
      * @return {MLSearchContext} `this`
      */
     setText: function setText(text) {
@@ -372,7 +374,7 @@
      * Sets the current page length
      * @method MLSearchContext#setPageLength
      *
-     * @param {Number} page length
+     * @param {Number} pageLength - page length
      * @return {MLSearchContext} `this`
      */
     setPageLength: function setPageLength(pageLength) {
@@ -394,7 +396,7 @@
      * Sets the current results transform operator state name
      * @method MLSearchContext#setSnippet
      *
-     * @param {String} operator state name
+     * @param {String} snippet - operator state name
      * @return {MLSearchContext} `this`
      */
     setSnippet: function setSnippet(snippet) {
@@ -427,7 +429,7 @@
      * Sets the current sort operator state name
      * @method MLSearchContext#setSort
      *
-     * @param {String} sort operator state name
+     * @param {String} sort - sort operator state name
      * @return {MLSearchContext} `this`
      */
     setSort: function setSort(sort) {
