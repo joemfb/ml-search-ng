@@ -571,6 +571,30 @@ describe('MLSearch', function () {
     expect(search.getParams().f[1]).toEqual('name:value2');
   });
 
+  it('should respect null URL params config', function() {
+    var search = factory.newContext();
+    search.setText('text').setPage(4);
+
+    expect(search.getParams().q).toEqual('text');
+    expect(search.getParams().p).toEqual(4);
+
+    search = factory.newContext({
+      params: { page: null }
+    });
+    search.setText('text').setPage(4);
+
+    expect(search.getParams().q).toEqual('text');
+    expect(search.getParams().p).toBeUndefined;
+
+    search = factory.newContext({
+      params: { qtext: null }
+    });
+    search.setText('text').setPage(4);
+
+    expect(search.getParams().q).toBeUndefined;
+    expect(search.getParams().p).toEqual(4);
+  });
+
   it('should populate from search parameters', function() {
     var search = factory.newContext({
       params: { separator: '*_*' }
