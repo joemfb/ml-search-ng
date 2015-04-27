@@ -5,14 +5,21 @@
   angular.module('ml.search')
     .service('MLRemoteInputService', MLRemoteInputService);
 
-  MLRemoteInputService.$inject = ['$route'];
+  MLRemoteInputService.$inject = ['$injector'];
 
   /**
    * @class MLRemoteInputService
    * @classdesc angular service for working with {@link ml-remote-input}
    */
-  function MLRemoteInputService($route) {
+  function MLRemoteInputService($injector) {
     var service = this;
+    var $route = null;
+
+    try {
+      $route = $injector.get('$route')
+    } catch (ex) {
+      console.log('ngRoute unavailable')
+    }
 
     service.input = '';
     service.mlSearch = null;
@@ -108,15 +115,19 @@
     };
 
     /**
-     * gets the path for a specified controller from the `$route` service
+     * gets the path for a specified controller from the `$route` service (if available)
      * @method MLRemoteInputService#getPath
      *
      * @param {string} searchCtrl - search controller name
      * @return {string} search controller path
      */
     service.getPath = function getPath(searchCtrl) {
-      var matches = _.where($route.routes, { controller: searchCtrl }),
-          route = { originalPath: '/' };
+      var route = { originalPath: '/' }
+          matches = null;
+
+      if ($route === null) return null;
+
+      matches = _.where($route.routes, { controller: searchCtrl });
 
       if ( matches.length === 0 ) {
         // TODO: get route from attr, or throw Error('can\t find Search controller') ?

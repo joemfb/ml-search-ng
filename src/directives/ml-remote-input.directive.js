@@ -54,16 +54,16 @@
            'suggest="suggest(val)"' + tpl + '></ml-input>';
   }
 
-  MLRemoteInputController.$inject = ['$scope', '$location', '$route', 'MLSearchFactory', 'MLRemoteInputService'];
+  MLRemoteInputController.$inject = ['$scope', '$location', 'MLSearchFactory', 'MLRemoteInputService'];
 
-  function MLRemoteInputController($scope, $location, $route, factory, remoteInput) {
+  function MLRemoteInputController($scope, $location, factory, remoteInput) {
     var mlSearch = factory.newContext(),
         searchPath;
 
     $scope.qtext = remoteInput.input;
     remoteInput.initInput($scope, mlSearch);
 
-    /**
+    /*
      * watch the `searchCtrl` property, and update search path
      * (allows for instrumentation by a parent controller)
      */
@@ -78,7 +78,7 @@
       }
     });
 
-    /**
+    /*
      * Search function for ml-input directive:
      * redirects to the search ctrl if necessary,
      * passes the input qtext to the remoteInput service
@@ -96,7 +96,7 @@
       remoteInput.setInput(qtext);
     };
 
-    /**
+    /*
      * suggest function for the ml-input directive
      * gets an MLSearchContext instance from the remoteInput service
      * (if possible)

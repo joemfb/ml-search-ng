@@ -16,6 +16,7 @@ module.exports = function(config) {
     files: [
       // Required libraries
       'bower_components/angular/angular.js',
+      'bower_components/angular-route/angular-route.js',
       'bower_components/lodash/dist/lodash.min.js',
 
       'bower_components/ml-common-ng/dist/ml-common-ng.js',
@@ -23,6 +24,7 @@ module.exports = function(config) {
       // App under test
       'src/ml-search.js',
       'src/ml-search.service.js',
+      'src/ml-remote-input.service.js',
 
       // Mocks
       'bower_components/angular-mocks/angular-mocks.js',
