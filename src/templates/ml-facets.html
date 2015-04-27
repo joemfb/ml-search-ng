@@ -2,7 +2,7 @@
   <div class="chiclets">
     <div ng-repeat="(index, facet) in facets | object2Array | filter:{selected: true}">
       <div class="btn btn-primary" ng-repeat="value in facet.facetValues | filter:{selected: true}">
-        <span title="{{ value.name }}">{{ facet.__key }}: {{ value.name | truncate:20 }}</span>
+        <span title="{{ value.name }}">{{ facet.__key }}: {{ value.name | truncate:truncateLength }}</span>
         <span class="glyphicon glyphicon-remove-circle icon-white" ng-click="toggle({facet: facet.__key, value: value.name})"></span>
       </div>
     </div>
@@ -11,7 +11,7 @@
     <h3>{{ facet.__key }}</h3>
     <div ng-repeat="value in facet.facetValues">
       <a ng-click="toggle({facet: facet.__key, value: value.name})" title="{{ value.name }}">
-        {{ value.name | truncate:20 }} ({{ value.count }})
+        {{ value.name | truncate:truncateLength }} ({{ value.count }})
       </a>
     </div>
     <div ng-if="!facet.displayingAll">
