@@ -96,6 +96,8 @@
      * @prop {String} defaults.params.facets - facets parameter name (`'f'`)
      * @prop {String} defaults.params.sort - sort parameter name (`'s'`)
      * @prop {String} defaults.params.page - page parameter name (`'p'`)
+     * @prop {String} defaults.params.prefix - optional string prefix for each parameter name (`null`)
+     * @prop {String} defaults.params.prefixSeparator - separator for prefix and parameter name. (`null`) <br>if `null`, `options.params.separator` is used as the prefix separator
      */
     defaults: {
       queryOptions: 'all',
@@ -109,7 +111,9 @@
         qtext: 'q',
         facets: 'f',
         sort: 's',
-        page: 'p'
+        page: 'p',
+        prefix: null,
+        prefixSeparator: null
         //TODO: queryOptions?
       }
     },
@@ -768,22 +772,30 @@
     getParams: function getParams() {
       var page = this.getPage(),
           facets = this.getFacetParams(),
-          params = {};
+          params = {},
+          prefix = '';
+
+      if ( this.options.params.prefix !== null ) {
+        prefix = this.options.params.prefix + (
+                   this.options.params.prefixSeparator ||
+                   this.options.params.separator
+                 );
+      }
 
       if ( facets.length && this.options.params.facets !== null ) {
-        params[ this.options.params.facets ] = facets;
+        params[ prefix + this.options.params.facets ] = facets;
       }
 
       if ( page > 1 && this.options.params.page !== null ) {
-        params[ this.options.params.page ] = page;
+        params[ prefix + this.options.params.page ] = page;
       }
 
       if ( this.qtext && this.options.params.qtext !== null ) {
-        params[ this.options.params.qtext ] = this.qtext;
+        params[ prefix + this.options.params.qtext ] = this.qtext;
       }
 
       if ( this.options.sort && this.options.params.sort !== null ) {
-        params[ this.options.params.sort ] = this.options.sort;
+        params[ prefix + this.options.params.sort ] = this.options.sort;
       }
 
       return params;
@@ -828,60 +840,91 @@
      */
     fromParams: function fromParams(params) {
       var self = this,
-          d = $q.defer(),
-          qtextP, facetsP, pageP, sortP;
+          d = $q.defer();
 
       params = params || $location.search();
 
-      qtextP = params[ this.options.params.qtext ] || null;
-      if ( this.options.params.qtext !== null ) {
-        self.setText(qtextP);
-      }
+      self.fromParam(self.options.params.qtext, params, self.setText, function() {
+        self.setText(null);
+      });
 
-      pageP = params[ this.options.params.page ];
-      if ( this.options.params.page !== null ) {
-        if ( pageP ) {
-          pageP = parseInt(pageP) || 1;
-          self.setPage( pageP );
-        } else {
+      self.fromParam(self.options.params.page, params,
+        function(val) {
+          val = parseInt(val) || 1;
+          self.setPage( val );
+        }, function() {
           self.setPage(1);
-        }
-      }
+        });
 
-      sortP = params[ this.options.params.sort ];
-      if ( sortP && this.options.params.sort !== null ) {
-        self.setSort( decodeParam(sortP) );
-      }
+      self.fromParam(self.options.params.sort, params, self.setSort);
 
-      facetsP = params[ this.options.params.facets ];
-      if ( this.options.params.facets !== null ) {
-        self.clearAllFacets();
+      self.fromParam(self.options.params.facets, params,
+        function(val) {
+          self.clearAllFacets();
 
-        if (facetsP) {
-          if (self.results.facets) {
-            self.fromFacetParam(facetsP);
+          if ( self.results.facets ) {
+            self.fromFacetParam(val);
             d.resolve();
           } else {
             self.getStoredOptions().then(function(options) {
-              self.fromFacetParam(facetsP, options);
+              self.fromFacetParam(val, options);
               d.resolve();
             });
           }
-        } else {
+        }, function() {
+          self.clearAllFacets();
           d.resolve();
-        }
-      }
+        });
 
       return d.promise;
     },
 
     /**
-     * Update the current active facets based on the provided URL query params object
-     * @method MLSearchContext#fromFacetParam
+     * Get the value for the given type of URL param, handling prefixes
+     * @method MLSearchContext#fromParam
+     * @private
      *
-     * @param {Object} params - a URL query params object
+     * @param {String} name - URL param name
+     * @param {Object} params - URL params
+     * @param {Function} callback - callback invoked with the value of the URL param
+     * @param {Function} defaultCallback - callback invoked if params are un-prefix'd, and no value is provided
+     * @param
+     */
+    fromParam: function fromParam(name, params, callback, defaultCallback) {
+      var value = null,
+          prefixedName = this.options.params.prefix + (
+                           this.options.params.prefixSeparator ||
+                           this.options.params.separator
+                         ) + name;
+
+      if ( name === null ) {
+        return;
+      }
+
+      if ( this.options.params.prefix && params[prefixedName] ) {
+        value = params[prefixedName];
+      } else if ( params[name] ) {
+        value = params[name];
+      } else if ( defaultCallback ) {
+        return defaultCallback.call(this);
+      }
+
+      if ( value !== null ) {
+        if ( _.isString(value) ) {
+          value = decodeParam(value);
+        }
+
+        callback.call( this, value );
+      }
+    },
+
+    /**
+     * Update the current active facets based on the provided facet URL query params
+     * @method MLSearchContext#fromFacetParam
+     * @private
+     *
+     * @param {Array|String} param - facet URL query params
      * @param {Object} storedOptions - a searchOptions object
-     * @return a {Promise} resolved once the params have been applied
      */
     fromFacetParam: function fromFacetParam(param, storedOptions) {
       var self = this,
@@ -891,18 +934,20 @@
         var tokens = value.split( self.options.params.separator ),
             facetName = tokens[0],
             facetValue = tokens[1],
-            type = null;
+            facetInfo = null;
 
-        if ( storedOptions ) {
-          type = getFacetConfig( storedOptions, facetName ).type;
-        } else if ( self.results.facets ) { // && self.results.facets[facetName]
-          type = self.results.facets[facetName].type;
-        } else {
+        facetInfo = !!storedOptions ?
+                    getFacetConfig( storedOptions, facetName ) :
+                    self.results.facets[facetName];
+
+        facetInfo = facetInfo || {};
+
+        if ( !facetInfo.type ) {
           console.error('don\'t have facets or options for \'' + facetName +
                         '\', falling back to un-typed range queries');
         }
 
-        self.selectFacet( facetName, facetValue, type );
+        self.selectFacet( facetName, facetValue, facetInfo.type );
       });
     },
 

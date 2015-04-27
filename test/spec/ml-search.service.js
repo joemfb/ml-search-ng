@@ -3,7 +3,7 @@
 describe('MLSearch', function () {
   'use strict';
 
-  var factory, $httpBackend, $q, $location;
+  var factory, $httpBackend, $q, $location, $rootScope;
 
   beforeEach(module('ml.search'));
 
@@ -11,6 +11,7 @@ describe('MLSearch', function () {
     $q = $injector.get('$q');
     $httpBackend = $injector.get('$httpBackend');
     $location = $injector.get('$location');
+    $rootScope = $injector.get('$rootScope');
 
     factory = $injector.get('MLSearchFactory', $q, $httpBackend);
   }));
@@ -447,13 +448,11 @@ describe('MLSearch', function () {
     expect(searchContext.getParams().f[0]).toEqual('cartoon:"bugs bunny"');
 
     searchContext.fromParams(searchContext.getParams());
+    $rootScope.$apply();
 
     expect(searchContext.getParams().f[0]).toEqual('cartoon:"bugs bunny"');
 
     expect(searchContext.activeFacets.cartoon.values[0]).toEqual('bugs bunny');
-    // clear selections
-    searchContext.clearAllFacets();
-
   });
 
   describe('#showMoreFacets', function(){
@@ -596,6 +595,12 @@ describe('MLSearch', function () {
   });
 
   it('should populate from search parameters', function() {
+    var options = {"options": { "constraint": [{"name":"my-facet", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"element1"}}},{"name":"my-facet2", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"element2"}}}]}};
+
+    $httpBackend
+      .expectGET('/v1/config/query/all?format=json')
+      .respond(options);
+
     var search = factory.newContext({
       params: { separator: '*_*' }
     });
@@ -608,10 +613,12 @@ describe('MLSearch', function () {
     });
 
     search.fromParams();
+    $httpBackend.flush();
 
     expect(search.getText()).toEqual('blah');
     expect(search.getSort()).toEqual('backwards');
     expect(search.getPage()).toEqual(3);
+    expect(search.getActiveFacets()['my-facet2'].values[0]).toEqual('facetvalue');
 
     var sort = _.chain(search.getQuery().query.queries)
       .filter(function(obj) {
@@ -638,14 +645,16 @@ describe('MLSearch', function () {
     });
 
     search.fromParams();
+    $rootScope.$apply();
 
     expect(search.getText()).toEqual('blah2');
     expect(search.getSort()).toEqual('backwards');
     expect(search.getPage()).toEqual(4);
-    //TODO: mock options
-    //expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
+    expect(search.getActiveFacets()['my-facet'].values[0]).toEqual('facetvalue');
+    expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
 
     search.clearAllFacets();
+    expect(search.getActiveFacets()['my-facet']).toBeUndefined;
 
     $location.search({
       q: 'blah2',
@@ -657,12 +666,211 @@ describe('MLSearch', function () {
     });
 
     search.fromParams();
+    $rootScope.$apply();
 
     expect(search.getText()).toEqual('blah2');
     expect(search.getSort()).toEqual('backwards');
     expect(search.getPage()).toEqual(4);
-    //TODO: mock options
-    // expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
+    expect(search.getActiveFacets()['my-facet'].values[0]).toEqual('facetvalue');
+    expect(search.getActiveFacets()['my-facet'].values[1]).toEqual('facetvalue2');
+    expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
+  });
+
+  it('should allow prefix\'d URL params', function() {
+    var search = factory.newContext({
+      params: { prefix: 'test' }
+    });
+
+    search
+    .setText('hi')
+    .setPage(3)
+    .selectFacet('color', 'blue');
+
+    expect(search.getText()).toEqual('hi');
+    expect(search.getPage()).toEqual(3);
+    expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+
+    expect(search.getParams()['test:q']).toEqual('hi');
+    expect(search.getParams()['test:p']).toEqual(3);
+    expect(search.getParams()['test:f'][0]).toEqual('color:blue');
+  });
+
+  it('should allow prefix\'d URL params with custom prefixSeparator', function() {
+    var search = factory.newContext({
+      params: {
+        prefix: 'test',
+        prefixSeparator: '|'
+      }
+    });
+
+    search
+    .setText('hi')
+    .setPage(3)
+    .selectFacet('color', 'blue');
+
+    expect(search.getText()).toEqual('hi');
+    expect(search.getPage()).toEqual(3);
+    expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+
+    expect(search.getParams()['test|q']).toEqual('hi');
+    expect(search.getParams()['test|p']).toEqual(3);
+    expect(search.getParams()['test|f'][0]).toEqual('color:blue');
+  });
+
+  it('should populate from facet URL params', function() {
+    var options = {"options": { "constraint": [{"name":"color", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"color"}}}]}};
+
+    $httpBackend
+      .expectGET('/v1/config/query/all?format=json')
+      .respond(options);
+
+    var search = factory.newContext();
+
+    $location.search({ q: 'hi', f: 'color:blue' });
+    search.fromParams();
+    $httpBackend.flush();
+
+    expect(search.getText()).toEqual('hi');
+    expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+
+    $location.search({ q: 'hi' });
+    search.fromParams();
+    $rootScope.$apply();
+
+    expect(search.getText()).toEqual('hi');
+    expect(search.getActiveFacets().color).toBeUndefined;
+  });
+
+  it('should ignore prefix-mismatch facet URL params', function() {
+    var options = {"options": { "constraint": [{"name":"color", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"color"}}}]}};
+
+    $httpBackend
+      .expectGET('/v1/config/query/all?format=json')
+      .respond(options);
+
+    var search = factory.newContext({
+      params: { prefix: 'test' }
+    });
+
+    $location.search({ 'test:q': 'hi', 'test:f': 'color:blue' });
+    search.fromParams();
+    $httpBackend.flush();
+
+    expect(search.getText()).toEqual('hi');
+    expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+
+    // prefixed w/ custom separator use case
+    $httpBackend
+      .expectGET('/v1/config/query/all?format=json')
+      .respond(options);
+    search = factory.newContext({
+      params: {
+        prefix: 'test',
+        prefixSeparator: '|'
+      }
+    });
+
+    $location.search({ 'test|q': 'hi', 'test|f': 'color:blue' });
+    search.fromParams();
+    $httpBackend.flush();
+
+    expect(search.getText()).toEqual('hi');
+    expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+
+    // prefix / unprefix'd
+    $httpBackend
+      .expectGET('/v1/config/query/all?format=json')
+      .respond(options);
+
+    search = factory.newContext({
+      params: {
+        prefix: 'test',
+        prefixSeparator: '|'
+      }
+    });
+
+    $location.search({ q: 'hi', 'test|f': 'color:blue' });
+    search.fromParams();
+    $httpBackend.flush();
+
+    expect(search.getText()).toBeNull;
+    expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+
+    // prefixed mis-match
+    search = factory.newContext({
+      params: {
+        prefix: 'mytest',
+        prefixSeparator: '|'
+      }
+    });
+
+    $location.search({ 'mytest|q': 'hi', 'test|f': 'color:blue' });
+    search.fromParams();
+    $rootScope.$apply();
+
+    expect(search.getText()).toEqual('hi');
+    expect(search.getActiveFacets().color).toBeUndefined;
+  });
+
+  it('should URL params for multiple. concurrent searchContexts', function() {
+    var all = {"options": { "constraint": [{"name":"color", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"color"}}}]}};
+    var some = {"options": { "constraint": [{"name":"color", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"color"}}}]}};
+    var others = {"options": { "constraint": [{"name":"color", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"color"}}}]}};
+
+    $httpBackend
+      .expectGET('/v1/config/query/all?format=json')
+      .respond(all);
+
+    $httpBackend
+      .expectGET('/v1/config/query/some?format=json')
+      .respond(some);
+
+    $httpBackend
+      .expectGET('/v1/config/query/others?format=json')
+      .respond(others);
+
+    var first = factory.newContext({
+      params: { prefix: 'a' }
+    });
+
+    var second = factory.newContext({
+      queryOptions: 'some',
+      params: { prefix: 's' }
+    });
+
+    var third = factory.newContext({
+      queryOptions: 'others',
+      params: { prefix: 'x' }
+    });
+
+    $location.search({ 'a:f': 'color:red', 's:f': 'color:blue', 'x:f': 'color:green'})
+
+    first.fromParams();
+    second.fromParams();
+    third.fromParams();
+
+    $httpBackend.flush();
+
+    expect(first.getActiveFacets().color.values[0]).toEqual('red');
+    expect(second.getActiveFacets().color.values[0]).toEqual('blue');
+    expect(third.getActiveFacets().color.values[0]).toEqual('green');
+
+    first.clearAllFacets();
+    second.clearAllFacets();
+    third.clearAllFacets();
+
+    first.selectFacet('color', 'red');
+    second.selectFacet('color', 'blue');
+    third.selectFacet('color', 'green');
+
+    var params = _.merge(first.getParams(), second.getParams(), third.getParams())
+
+    expect(params['a:f'][0]).toEqual('color:red');
+    expect(params['a:f'].length).toEqual(1);
+    expect(params['s:f'][0]).toEqual('color:blue');
+    expect(params['s:f'].length).toEqual(1);
+    expect(params['x:f'][0]).toEqual('color:green');
+    expect(params['x:f'].length).toEqual(1);
   });
 
   it('gets stored options', function() {
