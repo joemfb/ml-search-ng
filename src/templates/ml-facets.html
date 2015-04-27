@@ -11,8 +11,10 @@
     <h3>{{ facet.__key }}</h3>
     <div ng-repeat="value in facet.facetValues">
       <a ng-click="toggle({facet: facet.__key, value: value.name})" title="{{ value.name }}">
-        {{ value.name | truncate:truncateLength }} ({{ value.count }})
+        <span ng-if="value.name">{{ value.name | truncate:truncateLength }}</span>
+        <em ng-if="!value.name">blank</em>
       </a>
+      <span>({{ value.count }})</span>
     </div>
     <div ng-if="!facet.displayingAll">
       <a href ng-click="showMore({facet: facet, facetName: facet.__key})">see more ...</a>
