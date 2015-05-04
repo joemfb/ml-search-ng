@@ -28,7 +28,8 @@
       scope: {
         qtext: '=',
         search: '&',
-        suggest: '&'
+        suggest: '&',
+        save: '&'
       },
       templateUrl: template,
       link: link
@@ -52,7 +53,10 @@
     return url;
   }
 
-  function link($scope, element) {
+  function link($scope, element, attrs) {
+
+    $scope.saveEnabled = !!attrs.save;
+
     $scope.clear = function() {
       $scope.search({ qtext: '' });
     };

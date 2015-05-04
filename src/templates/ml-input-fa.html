@@ -3,7 +3,8 @@
     width: 100%;
   }
 
-  .ml-search .search-submit {
+  .ml-search .search-submit,
+  .ml-search .search-save {
     width: 40px !important;
   }
 
@@ -18,6 +19,10 @@
     cursor: hand;
   }
 
+  .ml-search .search-input-clear-with-save {
+    right: 75px;
+  }
+
   .ml-search .search-loading {
     right: -35px;
   }
@@ -26,7 +31,7 @@
   <div class="input-group">
     <input ng-model="qtext" type="text" class="form-control" placeholder="Search..." autocomplete="off"
         typeahead="suggestion for suggestion in suggest({ val: $viewValue })" typeahead-suggest-on-select="true" typeahead-loading="loadingSuggestions"/>
-    <span ng-show="qtext" ng-click="clear()" class="search-input-icon search-input-clear form-control-feedback">
+    <span ng-show="qtext" ng-click="clear()" class="search-input-icon search-input-clear form-control-feedback" ng-class="{'search-input-clear-with-save' : saveEnabled }">
       <i class="fa fa-times-circle"></i>
     </span>
     <span ng-show="loadingSuggestions" class="search-input-icon search-loading form-control-feedback">
@@ -34,6 +39,9 @@
     </span>
     <div ng-click="search({ qtext: qtext })" class="input-group-addon search-submit">
       <i class="fa fa-search"></i>
+    </div>
+    <div ng-if="saveEnabled" ng-click="save()" class="input-group-addon search-save">
+      <i class="fa fa-save"></i>
     </div>
   </div>
 </form>

@@ -45,6 +45,18 @@
 
   'use strict';
 
+  /**
+   * angular attribute directive; parses ISO duration (`xs:duration`) strings.
+   *
+   * Transcludes markup, and creates a new scope with the following properties:
+   *
+   * - `years`, `months`, `weeks`, `days`, `hours`, `minutes`, `seconds`
+   * - `toString`: a function that returns the original text serialization of the duration
+   *
+   * see {@link ml-metrics} for an example
+   *
+   * @namespace ml-duration
+   */
   angular.module('ml.search')
     .directive('mlDuration', mlDuration);
 
@@ -109,6 +121,22 @@
 
   'use strict';
 
+  /**
+   * angular element directive; displays facets.
+   *
+   * attributes:
+   *
+   * - `facets`: a reference to the `facets` property of the search results object from {@link MLSearchContext#search}
+   * - `toggle`: a reference to a function that will select or clear facets based on their state. Invoked with `facet` (name) and `value` parameters. This function should invoke `mlSearch.toggleFacet(facetName, value).search()`
+   * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used (chiclet-style facets). If `"inline"`, a bootstrap/font-awesome template will be used (inline facet selections)
+   *
+   * Example:
+   *
+   * ```
+   * <ml-facets facets="model.search.facets" toggle="toggleFacet(facet, value)"></ml-facets>```
+   *
+   * @namespace ml-facets
+   */
   angular.module('ml.search')
     .directive('mlFacets', mlFacets);
 
@@ -146,6 +174,23 @@
 
   'use strict';
 
+  /**
+   * angular element directive; a search-input form.
+   *
+   * attributes:
+   *
+   * - `qtext`: a reference to the model property containing the search phrase
+   * - `search`: a function reference. The function will be called with a parameter named `qtext`
+   * - `suggest`: a function reference. The function will be called with a parameter named `val`
+   * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used. If `"fa"`, a bootstrap/font-awesome template will be used. **Note: the `"fa"` template _requires_ bootstrap 3.2.0 or greater.**
+   *
+   * Example:
+   *
+   * ```
+   * <ml-input qtext="model.qtext" search="search(qtext)" suggest="suggest(val)"></ml-input>```
+   *
+   * @namespace ml-input
+   */
   angular.module('ml.search')
     .directive('mlInput', mlInput);
 
@@ -155,7 +200,8 @@
       scope: {
         qtext: '=',
         search: '&',
-        suggest: '&'
+        suggest: '&',
+        save: '&'
       },
       templateUrl: template,
       link: link
@@ -179,7 +225,10 @@
     return url;
   }
 
-  function link($scope, element) {
+  function link($scope, element, attrs) {
+
+    $scope.saveEnabled = !!attrs.save;
+
     $scope.clear = function() {
       $scope.search({ qtext: '' });
     };
@@ -191,6 +240,38 @@
 
   'use strict';
 
+  /**
+   * angular element directive; displays search metrics.
+   *
+   * attributes:
+   *
+   * - `search`: a reference to the search results object from {@link MLSearchContext#search}
+   * - `showDuration`: optional boolean. defaults to `true`
+   *
+   * Transcludes markup, and creates a new scope with the following properties:
+   *
+   * - `total`: The total number of search results
+   * - `start`: The index of the first displayed search result
+   * - `pageLength`: The length of the search results page
+   * - `pageEnd`: the index of the last displayed search result
+   * - `metrics`: a reference to the `metrics` property of the search results object passed to the `search` attribute
+   *
+   * Example:
+   *
+   * ```
+   * <ml-metrics search="model.search"></ml-metrics>```
+   *
+   * Transclusion Example:
+   *
+   * ```
+   * <ml-metrics search="model.search">
+   *   Showing {{ pageLength }} results in
+   *   <span ml-duration="metrics['total-time']">{{ duration.seconds | number:2 }}</span>
+   *   seconds.
+   * </ml-metrics>```
+   *
+   * @namespace ml-metrics
+   */
   angular.module('ml.search')
     .directive('mlMetrics', mlMetrics);
 
@@ -246,6 +327,32 @@
 
   'use strict';
 
+  /**
+   * angular element directive; creates a search-input form, outside of the scope of a controller.
+   *
+   * Uses {@link MLRemoteInputService} to communicate with a controller. Wraps {@link ml-input}.
+   *
+   * attributes:
+   *
+   * - `searchCtrl`: the name of the controller to interface with. defaults to `'SearchCtrl'`
+   * - `template`: passed to `ml-input`
+   *
+   * Example:
+   *
+   * ```
+   * <ml-remote-input search-ctrl="MySearchCtrl" template="fa"></ml-remote-input>```
+   *
+   * In the controller:
+   *
+   * ```javascript
+   * remoteInput.initCtrl($scope, model, mlSearch, search);```
+   *
+   * Note: this function assumes `mlSearch` is an instance of {@link MLSearchContext}, `search` is a function, and `model` has a `qtext` property. If these assumptions don't hold, a more verbose approach is required:
+   *
+   * `// TODO: complex example`
+   *
+   * @namespace ml-remote-input
+   */
   angular.module('ml.search')
     .directive('mlRemoteInput', mlRemoteInput)
     .controller('MLRemoteInputController', MLRemoteInputController);
@@ -256,7 +363,8 @@
       controller: 'MLRemoteInputController',
       scope: {
         searchCtrl: '@',
-        template: '@'
+        template: '@',
+        save: '&'
       },
       template: template
     };
@@ -264,12 +372,18 @@
 
   function template(element, attrs) {
     var tpl = '';
+    var save = '';
 
     if ( attrs.template ) {
       tpl = ' template="' + attrs.template + '"';
     }
+
+    if (attrs.save) {
+      save = ' save="save()"';
+    }
+
     return '<ml-input qtext="qtext" search="search(qtext)" ' +
-           'suggest="suggest(val)"' + tpl + '></ml-input>';
+           'suggest="suggest(val)"' + tpl + save + '></ml-input>';
   }
 
   MLRemoteInputController.$inject = ['$scope', '$location', '$route', 'MLSearchFactory', 'MLRemoteInputService'];
@@ -336,6 +450,24 @@
 
   'use strict';
 
+  /**
+   * angular element directive; displays search results.
+   *
+   * Binds a `link` property to each result object, based on the result of the function passed to the `link` attribute. If no function is passed a default function is provided. The resulting `link` property will have the form `/detail?uri={{ result.uri }}`
+   *
+   * attributes:
+   *
+   * - `search`: a reference to the search results object from {@link MLSearchContext#search}
+   * - `link`: optional. a function that accepts a `result` object, and returns a URL to be used as the link target in the search results display
+   * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used.
+   *
+   * Example:
+   *
+   * ```
+   * <ml-results results="model.search.results" link="linkTarget(result)"></ml-results>```
+   *
+   * @namespace ml-results
+   */
   angular.module('ml.search')
     .directive('mlResults', mlResults);
 
@@ -391,6 +523,10 @@
 
   MLRemoteInputService.$inject = ['$route'];
 
+  /**
+   * @class MLRemoteInputService
+   * @classdesc angular service for working with {@link ml-remote-input}
+   */
   function MLRemoteInputService($route) {
     var service = this;
 
@@ -404,11 +540,13 @@
 
     /**
      * sets the service.input instance property and invokes the registered callbacks
+     * @method MLRemoteInputService#setInput
      *
      * @param {string} input
      */
     service.setInput = function setInput(val) {
       service.input = val;
+      // TODO: Object.observe service.input?
       _.each(service.callbacks, function(callback) {
         callback(service.input);
       });
@@ -416,8 +554,9 @@
 
     /**
      * registers a callback, returning a de-registration function
+     * @method MLRemoteInputService#subscribe
      *
-     * @param {function} callback
+     * @param {function} callback - a callback to be invoked when `this.input` is changed
      * @return {function} callback de-registration function
      */
     service.subscribe = function subscribe(callback) {
@@ -434,9 +573,10 @@
      *   - updates the $scope parameter
      *   - updates the mlSearch parameter with the mlSearch instance property
      *     (if it exists)
+     * @method MLRemoteInputService#initInput
      *
-     * @param {object} $scope
-     * @param (object) mlSearch
+     * @param {object} $scope - search controller scope
+     * @param {MLSearchContext} mlSearch - controller mlSearch instance
      */
     service.initInput = function initInput($scope, mlSearch) {
       var unsubscribe = service.subscribe(function(input) {
@@ -456,10 +596,11 @@
      * - sets the mlSearch instance property
      * - initializes the qtext property of the model parameter
      *   (unless it's already set and the instance input property is not)
+     * @method MLRemoteInputService#initCtrl
      *
-     * @param {object} $scope
-     * @param {object} search ctrl model
-     * @param {MLSearchContext} ctrl mlSearch instance
+     * @param {object} $scope - search controller scope
+     * @param {object} model - search controller model
+     * @param {MLSearchContext} mlSearch - controller mlSearch instance
      * @param {function} search callback
      */
     service.initCtrl = function initCtrl($scope, model, mlSearch, searchCallback) {
@@ -483,10 +624,11 @@
     };
 
     /**
-     * gets the path for a specified controller from the $route service
+     * gets the path for a specified controller from the `$route` service
+     * @method MLRemoteInputService#getPath
      *
-     * @param {string} search ctrl name
-     * @return {string} search ctrl path
+     * @param {string} searchCtrl - search controller name
+     * @return {string} search controller path
      */
     service.getPath = function getPath(searchCtrl) {
       var matches = _.where($route.routes, { controller: searchCtrl }),
@@ -527,10 +669,8 @@
   MLSearchFactory.$inject = ['$q', '$location', 'MLRest', 'MLQueryBuilder'];
 
   /**
-   * Creates a new instance of MLSearchFactory
-   *
-   * @constructor
-   * @this {MLSearchFactory}
+   * @class MLSearchFactory
+   * @classdesc angular factory for creating instances of {@link MLSearchContext}
    */
   function MLSearchFactory($injectQ, $injectLocation, $injectMlRest, $injectQb) {
     $q = $injectQ;
@@ -539,6 +679,13 @@
     qb = $injectQb;
 
     return {
+      /**
+       * returns a new instance of {@link MLSearchContext}
+       * @method MLSearchFactory#newContext
+       *
+       * @param {Object} options
+       * @returns {MLSearchContext}
+       */
       newContext: function newContext(options) {
         return new MLSearchContext(options);
       }
@@ -546,44 +693,34 @@
   }
 
   /**
-   * Creates a new instance of MLSearchContext
+   * @class MLSearchContext
+   * @classdesc class for maintaining and manipulating the state of a search context
    *
-   * @constructor
-   * @this {MLSearchContext}
-   * @param {options} provided object properties will override defaults
+   * @param {Object} options - provided object properties will override defaults
+   *
+   * @prop {MLQueryBuilder} qb - query builder service from `ml.common`
+   * @prop {Object} results - search results
+   * @prop {Object} storedOptions - cache stored search options by name
+   * @prop {Object} activeFacets - active facet selections
+   * @prop {Object} namespaces - namespace prefix-to-URI mappings
+   * @prop {Object[]} boostQueries - boosting queries to be added to the current query
+   * @prop {Object[]} additionalQueries - additional queries to be added to the current query
+   * @prop {String} searchTransform - search results transformation name
+   * @prop {String} qtext - current search phrase
+   * @prop {Number} start - current pagination offset
+   * @prop {Object} options - configuration options
    */
   function MLSearchContext(options) {
-    // MLQueryBuilder} from ml.common
     this.qb = qb;
-
-    // cache search results from the last search call
     this.results = {};
-
-    // cache stored search options by name
     this.storedOptions = {};
-
-    // active facet selections
     this.activeFacets = {};
-
-    // namespace uri / prefix hash for results metadata transformation
     this.namespaces = {};
-
-    // boosting queries to be added to the current query
     this.boostQueries = [];
-
-    // additional queries to be added to the current query
     this.additionalQueries = [];
-
-    // search results transformation name
     this.searchTransform = null;
-
-    // current search phrase
     this.qtext = null;
-
-    // current pagination offset
     this.start = 1;
-
-    // configuration options
     this.options = _.merge( _.cloneDeep(this.defaults), options );
   }
 
@@ -594,31 +731,33 @@
     /************************************************************/
 
     /**
-     * default options
-     *
-     * pass an object (to MLSearchFactory.newContest)
+     * pass an object to `new MLSearchContext()` or {@link MLSearchFactory#newContext}
      * with any of these properties to override their values
+     *
+     * @type object
+     * @memberof MLSearchContext
+     * @static
+     *
+     * @prop {String} defaults.queryOptions - stored search options name ('all')
+     * @prop {Number} defaults.pageLength - results page length (10)
+     * @prop {String} defaults.snippet - results transform operator state-name ('compact')
+     * @prop {String} defaults.sort - sort operator state-name (null)
+     * @prop {String} defaults.facetMode - combine facets with an `and-query` or an `or-query` ('and')
+     * @prop {Boolean} defaults.includeProperties - include document properties in queries (false)
+     * @prop {Object} defaults.params - URL params settings
+     * @prop {String} defaults.params.separator - constraint-name and value separator (':')
+     * @prop {String} defaults.params.qtext - qtext parameter name ('qtext')
+     * @prop {String} defaults.params.facets - facets parameter name ('f')
+     * @prop {String} defaults.params.sort - sort parameter name ('s')
+     * @prop {String} defaults.params.page - page parameter name ('p')
      */
     defaults: {
-      // stored search options name
       queryOptions: 'all',
-
-      // page length
       pageLength: 10,
-
-      // results transform operator state name
       snippet: 'compact',
-
-      // sort operator state name
       sort: null,
-
-      // combine facets with an `and-query` or an `or-query`
       facetMode: 'and',
-
-      // include document properties in queries
       includeProperties: false,
-
-      // URL params settings
       params: {
         separator: ':',
         qtext: 'q',
@@ -635,8 +774,9 @@
 
     /**
      * Gets the hash of active facets
+     * @method MLSearchContext#getActiveFacets
      *
-     * @return {object} this.activeFacets
+     * @return {MLSearchContext} `this`.activeFacets
      */
     getActiveFacets: function getActiveFacets() {
       return this.activeFacets;
@@ -644,9 +784,10 @@
 
     /**
      * Get namspace prefix by URI
+     * @method MLSearchContext#getNamespacePrefix
      *
-     * @param {string} uri
-     * @return {string} prefix
+     * @param {String} uri
+     * @return {String} prefix
      */
     getNamespacePrefix: function getNamespacePrefix(uri) {
       return this.namespaces[ uri ];
@@ -654,9 +795,10 @@
 
     /**
      * Get namspace URI by prefix
+     * @method MLSearchContext#getNamespaceUri
      *
-     * @param {string} prefix
-     * @return {string} uri
+     * @param {String} prefix
+     * @return {String} uri
      */
     getNamespaceUri: function getNamespacePrefix(prefix) {
       return _.chain(this.namespaces)
@@ -670,9 +812,10 @@
     },
 
     /**
-     * Gets namespace objects
+     * Gets namespace prefix-to-URI mapping objects
+     * @method MLSearchContext#getNamespaces
      *
-     * @return {array} namespace objects
+     * @return {Object[]} namespace prefix-to-URI mapping objects
      */
     getNamespaces: function getNamespaces() {
       var namespaces = [];
@@ -684,9 +827,10 @@
 
     /**
      * Sets namespace objects
+     * @method MLSearchContext#setNamespaces
      *
-     * @param {array} namespace objects
-     * @return {this}
+     * @param {Object[]} namespace objects
+     * @return {MLSearchContext} `this`
      */
     setNamespaces: function setNamespaces(namespaces) {
       _.each(namespaces, this.addNamespace, this);
@@ -695,9 +839,10 @@
 
     /**
      * Adds a namespace object
+     * @method MLSearchContext#addNamespace
      *
-     * @param {object} namespace
-     * @return {this}
+     * @param {Object} namespace
+     * @return {MLSearchContext} `this`
      */
     addNamespace: function addNamespace(namespace) {
       this.namespaces[ namespace.uri ] = namespace.prefix;
@@ -706,8 +851,9 @@
 
     /**
      * Clears namespaces
+     * @method MLSearchContext#clearNamespaces
      *
-     * @return {this}
+     * @return {MLSearchContext} `this`
      */
     clearNamespaces: function clearNamespaces() {
       this.namespaces = {};
@@ -716,8 +862,9 @@
 
     /**
      * Gets the boost queries
+     * @method MLSearchContext#getBoostQueries
      *
-     * @return {object} this.activeFacets
+     * @return {MLSearchContext} `this`.activeFacets
      */
     getBoostQueries: function getBoostQueries() {
       return this.boostQueries;
@@ -725,9 +872,10 @@
 
     /**
      * Adds a boost query
+     * @method MLSearchContext#addBoostQuery
      *
-     * @param {object} boost query
-     * @return {Object} this
+     * @param {Object} boost query
+     * @return {MLSearchContext} `this`
      */
     addBoostQuery: function addBoostQuery(query) {
       this.boostQueries.push(query);
@@ -736,8 +884,9 @@
 
     /**
      * Clear the boost queries
+     * @method MLSearchContext#clearBoostQueries
      *
-     * @return {Object} this
+     * @return {MLSearchContext} `this`
      */
     clearBoostQueries: function clearBoostQueries() {
       this.boostQueries = [];
@@ -746,8 +895,9 @@
 
     /**
      * Gets the additional queries
+     * @method MLSearchContext#getAdditionalQueries
      *
-     * @return {object} this.additionalQueries
+     * @return {MLSearchContext} `this`.additionalQueries
      */
     getAdditionalQueries: function getAdditionalQueries() {
       return this.additionalQueries;
@@ -755,9 +905,10 @@
 
     /**
      * Adds a additional query
+     * @method MLSearchContext#addAdditionalQuery
      *
-     * @param {object} additional query
-     * @return {Object} this
+     * @param {Object} additional query
+     * @return {MLSearchContext} `this`
      */
     addAdditionalQuery: function addAdditionalQuery(query) {
       this.additionalQueries.push(query);
@@ -766,8 +917,9 @@
 
     /**
      * Clear the additional queries
+     * @method MLSearchContext#clearAdditionalQueries
      *
-     * @return {Object} this
+     * @return {MLSearchContext} `this`
      */
     clearAdditionalQueries: function clearAdditionalQueries() {
       this.additionalQueries = [];
@@ -776,8 +928,9 @@
 
     /**
      * Gets the search transform name
+     * @method MLSearchContext#getTransform
      *
-     * @return {string} transform name
+     * @return {String} transform name
      */
     getTransform: function getTransform(transform) {
       return this.searchTransform;
@@ -785,9 +938,10 @@
 
     /**
      * Sets the search transform name
+     * @method MLSearchContext#setTransform
      *
-     * @param {string} transform name
-     * @return {Object} this
+     * @param {String} transform name
+     * @return {MLSearchContext} `this`
      */
     setTransform: function setTransform(transform) {
       this.searchTransform = transform;
@@ -796,8 +950,9 @@
 
     /**
      * Gets the current search phrase
+     * @method MLSearchContext#getText
      *
-     * @return {string} search phrase
+     * @return {String} search phrase
      */
     getText: function getText() {
       return this.qtext;
@@ -805,9 +960,10 @@
 
     /**
      * Sets the current search phrase
+     * @method MLSearchContext#setText
      *
-     * @param {string} search phrase
-     * @return {object} this
+     * @param {String} search phrase
+     * @return {MLSearchContext} `this`
      */
     setText: function setText(text) {
       if (text !== '') {
@@ -820,8 +976,9 @@
 
     /**
      * Gets the current search page
+     * @method MLSearchContext#getPage
      *
-     * @return {number} search page
+     * @return {Number} search page
      */
     getPage: function getPage() {
       //TODO: $window.Math
@@ -830,10 +987,11 @@
     },
 
     /**
-     * Sets the current search page
+     * Sets the search results page
+     * @method MLSearchContext#setPage
      *
-     * @param {number} search page
-     * @return {object} this
+     * @param {Number} search - the desired search results page
+     * @return {MLSearchContext} `this`
      */
     setPage: function setPage(page) {
       this.start = 1 + (page - 1) * this.options.pageLength;
@@ -846,8 +1004,9 @@
 
     /**
      * Gets the current queryOptions (name of stored params)
+     * @method MLSearchContext#getQueryOptions
      *
-     * @return {string} queryOptions
+     * @return {String} queryOptions
      */
     getQueryOptions: function getQueryOptions() {
       return this.options.queryOptions;
@@ -857,8 +1016,9 @@
 
     /**
      * Gets the current page length
+     * @method MLSearchContext#getPageLength
      *
-     * @return {number} page length
+     * @return {Number} page length
      */
     getPageLength: function getPageLength() {
       return this.options.pageLength;
@@ -866,9 +1026,10 @@
 
     /**
      * Sets the current page length
+     * @method MLSearchContext#setPageLength
      *
-     * @param {number} page length
-     * @return {object} this
+     * @param {Number} page length
+     * @return {MLSearchContext} `this`
      */
     setPageLength: function setPageLength(pageLength) {
       this.options.pageLength = pageLength;
@@ -877,8 +1038,9 @@
 
     /**
      * Gets the current results transform operator state name
+     * @method MLSearchContext#getSnippet
      *
-     * @return {string} operator state name
+     * @return {String} operator state name
      */
     getSnippet: function getSnippet() {
       return this.options.snippet;
@@ -886,9 +1048,10 @@
 
     /**
      * Sets the current results transform operator state name
+     * @method MLSearchContext#setSnippet
      *
-     * @param {string} operator state name
-     * @return {object} this
+     * @param {String} operator state name
+     * @return {MLSearchContext} `this`
      */
     setSnippet: function setSnippet(snippet) {
       this.options.snippet = snippet;
@@ -897,8 +1060,9 @@
 
     /**
      * Resets the current results transform operator state name to its default value
+     * @method MLSearchContext#clearSnippet
      *
-     * @return {object} this
+     * @return {MLSearchContext} `this`
      */
     clearSnippet: function clearSnippet() {
       this.options.snippet = this.defaults.snippet;
@@ -907,8 +1071,9 @@
 
     /**
      * Gets the current sort operator state name
+     * @method MLSearchContext#getSort
      *
-     * @return {string} sort operator state name
+     * @return {String} sort operator state name
      */
     getSort: function getSort() {
       return this.options.sort;
@@ -916,9 +1081,10 @@
 
     /**
      * Sets the current sort operator state name
+     * @method MLSearchContext#setSort
      *
-     * @param {string} sort operator state name
-     * @return {object} this
+     * @param {String} sort operator state name
+     * @return {MLSearchContext} `this`
      */
     setSort: function setSort(sort) {
       this.options.sort = sort;
@@ -927,8 +1093,9 @@
 
     /**
      * Resets the current sort operator state name to its default value
+     * @method MLSearchContext#clearSort
      *
-     * @return {object} this
+     * @return {MLSearchContext} `this`
      */
     clearSort: function clearSort() {
       this.options.sort = this.defaults.sort;
@@ -937,28 +1104,33 @@
 
     /**
      * Gets the current facet mode name (and|or)
+     * @method MLSearchContext#getFacetMode
      *
-     * @return {string} facet mode
+     * @return {String} facet mode
      */
     getFacetMode: function getFacetMode() {
       return this.options.facetMode;
     },
 
     /**
-     * Sets the current facet mode name
+     * Sets the current facet mode name. The facet mode determines the query used to join facet selections:
+     * `and-query` or `or-query`.
+     * @method MLSearchContext#setFacetMode
      *
-     * @param {string} facet mode (and|or)
-     * @return {object} this
+     * @param {String} facetMode - 'and' or 'or'
+     * @return {MLSearchContext} `this`
      */
     setFacetMode: function setFacetMode(facetMode) {
+      //TODO: validate facetMode
       this.options.facetMode = facetMode;
       return this;
     },
 
     /**
      * Gets the current URL params config object
+     * @method MLSearchContext#getParamsConfig
      *
-     * @return {string} facet mode
+     * @return {String} facet mode
      */
     getParamsConfig: function getParamsConfig() {
       return this.options.params;
@@ -972,6 +1144,7 @@
 
     /**
      * Constructs a structured query from the current state
+     * @method MLSearchContext#getQuery
      *
      * @return a structured query object
      */
@@ -1017,7 +1190,10 @@
     },
 
     /**
+     * constructs a structured query from the current active facets
+     * @method MLSearchContext#getFacetQuery
      *
+     * @return a structured query object
      */
     getFacetQuery: function getFacetQuery() {
       var self = this,
@@ -1050,8 +1226,9 @@
 
     /**
      * Construct a combined query from the current state
+     * @method MLSearchContext#getCombinedQuery
      *
-     * @return a {Promise} resolved with the combined query
+     * @return {Promise} - a promise resolved with the combined query
      */
     getCombinedQuery: function getCombinedQuery() {
       var d = $q.defer(),
@@ -1074,10 +1251,11 @@
 
     /**
      * Check if the facet/value combination is already selected
+     * @method MLSearchContext#isFacetActive
      *
-     * @param {string} facet name
-     * @param {string} facet value
-     * return {boolean} isSelected
+     * @param {String} name - facet name
+     * @param {String} value - facet value
+     * @return {Boolean} isSelected
      */
     isFacetActive: function isFacetActive(name, value) {
       var active = this.activeFacets[name];
@@ -1086,11 +1264,12 @@
 
     /**
      * Add the facet/value/type combination to the activeFacets list
+     * @method MLSearchContext#selectFacet
      *
-     * @param {string} facet name
-     * @param {string} facet value
-     * @param {string} facet type
-     * return {object} this
+     * @param {String} name - facet name
+     * @param {String} value - facet value
+     * @param {String} type - facet type
+     * @return {MLSearchContext} `this`
      */
     selectFacet: function selectFacet(name, value, type) {
       if (/^"(.*)"$/.test(value)) {
@@ -1109,10 +1288,11 @@
 
     /**
      * Remove the facet/value combination from the activeFacets list
+     * @method MLSearchContext#clearFacet
      *
-     * @param {string} facet name
-     * @param {string} facet value
-     * return {object} this
+     * @param {String} name - facet name
+     * @param {String} value - facet value
+     * @return {MLSearchContext} `this`
      */
     clearFacet: function clearFacet(name, value) {
       var active = this.activeFacets[name];
@@ -1131,10 +1311,11 @@
     /**
      * If facet/value combination is active, remove it from the activeFacets list
      *   otherwise, find it's type, and add it.
+     * @method MLSearchContext#toggleFacet
      *
-     * @param {string} facet name
-     * @param {string} facet value
-     * return {object} this
+     * @param {String} name - facet name
+     * @param {String} value - facet value
+     * @return {MLSearchContext} `this`
      */
     toggleFacet: function toggleFacet(name, value) {
       var type;
@@ -1151,8 +1332,9 @@
 
     /**
      * Reset the activeFacets list
+     * @method MLSearchContext#clearAllFacets
      *
-     * return {object} this
+     * @return {MLSearchContext} `this`
      */
     clearAllFacets: function clearAllFacets() {
       this.activeFacets = {};
@@ -1165,8 +1347,9 @@
 
     /**
      * Construct a URL query params object from the current state
+     * @method MLSearchContext#getParams
      *
-     * @return a URL query params object
+     * @return {Object} params - a URL query params object
      */
     getParams: function getParams() {
       var page = this.getPage(),
@@ -1195,7 +1378,10 @@
     },
 
     /**
-     * @private
+     * Construct a URL query params object from the active facets
+     * @method MLSearchContext#getFacetParams
+     *
+     * @return {Object} params - a URL query params object
      */
     getFacetParams: function getFacetParams() {
       var self = this,
@@ -1223,8 +1409,9 @@
 
     /**
      * Update the current state based on the provided URL query params object
+     * @method MLSearchContext#fromParams
      *
-     * @param {params} a URL query params object
+     * @param {Object} params - a URL query params object
      * @return a {Promise} resolved once the params have been applied
      */
     fromParams: function fromParams(params) {
@@ -1271,7 +1458,12 @@
     },
 
     /**
-     * @private
+     * Update the current active facets based on the provided URL query params object
+     * @method MLSearchContext#fromFacetParam
+     *
+     * @param {Object} params - a URL query params object
+     * @param {Object} storedOptions - a searchOptions object
+     * @return a {Promise} resolved once the params have been applied
      */
     fromFacetParam: function fromFacetParam(param, storedOptions) {
       var self = this,
@@ -1299,12 +1491,13 @@
     /**
      * Examines the current state, and determines if a new search is needed.
      *   (intended to be triggered on {$locationChangeSuccess})
+     * @method MLSearchContext#locationChange
      *
-     * @param {newUrl} the target URL of a location change
-     * @param {oldUrl} the original URL of a location change
-     * @param {params} the search params of the target URL
+     * @param {String} newUrl - the target URL of a location change
+     * @param {String} oldUrl - the original URL of a location change
+     * @param {Object} params - the search params of the target URL
      *
-     * @return a {Promise} resolved after calling {this.fromParams} (if a new search is needed)
+     * @return {Promise} a promise resolved after calling {@link MLSearchContext#fromParams} (if a new search is needed)
      */
     locationChange: function locationChange(newUrl, oldUrl) {
       var d = $q.defer(),
@@ -1325,10 +1518,11 @@
     /************************************************************/
 
     /**
-     * Retrieves stored search options, caching the result in {this.storedOptions}
+     * Retrieves stored search options, caching the result in `this.storedOptions`
+     * @method MLSearchContext#getStoredOptions
      *
-     * @param {name} [this.options.queryOptions] the name of the options to retrieve
-     * @return a {Promise} resolved with the stored options
+     * @param {String} [name] - the name of the options to retrieve (defaults to `this.options.queryOptions`)
+     * @return {Promise} a promise resolved with the stored options
      */
     getStoredOptions: function getStoredOptions(name) {
       var self = this,
@@ -1353,11 +1547,11 @@
     },
 
     /**
-     * Retrieves stored search options, caching the result in {this.storedOptions}
+     * Retrieves stored search options, caching the result in `this.storedOptions`
+     * @method MLSearchContext#getAllStoredOptions
      *
-     * @param {names} the names of the options to retrieve
-    *
-     * @return a {Promise} resolved with {this.storedOptions}
+     * @param {String[]} names - the names of the options to retrieve
+     * @return {Promise} a promise resolved with `this.storedOptions`
      */
     getAllStoredOptions: function getAllStoredOptions(names) {
       var self = this,
@@ -1378,9 +1572,10 @@
 
     /**
      * Gets search phrase suggestions based on the current state
+     * @method MLSearchContext#suggest
      *
-     * @param {qtext} the partial-phrase to match
-     * @return {Promise} resolved with the search phrase suggestions
+     * @param {String} qtext - the partial-phrase to match
+     * @return {Promise} a promise resolved with search phrase suggestions
      */
     suggest: function suggest(qtext) {
       var d = $q.defer(),
@@ -1406,8 +1601,9 @@
 
     /**
      * Runs a search based on the current state
+     * @method MLSearchContext#search
      *
-     * @return a {Promise} resolved with the search results
+     * @return {Promise} a promise resolved with search results
      */
     search: function search() {
       var self = this,
@@ -1435,9 +1631,11 @@
     },
 
     /**
-     * Annotate the facets in the search results object with the selects from this.activeFacets
+     * Annotate the facets in the search results object with the selections from `this.activeFacets`
+     * @method MLSearchContext#annotateActiveFacets
      *
-     * @param {object} facets [this.results.facets]
+     * @param {Object} [facets] - the search facets object to annotate; if `result` is falsy,
+     * `this.annotateActiveFacets` is applied to `this.results.facets`
      */
     annotateActiveFacets: function annotateActiveFacets(facets) {
       var self = this;
@@ -1461,8 +1659,10 @@
 
     /**
      * Transform each search result's metadata object from an array of objects to an object
+     * @method MLSearchContext#transformMetadata
      *
-     * @param {object} results [this.results.results]
+     * @param {Object} [result] - the search result to transform; if `result` is falsy,
+     * `this.transformMetadata` is applied to each result in `this.results.results`
      */
     transformMetadata: function transformMetadata(result) {
       var self = this,
@@ -1505,16 +1705,20 @@
     },
 
     /**
+     * @method MLSearchContext#getStructuredQuery
      * @deprecated
-     * @see this.getQuery
+     *
+     * @see MLSearchContext#getQuery
      */
     getStructuredQuery: function getStructuredQuery() {
       return this.getQuery();
     },
 
     /**
+     * @method MLSearchContext#serializeStructuredQuery
      * @deprecated
-     * @see this.getParams
+     *
+     * @see MLSearchContext#getParams
      */
     serializeStructuredQuery: function serializeStructuredQuery() {
       return this.getParams();
