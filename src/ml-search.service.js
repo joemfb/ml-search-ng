@@ -685,6 +685,57 @@
       return this;
     },
 
+    /** 
+     *
+     * POST to /v1/values to return the next 5 facets. This function first
+     * calls `mlRest.queryConfig` to get the current constraints. Once the
+     * POST returns less than 5 facets, `facet.displayingAll` is set to true.
+     *
+     * @method * MLSearchContext#showMoreFacets
+     *
+     * @return {MLSearchContext} `this`
+     */
+    showMoreFacets: function showMoreFacets(facet, facetName) {
+      var _this = this;
+      mlRest.queryConfig(this.getQueryOptions(), 'constraint').then(function(resp) {
+        var options = resp.data.options.constraint;
+
+        var myOption = options.filter(function (option) {
+          return option.name === facetName;
+        })[0];
+        if (!myOption) {throw 'No constraint exists matching ' + facetName;}
+
+        var searchOptions = _this.getQuery();
+        searchOptions.options = {};
+        searchOptions.options.constraint = _.cloneDeep(options);
+        if (myOption.range && myOption.range['facet-option']) {
+          myOption['values-option'] = myOption.range['facet-option'];
+        }
+        searchOptions.options.values = myOption;
+
+        var searchConfig = { search: searchOptions };
+
+        var start = facet.facetValues.length + 1;
+        var limit = start + 5;
+
+        mlRest.values(facetName, {start: start, limit: limit}, searchConfig).then(function(resp) {
+          var newFacets = resp.data['values-response']['distinct-value'];
+          if (!newFacets || newFacets.length < (limit - start)) {
+            facet.displayingAll = true;
+          }
+
+          _.each(newFacets, function(newFacetValue) {
+            var newFacet = {};
+            newFacet.name = newFacetValue._value;
+            newFacet.value = newFacetValue._value;
+            newFacet.count = newFacetValue.frequency;
+            facet.facetValues.push(newFacet);
+          });
+        });
+      });
+      return this;
+    },
+
     /************************************************************/
     /************ MLSearchContext URL params methods ************/
     /************************************************************/

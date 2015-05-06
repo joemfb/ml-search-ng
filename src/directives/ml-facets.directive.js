@@ -9,12 +9,13 @@
    *
    * - `facets`: a reference to the `facets` property of the search results object from {@link MLSearchContext#search}
    * - `toggle`: a reference to a function that will select or clear facets based on their state. Invoked with `facet` (name) and `value` parameters. This function should invoke `mlSearch.toggleFacet(facetName, value).search()`
+   * - `showMore`: a reference to a function that will pull down the next five facets. This is invoked with the `facet` itself and the `facetName`. This function should by default invoke `mlSearch.showMoreFacets(facet, facetName)`
    * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used (chiclet-style facets). If `"inline"`, a bootstrap/font-awesome template will be used (inline facet selections)
    *
    * Example:
    *
    * ```
-   * <ml-facets facets="model.search.facets" toggle="toggleFacet(facet, value)"></ml-facets>```
+   * <ml-facets facets="model.search.facets" toggle="toggleFacet(facet, value)" show-more="showMoreFacets(facet, facetName)"></ml-facets>```
    *
    * @namespace ml-facets
    */
@@ -26,7 +27,8 @@
       restrict: 'E',
       scope: {
         facets: '=',
-        toggle: '&'
+        toggle: '&',
+        showMore: '&'
       },
       templateUrl: template
     };
