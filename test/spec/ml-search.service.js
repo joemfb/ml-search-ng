@@ -456,13 +456,71 @@ describe('MLSearch', function () {
 
   });
 
+  describe('#showMoreFacets', function(){
+    var searchContext, constraintConfig, myFacet, extraFacets;
+
+    beforeEach(function() {
+      searchContext = factory.newContext();
+      constraintConfig = {
+        options: {
+          constraint: [{
+            name: 'MyFacetName',
+            range: {}
+          }] } };
+      myFacet = {facetValues: []};
+      extraFacets = {
+        'values-response': {
+          name: 'MyFacetName',
+          type: 'xs:string',
+          'distinct-value': [ {frequency: 10, _value: 'First'} ]
+        } };
+    });
+
+    it('returns additional facets correctly', function() {
+      $httpBackend
+        .expectGET('/v1/config/query/all/constraint?format=json')
+        .respond(constraintConfig);
+      $httpBackend
+        .expectPOST('/v1/values/MyFacetName?limit=6&start=1')
+        .respond(extraFacets);
+
+      searchContext.showMoreFacets(myFacet, 'MyFacetName');
+      $httpBackend.flush();
+      expect(myFacet.facetValues).toContain(
+          {name: 'First', value: 'First', count: 10});
+    });
+
+    it('correctly uses saved queryOption', function() {
+      searchContext.options.queryOptions = 'queryOption';
+      $httpBackend
+        .expectGET('/v1/config/query/queryOption/constraint?format=json')
+        .respond(constraintConfig);
+
+      $httpBackend
+        .whenPOST('/v1/values/MyFacetName?limit=6&start=1')
+        .respond(extraFacets);
+      searchContext.showMoreFacets(myFacet, 'MyFacetName');
+      $httpBackend.flush();
+    });
+
+    it('errors when no matching constraints', function() {
+      var emptyConstraintConfig = { options: { constraint: [] } };
+      $httpBackend
+        .whenGET('/v1/config/query/all/constraint?format=json')
+        .respond(emptyConstraintConfig);
+      expect(function() {
+        searchContext.showMoreFacets(myFacet, 'MyFacetName');
+        $httpBackend.flush(); }).toThrow('No constraint exists matching MyFacetName');
+    });
+  });
+
   it('should set search parameters', function() {
     var search = factory.newContext();
 
     expect(search.setText('blah').getParams().q).toEqual('blah');
     expect(search.setSort('yesterday').getParams().s).toEqual('yesterday');
 
-    var search = factory.newContext({
+    search = factory.newContext({
       params: {
         qtext: 'qtext',
         sort: 'orderby'
