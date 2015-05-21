@@ -1,6 +1,6 @@
 {
   "name": "ml-search-ng",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "An angular module for common search-app use cases",
   "main": "/dist/ml-search-ng.min.js",
   "dependencies": {
