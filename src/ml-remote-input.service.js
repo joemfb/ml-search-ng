@@ -16,9 +16,9 @@
     var $route = null;
 
     try {
-      $route = $injector.get('$route')
+      $route = $injector.get('$route');
     } catch (ex) {
-      console.log('ngRoute unavailable')
+      console.log('ngRoute unavailable');
     }
 
     service.input = '';
@@ -122,7 +122,7 @@
      * @return {string} search controller path
      */
     service.getPath = function getPath(searchCtrl) {
-      var route = { originalPath: '/' }
+      var route = { originalPath: '/' },
           matches = null;
 
       if ($route === null) return null;
