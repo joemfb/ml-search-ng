@@ -9,5 +9,8 @@
   <button type="reset" class="btn btn-default" ng-show="qtext" ng-click="clear()">
     <span class="glyphicon glyphicon-remove"></span>
   </button>
+  <button type="button" class="btn btn-default" ng-if="saveEnabled" ng-click="save()">
+    <span class="glyphicon glyphicon-floppy-disk"></span>
+  </button>
   <span ng-show="loadingSuggestions" class="glyphicon glyphicon-refresh"></span>
 </form>

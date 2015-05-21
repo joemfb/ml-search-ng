@@ -38,7 +38,8 @@
       controller: 'MLRemoteInputController',
       scope: {
         searchCtrl: '@',
-        template: '@'
+        template: '@',
+        save: '&'
       },
       template: template
     };
@@ -46,12 +47,18 @@
 
   function template(element, attrs) {
     var tpl = '';
+    var save = '';
 
     if ( attrs.template ) {
       tpl = ' template="' + attrs.template + '"';
     }
+
+    if (attrs.save) {
+      save = ' save="save()"';
+    }
+
     return '<ml-input qtext="qtext" search="search(qtext)" ' +
-           'suggest="suggest(val)"' + tpl + '></ml-input>';
+           'suggest="suggest(val)"' + tpl + save + '></ml-input>';
   }
 
   MLRemoteInputController.$inject = ['$scope', '$location', '$route', 'MLSearchFactory', 'MLRemoteInputService'];
