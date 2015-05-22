@@ -4,8 +4,10 @@
     <div ng-repeat="value in facet.facetValues" ng-class="{ 'on': value.selected} ">
       <a ng-click="toggle({facet: facet.__key, value: value.name})" title="{{ value.name }}">
         <i ng-class="{ 'fa fa-trash-o': value.selected }"></i>
-        {{ value.name | truncate:20 }} ({{ value.count }})
+        <span ng-if="value.name">{{ value.name | truncate:truncateLength }}</span>
+        <em ng-if="!value.name">blank</em>
       </a>
+      <span>({{ value.count }})</span>
     </div>
     <div ng-if="!facet.displayingAll">
       <a href ng-click="showMore({facet: facet, facetName: facet.__key})">see more ...</a>
