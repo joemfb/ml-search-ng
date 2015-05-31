@@ -55,6 +55,7 @@
 
   function link($scope, element, attrs) {
     $scope.truncateLength = parseInt(attrs.truncate) || 20;
+    $scope.shouldShowMore = !!attrs.showMore;
   }
 
 }());
