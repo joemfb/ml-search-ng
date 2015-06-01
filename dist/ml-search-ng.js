@@ -20,22 +20,11 @@
   function truncate() {
     return function (text, length, end) {
       length = length || 10;
-      // if (isNaN(length)) {
-      //   length = 10;
-      // }
-
       end = end || '...';
-      // if (end === undefined) {
-      //   end = '...';
-      // }
 
-      if (text.length <= length || text.length - end.length <= length) {
-        return text;
-      }
-      else {
-        return String(text).substring(0, length - end.length) + end;
-      }
-
+      return (text.length > length) ?
+             String(text).substring(0, length - end.length) + end :
+             text;
     };
   }
 
@@ -130,6 +119,7 @@
    * - `toggle`: a reference to a function that will select or clear facets based on their state. Invoked with `facet` (name) and `value` parameters. This function should invoke `mlSearch.toggleFacet(facetName, value).search()`
    * - `showMore`: a reference to a function that will pull down the next five facets. This is invoked with the `facet` itself and the `facetName`. This function should by default invoke `mlSearch.showMoreFacets(facet, facetName)`
    * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used (chiclet-style facets). If `"inline"`, a bootstrap/font-awesome template will be used (inline facet selections)
+   * - `truncate`: optional. The length at which to truncate the facet display. Defaults to `20`.
    *
    * Example:
    *
@@ -149,7 +139,8 @@
         toggle: '&',
         showMore: '&'
       },
-      templateUrl: template
+      templateUrl: template,
+      link: link
     };
   }
 
@@ -168,6 +159,11 @@
     }
 
     return url;
+  }
+
+  function link($scope, element, attrs) {
+    $scope.truncateLength = parseInt(attrs.truncate) || 20;
+    $scope.shouldShowMore = !!attrs.showMore;
   }
 
 }());
@@ -1343,7 +1339,7 @@
       return this;
     },
 
-    /** 
+    /**
      *
      * POST to /v1/values to return the next 5 facets. This function first
      * calls `mlRest.queryConfig` to get the current constraints. Once the
@@ -1351,10 +1347,16 @@
      *
      * @method * MLSearchContext#showMoreFacets
      *
+     * @param {Object} facet - a facet object returned from {@link MLSearchContext#search}
+     * @param {String} name - facet name
+     * @param {String} [step] - the number of additional facet values to retrieve (defaults to `5`)
+     *
      * @return {MLSearchContext} `this`
      */
-    showMoreFacets: function showMoreFacets(facet, facetName) {
+    showMoreFacets: function showMoreFacets(facet, facetName, step) {
       var _this = this;
+      step = step || 5;
+
       mlRest.queryConfig(this.getQueryOptions(), 'constraint').then(function(resp) {
         var options = resp.data.options.constraint;
 
@@ -1374,7 +1376,7 @@
         var searchConfig = { search: searchOptions };
 
         var start = facet.facetValues.length + 1;
-        var limit = start + 5;
+        var limit = start + step;
 
         mlRest.values(facetName, {start: start, limit: limit}, searchConfig).then(function(resp) {
           var newFacets = resp.data['values-response']['distinct-value'];
