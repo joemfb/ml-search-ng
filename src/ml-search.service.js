@@ -685,7 +685,7 @@
       return this;
     },
 
-    /** 
+    /**
      *
      * POST to /v1/values to return the next 5 facets. This function first
      * calls `mlRest.queryConfig` to get the current constraints. Once the
@@ -693,10 +693,16 @@
      *
      * @method * MLSearchContext#showMoreFacets
      *
+     * @param {Object} facet - a facet object returned from {@link MLSearchContext#search}
+     * @param {String} name - facet name
+     * @param {String} [step] - the number of additional facet values to retrieve (defaults to `5`)
+     *
      * @return {MLSearchContext} `this`
      */
-    showMoreFacets: function showMoreFacets(facet, facetName) {
+    showMoreFacets: function showMoreFacets(facet, facetName, step) {
       var _this = this;
+      step = step || 5;
+
       mlRest.queryConfig(this.getQueryOptions(), 'constraint').then(function(resp) {
         var options = resp.data.options.constraint;
 
@@ -716,7 +722,7 @@
         var searchConfig = { search: searchOptions };
 
         var start = facet.facetValues.length + 1;
-        var limit = start + 5;
+        var limit = start + step;
 
         mlRest.values(facetName, {start: start, limit: limit}, searchConfig).then(function(resp) {
           var newFacets = resp.data['values-response']['distinct-value'];

@@ -490,6 +490,40 @@ describe('MLSearch', function () {
           {name: 'First', value: 'First', count: 10});
     });
 
+    it('returns `step` number of additional facets', function() {
+      var myFacetValues = _.map(_.range(10), function(idx) {
+        return { frequency: idx, _value: 'value-' + idx };
+      });
+
+      var myExtraFacets = _.clone(extraFacets);
+
+      myExtraFacets['values-response']['distinct-value'] = _.take(myFacetValues, 5);
+
+      $httpBackend
+        .expectGET('/v1/config/query/all/constraint?format=json')
+        .respond(constraintConfig);
+      $httpBackend
+        .expectPOST('/v1/values/MyFacetName?limit=6&start=1')
+        .respond(extraFacets);
+
+      searchContext.showMoreFacets(myFacet, 'MyFacetName');
+      $httpBackend.flush();
+      expect(myFacet.facetValues.length).toEqual(5);
+
+      myExtraFacets['values-response']['distinct-value'] = myFacetValues;
+
+      $httpBackend
+        .expectGET('/v1/config/query/all/constraint?format=json')
+        .respond(constraintConfig);
+      $httpBackend
+        .expectPOST('/v1/values/MyFacetName?limit=16&start=6')
+        .respond(myExtraFacets);
+
+      searchContext.showMoreFacets(myFacet, 'MyFacetName', 10);
+      $httpBackend.flush();
+      expect(myFacet.facetValues.length).toEqual(15);
+    });
+
     it('correctly uses saved queryOption', function() {
       searchContext.options.queryOptions = 'queryOption';
       $httpBackend
