@@ -756,24 +756,22 @@
      */
     getParams: function getParams() {
       var page = this.getPage(),
-          facets = [],
+          facets = this.getFacetParams(),
           params = {};
 
-      facets = this.getFacetParams();
-
-      if ( facets.length ) {
+      if ( facets.length && this.options.params.facets !== null ) {
         params[ this.options.params.facets ] = facets;
       }
 
-      if ( page > 1 ) {
+      if ( page > 1 && this.options.params.page !== null ) {
         params[ this.options.params.page ] = page;
       }
 
-      if ( this.qtext ) {
+      if ( this.qtext && this.options.params.qtext !== null ) {
         params[ this.options.params.qtext ] = this.qtext;
       }
 
-      if ( this.options.sort ) {
+      if ( this.options.sort && this.options.params.sort !== null ) {
         params[ this.options.params.sort ] = this.options.sort;
       }
 
@@ -814,7 +812,7 @@
      * Update the current state based on the provided URL query params object
      * @method MLSearchContext#fromParams
      *
-     * @param {Object} params - a URL query params object
+     * @param {Object} [params] - a URL query params object
      * @return a {Promise} resolved once the params have been applied
      */
     fromParams: function fromParams(params) {
@@ -823,38 +821,44 @@
           qtextP, facetsP, pageP, sortP;
 
       params = params || $location.search();
+
       qtextP = params[ this.options.params.qtext ] || null;
-      pageP = params[ this.options.params.page ];
-      sortP = params[ this.options.params.sort ];
-      facetsP = params[ this.options.params.facets ];
-
-      self.setText(qtextP);
-
-      if ( pageP ) {
-        pageP = parseInt(pageP) || 1;
-        self.setPage( pageP );
-      } else if ( this.options.params.page ) {
-        self.setPage(1);
+      if ( this.options.params.qtext !== null ) {
+        self.setText(qtextP);
       }
 
-      if (sortP) {
+      pageP = params[ this.options.params.page ];
+      if ( this.options.params.page !== null ) {
+        if ( pageP ) {
+          pageP = parseInt(pageP) || 1;
+          self.setPage( pageP );
+        } else {
+          self.setPage(1);
+        }
+      }
+
+      sortP = params[ this.options.params.sort ];
+      if ( sortP && this.options.params.sort !== null ) {
         self.setSort( decodeParam(sortP) );
       }
 
-      self.clearAllFacets();
+      facetsP = params[ this.options.params.facets ];
+      if ( this.options.params.facets !== null ) {
+        self.clearAllFacets();
 
-      if (facetsP) {
-        if (self.results.facets) {
-          self.fromFacetParam(facetsP);
-          d.resolve();
-        } else {
-          self.getStoredOptions().then(function(options) {
-            self.fromFacetParam(facetsP, options);
+        if (facetsP) {
+          if (self.results.facets) {
+            self.fromFacetParam(facetsP);
             d.resolve();
-          });
+          } else {
+            self.getStoredOptions().then(function(options) {
+              self.fromFacetParam(facetsP, options);
+              d.resolve();
+            });
+          }
+        } else {
+          d.resolve();
         }
-      } else {
-        d.resolve();
       }
 
       return d.promise;
@@ -880,7 +884,7 @@
 
         if ( storedOptions ) {
           type = getFacetConfig( storedOptions, facetName ).type;
-        } else if ( self.results.facets ) {
+        } else if ( self.results.facets ) { // && self.results.facets[facetName]
           type = self.results.facets[facetName].type;
         } else {
           console.error('don\'t have facets or options for \'' + facetName +
