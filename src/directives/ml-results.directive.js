@@ -53,7 +53,7 @@
     if (!attrs.link) {
       scope.link = function(result) {
         //weird object hierarchy because directive methods requiring objects (?)
-        return '/detail?uri=' + result.result.uri;
+        return '/detail?uri=' + encodeURIComponent( result.result.uri );
       };
     }
 
