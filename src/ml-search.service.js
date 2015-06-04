@@ -574,19 +574,30 @@
      * Construct a combined query from the current state
      * @method MLSearchContext#getCombinedQuery
      *
+     * @param {Boolean} [includeOptions] - get stored search options, and include them in the combined query
+     *
      * @return {Promise} - a promise resolved with the combined query
      */
-    getCombinedQuery: function getCombinedQuery() {
+    getCombinedQuery: function getCombinedQuery(includeOptions) {
       var d = $q.defer(),
-          combined = { query: this.getQuery() };
+          combined = {
+            search: { query: this.getQuery() }
+          };
 
-      this.getStoredOptions(this.options.queryConfig).then(function(options) {
-          combined.options = options;
+      if ( !includeOptions ) {
+        d.resolve(combined);
+        return d.promise;
+      }
+
+      this.getStoredOptions(this.options.queryConfig).then(
+        function(data) {
+          combined.search.options = data.options;
           d.resolve(combined);
         },
         function(reason) {
           d.reject(reason);
-        });
+        }
+      );
 
       return d.promise;
     },
@@ -986,22 +997,24 @@
      */
     suggest: function suggest(qtext) {
       var d = $q.defer(),
-          //TODO: figure out why getCombinedQuery errors
-          combined = {
-            search: { query: this.getQuery() }
-          },
           params = {
             'partial-q': qtext,
             format: 'json',
             options: this.options.queryOptions
           };
 
-      mlRest.suggest(params, combined).then(function(response) {
+      this.getCombinedQuery(false)
+      .then(function(combined) {
+        return mlRest.suggest(params, combined);
+      })
+      .then(
+        function(response) {
           d.resolve(response.data);
         },
         function(reason) {
           d.reject(reason);
-        });
+        }
+      );
 
       return d.promise;
     },
