@@ -1166,7 +1166,11 @@
   // this function get's called in a tight loop, so loading the options async won't work
   // (could end up requesting the options over and over ...)
   function getFacetConfig(storedOptions, name) {
-    var constraint = _.where( storedOptions.options.constraint, { name: name } )[0];
+    var constraint = _.chain( storedOptions.options.constraint )
+      .where({ name: name })
+      .first()
+      .clone()
+      .value()
 
     constraint.type = constraint.collection ? 'collection' :
                       constraint.custom ? 'custom' :
