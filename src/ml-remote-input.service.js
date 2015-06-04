@@ -125,7 +125,9 @@
       var route = { originalPath: '/' },
           matches = null;
 
-      if ($route === null) return null;
+      if ($route === null) {
+        return null;
+      }
 
       matches = _.where($route.routes, { controller: searchCtrl });
 

@@ -76,7 +76,9 @@ gulp.task('autotest', function() {
 
 gulp.task('docs', function() {
   cp.exec('./node_modules/.bin/jsdoc -c jsdoc.conf.json', function(err) {
-    if (err) return console.log(err);
+    if (err) {
+      return console.log(err);
+    }
 
     gulp.src([ './docs/generated/css/baseline.css', './docs/custom-styles.css' ])
     .pipe(concat('baseline.css'))
