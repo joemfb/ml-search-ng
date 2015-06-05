@@ -15,6 +15,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       // Required libraries
+      './node_modules/phantomjs-polyfill/bind-polyfill.js',
       'bower_components/angular/angular.js',
       'bower_components/angular-route/angular-route.js',
       'bower_components/lodash/dist/lodash.min.js',
@@ -25,6 +26,8 @@ module.exports = function(config) {
       'src/ml-search.js',
       'src/ml-search.service.js',
       'src/ml-remote-input.service.js',
+      'src/controllers/ml-search.controller.js',
+      'sample/*.js',
 
       // Mocks
       'bower_components/angular-mocks/angular-mocks.js',
