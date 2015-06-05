@@ -504,6 +504,10 @@
     },
 
     /**
+     * Gets the URL params prefix
+     * @method MLSearchContext#getParamsPrefix
+     *
+     * @return {String} the defined params prefix + separator
      */
     getParamsPrefix: function getParamsPrefix() {
       var prefix = '';
@@ -743,8 +747,8 @@
      * @method * MLSearchContext#showMoreFacets
      *
      * @param {Object} facet - a facet object returned from {@link MLSearchContext#search}
-     * @param {String} name - facet name
-     * @param {String} [step] - the number of additional facet values to retrieve (defaults to `5`)
+     * @param {String} facetName - facet name
+     * @param {Number} [step] - the number of additional facet values to retrieve (defaults to `5`)
      *
      * @return {MLSearchContext} `this`
      */
@@ -1247,7 +1251,7 @@
       .where({ name: name })
       .first()
       .clone()
-      .value()
+      .value();
 
     constraint.type = constraint.collection ? 'collection' :
                       constraint.custom ? 'custom' :
