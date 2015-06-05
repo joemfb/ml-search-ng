@@ -246,6 +246,13 @@ describe('MLSearch', function () {
     // TODO: test with options
   });
 
+  it('gets URL params keys', function() {
+    var mlSearch = factory.newContext();
+    var keys = ['q', 'f', 's', 'p'];
+
+    expect( _.difference( mlSearch.getParamsKeys(), keys ).length ).toEqual(0);
+  });
+
   it('rewrites search results metadata correctly', function() {
     $httpBackend
       .expectGET(/\/v1\/search\?format=json&options=all&pageLength=10&start=1&structuredQuery=.*/)
@@ -681,6 +688,8 @@ describe('MLSearch', function () {
       params: { prefix: 'test' }
     });
 
+    expect( search.getParamsPrefix() ).toEqual('test:');
+
     search
     .setText('hi')
     .setPage(3)
@@ -812,7 +821,7 @@ describe('MLSearch', function () {
     expect(search.getActiveFacets().color).toBeUndefined;
   });
 
-  it('should URL params for multiple. concurrent searchContexts', function() {
+  it('should handle URL params for multiple, concurrent searchContexts', function() {
     var all = {"options": { "constraint": [{"name":"color", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"color"}}}]}};
     var some = {"options": { "constraint": [{"name":"color", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"color"}}}]}};
     var others = {"options": { "constraint": [{"name":"color", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"color"}}}]}};

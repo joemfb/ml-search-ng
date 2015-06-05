@@ -480,10 +480,42 @@
      * Gets the current URL params config object
      * @method MLSearchContext#getParamsConfig
      *
-     * @return {String} facet mode
+     * @return {Object} params config
      */
     getParamsConfig: function getParamsConfig() {
       return this.options.params;
+    },
+
+    /**
+     * Gets the key of the enabled URL params
+     * @method MLSearchContext#getParamsKeys
+     *
+     * @return {Array<String>} URL params keys
+     */
+    getParamsKeys: function getParamsKeys() {
+      var prefix = this.getParamsPrefix();
+      return _.chain( this.options.params )
+        .omit(['separator', 'prefix', 'prefixSeparator'])
+        .map(function(value) {
+          return prefix + value;
+        })
+        .compact()
+        .value();
+    },
+
+    /**
+     */
+    getParamsPrefix: function getParamsPrefix() {
+      var prefix = '';
+
+      if ( this.options.params.prefix !== null ) {
+        prefix = this.options.params.prefix + (
+                   this.options.params.prefixSeparator ||
+                   this.options.params.separator
+                 );
+      }
+
+      return prefix;
     },
 
     //TODO: setParamsConfig ?
@@ -773,14 +805,7 @@
       var page = this.getPage(),
           facets = this.getFacetParams(),
           params = {},
-          prefix = '';
-
-      if ( this.options.params.prefix !== null ) {
-        prefix = this.options.params.prefix + (
-                   this.options.params.prefixSeparator ||
-                   this.options.params.separator
-                 );
-      }
+          prefix = this.getParamsPrefix();
 
       if ( facets.length && this.options.params.facets !== null ) {
         params[ prefix + this.options.params.facets ] = facets;
@@ -831,6 +856,13 @@
       return facets;
     },
 
+    getCurrentParams: function getCurrentParams(params) {
+      return _.pick(
+        params || $location.search(),
+        this.getParamsKeys()
+      );
+    },
+
     /**
      * Update the current state based on the provided URL query params object
      * @method MLSearchContext#fromParams
@@ -842,7 +874,7 @@
       var self = this,
           d = $q.defer();
 
-      params = params || $location.search();
+      params = self.getCurrentParams( params );
 
       self.fromParam(self.options.params.qtext, params, self.setText, function() {
         self.setText(null);
@@ -892,10 +924,7 @@
      */
     fromParam: function fromParam(name, params, callback, defaultCallback) {
       var value = null,
-          prefixedName = this.options.params.prefix + (
-                           this.options.params.prefixSeparator ||
-                           this.options.params.separator
-                         ) + name;
+          prefixedName = this.getParamsPrefix() + name;
 
       if ( name === null ) {
         return;
@@ -962,13 +991,16 @@
      *
      * @return {Promise} a promise resolved after calling {@link MLSearchContext#fromParams} (if a new search is needed)
      */
-    locationChange: function locationChange(newUrl, oldUrl) {
-      var d = $q.defer(),
-          samePage = pathsEqual(newUrl, oldUrl),
-          sameQuery = _.isEqual( this.getParams(), $location.search() );
+    locationChange: function locationChange(newUrl, oldUrl, params) {
+      params = this.getCurrentParams( params );
 
-      if ( samePage && !sameQuery ) {
-        this.fromParams().then(d.resolve);
+      var d = $q.defer();
+      // still on the search page, but there's a new query
+      var shouldUpdate = pathsEqual(newUrl, oldUrl) &&
+                         !_.isEqual( this.getParams(), params );
+
+      if ( shouldUpdate ) {
+        this.fromParams().then( d.resolve );
       } else {
         d.reject();
       }
