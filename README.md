@@ -22,6 +22,10 @@ depends on [https://github.com/joemfb/ml-common-ng](https://github.com/joemfb/ml
 - `ml-remote-input`: remote wrapper for `ml-input`
 - `ml-results`: display search results / snippets / highlights
 
+#### controllers
+
+- `MLSearchController`: prototypically inherit to setup default search behavior
+
 See [https://joemfb.github.io/ml-search-ng/](https://joemfb.github.io/ml-search-ng/) for API docs and directive examples.
 
 See [https://github.com/marklogic/slush-marklogic-node](https://github.com/marklogic/slush-marklogic-node) for a quick way to get started with an angular search application on top of the MarkLogic REST API.
