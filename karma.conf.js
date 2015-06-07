@@ -16,17 +16,21 @@ module.exports = function(config) {
     files: [
       // Required libraries
       './node_modules/phantomjs-polyfill/bind-polyfill.js',
+      './node_modules/jquery/dist/jquery.min.js',
+
       'bower_components/angular/angular.js',
       'bower_components/angular-route/angular-route.js',
       'bower_components/lodash/dist/lodash.min.js',
-
       'bower_components/ml-common-ng/dist/ml-common-ng.js',
+
+      'dist/ml-search-ng-tpls.min.js',
 
       // App under test
       'src/ml-search.js',
       'src/ml-search.service.js',
       'src/ml-remote-input.service.js',
       'src/controllers/ml-search.controller.js',
+      'src/directives/*.js',
       'sample/*.js',
 
       // Mocks
