@@ -15,10 +15,12 @@
     var service = this;
     var $route = null;
 
+    this.routeAvailable = true;
+
     try {
       $route = $injector.get('$route');
     } catch (ex) {
-      console.log('ngRoute unavailable');
+      this.routeAvailable = false;
     }
 
     service.input = '';
@@ -133,7 +135,7 @@
 
       if ( matches.length === 0 ) {
         // TODO: get route from attr, or throw Error('can\t find Search controller') ?
-        console.error('can\t find Search controller: ' + searchCtrl);
+        console.error('can\'t find Search controller: ' + searchCtrl);
       }
       else {
         route = matches[0];
