@@ -34,6 +34,7 @@ describe('ml-duration', function () {
         '<span class="hours">{{ duration.hours }}</span>' +
         '<span class="minutes">{{ duration.minutes }}</span>' +
         '<span class="seconds">{{ duration.seconds }}</span>' +
+        '<span class="original">{{ duration.toString() }}</span>' +
       '</span>'
     );
 
@@ -41,13 +42,27 @@ describe('ml-duration', function () {
     $scope.$digest();
   }));
 
-  it('should contain template', function() {
+  it('should contain template, and handle updates', function() {
     expect( elem.find('.years').text() ).toEqual(parsedDuration.years);
     expect( elem.find('.months').text() ).toEqual(parsedDuration.months);
     expect( elem.find('.days').text() ).toEqual(parsedDuration.days);
     expect( elem.find('.hours').text() ).toEqual(parsedDuration.hours);
     expect( elem.find('.minutes').text() ).toEqual(parsedDuration.minutes);
     expect( elem.find('.seconds').text() ).toEqual(parsedDuration.seconds);
+    expect( elem.find('.original').text() ).toEqual(duration);
+
+    var newDuration = 'PT1H1M1S';
+
+    $scope.duration = newDuration;
+    $scope.$apply();
+
+    expect( elem.find('.years').text() ).toEqual('');
+    expect( elem.find('.months').text() ).toEqual('');
+    expect( elem.find('.days').text() ).toEqual('');
+    expect( elem.find('.hours').text() ).toEqual('1');
+    expect( elem.find('.minutes').text() ).toEqual('1');
+    expect( elem.find('.seconds').text() ).toEqual('1');
+    expect( elem.find('.original').text() ).toEqual(newDuration);
   });
 
 });

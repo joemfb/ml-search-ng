@@ -51,6 +51,33 @@ describe('ml-metrics', function () {
 
 });
 
+describe('ml-metrics#default-show-duration', function () {
+
+  beforeEach(module('ml.search'));
+  beforeEach(module('ml.search.tpls'));
+
+  beforeEach(inject(function ($injector) {
+    $rootScope = $injector.get('$rootScope');
+    $compile = $injector.get('$compile');
+
+    $scope = $rootScope.$new();
+    $scope.response = response;
+    $scope.showDuration = true;
+
+    elem = angular.element('<ml-metrics search="response"></ml-metrics>');
+
+    $compile(elem)($scope);
+    $scope.$digest();
+  }));
+
+  it('should show duration by deafult', function() {
+    //TODO: add classes to test more clearly
+    expect(elem.find('> span.ng-hide').length).toEqual(1);
+    expect(elem.find('> span.ng-isolate-scope.ng-hide').length).toEqual(0);
+  });
+
+});
+
 describe('ml-metrics#transclude', function () {
   beforeEach(module('ml.search'));
   beforeEach(module('ml.search.tpls'));
