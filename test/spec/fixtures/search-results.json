@@ -1,0 +1,26 @@
+{
+  "snippet-format": "snippet",
+  "total": 13,
+  "start": 1,
+  "page-length": 1,
+  "results":[
+    {
+      "index": 1,
+      "uri": "/demos/17380453717445161293.json",
+      "path": "fn:doc(\"/demos/17380453717445161293.json\")",
+      "score": 0,
+      "confidence": 0,
+      "fitness": 0,
+      "href": "/v1/documents?uri=%2Fdemos%2F17380453717445161293.json",
+      "mimetype": "application/json",
+      "format": "json",
+      "matches": [{"path":"fn:doc(\"/demos/17380453717445161293.json\")/jbasic:json","match-text":["Semantic News Search This use case aims to demonstrate a combination of MarkLogic\"s built-in full-text XQuery XML content search and SPARQL..."]}],
+      "metadata": [
+        {"name":"Semantic News Search","metadata-type":"element"},
+        {"series":"value1","metadata-type":"element"},
+        {"series":"value2","metadata-type":"element"}
+      ]
+    }
+  ],
+  "query": {"and-query":[]}
+}

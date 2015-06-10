@@ -19,6 +19,7 @@
     "jsdoc-baseline": "hegemonic/baseline#a5ba36bbce",
     "karma-coverage": "^0.2.6",
     "karma-jasmine": "^0.1.5",
+    "karma-ng-json2js-preprocessor": "^1.0.0",
     "karma-phantomjs-launcher": "^0.1.4",
     "phantomjs": "^1.9.7-4",
     "phantomjs-polyfill": "0.0.1"

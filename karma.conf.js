@@ -40,12 +40,21 @@ module.exports = function(config) {
       // 'ui/test/**/*.js'
       'test/helpers.js',
       'test/spec/**/*.js',
+
+      // JSON fixtures
+      'test/spec/fixtures/**/*.json'
     ],
 
-   reporters: ['progress', 'coverage'],
+    reporters: ['progress', 'coverage'],
 
-   preprocessors: {
-      'src/**/*.js': ['coverage']
+    preprocessors: {
+      'src/**/*.js': ['coverage'],
+      'test/**/*.json': ['ng-json2js']
+    },
+
+    ngJson2JsPreprocessor: {
+      stripPrefix: 'test/spec/fixtures/',
+      // prependPrefix: 'served/'
     },
 
     coverageReporter: {

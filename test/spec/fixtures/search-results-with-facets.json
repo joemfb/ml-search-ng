@@ -1,0 +1,54 @@
+{
+  "snippet-format": "snippet",
+  "total": 1,
+  "start": 1,
+  "page-length": 10,
+  "results": [
+    {
+      "index": 1,
+      "uri": "/object/master/cffb60cb-ddc1-4608-bab0-dd233907b60c.xml",
+      "path": "fn:doc(\"/object/master/cffb60cb-ddc1-4608-bab0-dd233907b60c.xml\")",
+      "score": 0,
+      "confidence": 0,
+      "fitness": 0,
+      "href": "/v1/documents?uri=%2Fobject%2Fmaster%2Fcffb60cb-ddc1-4608-bab0-dd233907b60c.xml",
+      "mimetype": "text/xml",
+      "format": "xml",
+      "matches": [
+      {
+        "path": "fn:doc(\"/object/master/cffb60cb-ddc1-4608-bab0-dd233907b60c.xml\")/*:object",
+        "match-text": [
+          "cffb60cb-ddc1-4608-bab0-dd233907b60c cffb60cb-ddc1-4608-bab0-dd233907b60c http://purl.org/dc/elements/1.1/title Joe Hunter Joe Hunter Ruby JavaScript Java JavaScript Java Bachelor\"s M Payroll..."
+        ]
+      }],
+      "metadata": {}
+    }
+  ],
+  "facets": {
+    "my-facet": {
+      "type": "xs:string",
+      "facetValues": [
+        {
+          "name": "test",
+          "count": 1,
+          "value": "test"
+        },
+        {
+          "name": "test2",
+          "count": 2,
+          "value": "test2"
+        }
+      ]
+    }
+  },
+  "qtext": "",
+  "metrics": {
+    "query-resolution-time": "PT0.002562S",
+    "facet-resolution-time": "PT0.000069S",
+    "snippet-resolution-time": "PT0.003802S",
+    "total-time": "PT0.007772S"
+  },
+  "page": 1,
+  "totalPages": 1,
+  "end": 1
+}

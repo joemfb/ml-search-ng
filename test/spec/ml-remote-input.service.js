@@ -1,176 +1,174 @@
 /* global describe, beforeEach, module, it, expect, inject */
 
-'use strict';
-
-var remoteInput, searchFactory, $q, $httpBackend, $rootScope;
-
 describe('MLRemoteInput', function () {
+  'use strict';
+
+  var remoteInput, searchFactory, $q, $httpBackend, $rootScope;
 
   beforeEach(module('ml.search'));
 
-  beforeEach(inject(function ($injector) {
-    remoteInput = $injector.get('MLRemoteInputService');
-  }));
+  describe('#defaults', function () {
 
-  it('should be injectable without ngRoute', function() {
-    expect(remoteInput).toBeDefined;
-    expect(remoteInput.routeAvailable).toEqual(false);
-  });
+    beforeEach(inject(function ($injector) {
+      remoteInput = $injector.get('MLRemoteInputService');
+    }));
 
-  it('should invoke callbacks', function() {
-    var counter = 0,
-        latest = null,
-        unsubscribe = null;
-
-    unsubscribe = remoteInput.subscribe(function(input) {
-      latest = input;
-      counter++;
+    it('should be injectable without ngRoute', function() {
+      expect(remoteInput).toBeDefined;
+      expect(remoteInput.routeAvailable).toEqual(false);
     });
 
-    remoteInput.setInput('a');
-    expect(counter).toEqual(1);
-    expect(latest).toEqual('a');
+    it('should invoke callbacks', function() {
+      var counter = 0,
+          latest = null,
+          unsubscribe = null;
 
-    remoteInput.setInput('b');
-    expect(counter).toEqual(2);
-    expect(latest).toEqual('b');
+      unsubscribe = remoteInput.subscribe(function(input) {
+        latest = input;
+        counter++;
+      });
 
-    unsubscribe();
+      remoteInput.setInput('a');
+      expect(counter).toEqual(1);
+      expect(latest).toEqual('a');
 
-    remoteInput.setInput('c');
-    expect(counter).toEqual(2);
-    expect(latest).toEqual('b');
-  });
+      remoteInput.setInput('b');
+      expect(counter).toEqual(2);
+      expect(latest).toEqual('b');
 
-  it('should fail to get path', function() {
-    // TODO: fix this to make more sense
-    expect( remoteInput.getPath('SearchCtrl') ).toBeNull;
-  });
+      unsubscribe();
 
-});
-
-describe('MLRemoteInput#with-empty-ngRoute', function () {
-
-  beforeEach(module('ml.search'));
-  beforeEach(module('ngRoute'));
-
-  beforeEach(inject(function ($injector) {
-    remoteInput = $injector.get('MLRemoteInputService');
-  }));
-
-  it('should be injectable with ngRoute', function() {
-    expect(remoteInput).toBeDefined;
-    expect(remoteInput.routeAvailable).toEqual(true);
-  });
-
-  it('should get path', function() {
-    // TODO: fix this to make more sense
-    expect( remoteInput.getPath('SearchCtrl') ).toEqual('/');
-  });
-
-});
-
-describe('MLRemoteInput#with-configured-ngRoute', function () {
-
-  beforeEach(module('ml.search'));
-  beforeEach(module('ngRoute'));
-
-  beforeEach(module(function($provide) {
-    $provide.value('$route', { routes: {
-      '/': {
-        templateUrl: '/views/home/home.html',
-        controller: 'HomeCtrl',
-        controllerAs: 'ctrl',
-        originalPath: '/'
-      },
-      '/search': {
-        templateUrl: '/views/search/search.html',
-        controller: 'SearchCtrl',
-        controllerAs: 'ctrl',
-        originalPath: '/search'
-      }
-    }});
-  }));
-
-  beforeEach(inject(function ($injector) {
-    remoteInput = $injector.get('MLRemoteInputService');
-  }));
-
-  it('should get path', function() {
-    expect( remoteInput.getPath('SearchCtrl') ).toEqual('/search');
-  });
-
-});
-
-describe('MLRemoteInput#with-multiple-routes', function () {
-
-  beforeEach(module('ml.search'));
-  beforeEach(module('ngRoute'));
-
-  beforeEach(module(function($provide) {
-    $provide.value('$route', { routes: {
-      '/': {
-        templateUrl: '/views/search/search.html',
-        controller: 'SearchCtrl',
-        controllerAs: 'ctrl',
-        originalPath: '/'
-      },
-      '/search': {
-        templateUrl: '/views/search/search.html',
-        controller: 'SearchCtrl',
-        controllerAs: 'ctrl',
-        originalPath: '/search'
-      }
-    }});
-  }));
-
-  beforeEach(inject(function ($injector) {
-    remoteInput = $injector.get('MLRemoteInputService');
-  }));
-
-  it('should get path', function() {
-    expect( remoteInput.getPath('SearchCtrl') ).toEqual('/');
-  });
-
-});
-
-describe('MLRemoteInput#init-ctrl', function () {
-
-  beforeEach(module('ml.search'));
-
-  beforeEach(inject(function ($injector) {
-    $q = $injector.get('$q');
-    $httpBackend = $injector.get('$httpBackend');
-    // $location = $injector.get('$location');
-    $rootScope = $injector.get('$rootScope');
-
-    searchFactory = $injector.get('MLSearchFactory', $q, $httpBackend);
-    remoteInput = $injector.get('MLRemoteInputService');
-  }));
-
-  it('should init ctrl', function() {
-    var $scope = $rootScope.$new();
-    var model = { qtext: '' };
-    var mlSearch = searchFactory.newContext();
-
-    var counter = 0;
-
-    remoteInput.initCtrl($scope, model, mlSearch, function() {
-      counter++;
+      remoteInput.setInput('c');
+      expect(counter).toEqual(2);
+      expect(latest).toEqual('b');
     });
 
-    remoteInput.setInput('blah');
-    expect(counter).toEqual(1);;
+    it('should fail to get path', function() {
+      // TODO: fix this to make more sense
+      expect( remoteInput.getPath('SearchCtrl') ).toBeNull;
+    });
+
   });
 
-  it('should preserve ctrl state', function() {
-    var $scope = $rootScope.$new();
-    var model = { qtext: 'already here' };
-    var mlSearch = searchFactory.newContext();
+  describe('#with-empty-ngRoute', function () {
 
-    remoteInput.initCtrl($scope, model, mlSearch, null);
+    beforeEach(module('ngRoute'));
 
-    expect(remoteInput.input).toEqual('already here');
+    beforeEach(inject(function ($injector) {
+      remoteInput = $injector.get('MLRemoteInputService');
+    }));
+
+    it('should be injectable with ngRoute', function() {
+      expect(remoteInput).toBeDefined;
+      expect(remoteInput.routeAvailable).toEqual(true);
+    });
+
+    it('should get path', function() {
+      // TODO: fix this to make more sense
+      expect( remoteInput.getPath('SearchCtrl') ).toEqual('/');
+    });
+
+  });
+
+  describe('#with-configured-ngRoute', function () {
+
+    beforeEach(module('ngRoute'));
+
+    beforeEach(module(function($provide) {
+      $provide.value('$route', { routes: {
+        '/': {
+          templateUrl: '/views/home/home.html',
+          controller: 'HomeCtrl',
+          controllerAs: 'ctrl',
+          originalPath: '/'
+        },
+        '/search': {
+          templateUrl: '/views/search/search.html',
+          controller: 'SearchCtrl',
+          controllerAs: 'ctrl',
+          originalPath: '/search'
+        }
+      }});
+    }));
+
+    beforeEach(inject(function ($injector) {
+      remoteInput = $injector.get('MLRemoteInputService');
+    }));
+
+    it('should get path', function() {
+      expect( remoteInput.getPath('SearchCtrl') ).toEqual('/search');
+    });
+
+  });
+
+  describe('#with-multiple-routes', function () {
+
+    beforeEach(module('ngRoute'));
+
+    beforeEach(module(function($provide) {
+      $provide.value('$route', { routes: {
+        '/': {
+          templateUrl: '/views/search/search.html',
+          controller: 'SearchCtrl',
+          controllerAs: 'ctrl',
+          originalPath: '/'
+        },
+        '/search': {
+          templateUrl: '/views/search/search.html',
+          controller: 'SearchCtrl',
+          controllerAs: 'ctrl',
+          originalPath: '/search'
+        }
+      }});
+    }));
+
+    beforeEach(inject(function ($injector) {
+      remoteInput = $injector.get('MLRemoteInputService');
+    }));
+
+    it('should get path', function() {
+      expect( remoteInput.getPath('SearchCtrl') ).toEqual('/');
+    });
+
+  });
+
+  describe('#init-ctrl', function () {
+
+    beforeEach(inject(function ($injector) {
+      $q = $injector.get('$q');
+      $httpBackend = $injector.get('$httpBackend');
+      // $location = $injector.get('$location');
+      $rootScope = $injector.get('$rootScope');
+
+      searchFactory = $injector.get('MLSearchFactory', $q, $httpBackend);
+      remoteInput = $injector.get('MLRemoteInputService');
+    }));
+
+    it('should init ctrl', function() {
+      var $scope = $rootScope.$new();
+      var model = { qtext: '' };
+      var mlSearch = searchFactory.newContext();
+
+      var counter = 0;
+
+      remoteInput.initCtrl($scope, model, mlSearch, function() {
+        counter++;
+      });
+
+      remoteInput.setInput('blah');
+      expect(counter).toEqual(1);
+    });
+
+    it('should preserve ctrl state', function() {
+      var $scope = $rootScope.$new();
+      var model = { qtext: 'already here' };
+      var mlSearch = searchFactory.newContext();
+
+      remoteInput.initCtrl($scope, model, mlSearch, null);
+
+      expect(remoteInput.input).toEqual('already here');
+    });
+
   });
 
 });
