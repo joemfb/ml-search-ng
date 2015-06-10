@@ -207,6 +207,28 @@ describe('MLSearchController', function () {
       expect( args[2] ).toEqual(10);
     });
 
+    it('should clear facets and search', function() {
+      ctrl.clearFacets();
+      $rootScope.$apply();
+
+      expect(mockSearchContext.clearAllFacets).toHaveBeenCalled();
+      expect(mockSearchContext.search).toHaveBeenCalled();
+    });
+
+    it('should reset ctrl and search', function() {
+      ctrl.qtext = 'hi';
+      ctrl.page = 4;
+      ctrl.reset();
+      $rootScope.$apply();
+
+      expect(mockSearchContext.search).toHaveBeenCalled();
+      expect(mockSearchContext.clearAllFacets).toHaveBeenCalled();
+      expect(mockSearchContext.clearAdditionalQueries).toHaveBeenCalled();
+      expect(mockSearchContext.clearBoostQueries).toHaveBeenCalled();
+      expect(ctrl.qtext).toEqual('');
+      expect(ctrl.page).toEqual(1);
+    });
+
     it('should parse extra URL params and search', function() {
       var spy = jasmine.createSpy('parseExtraURLParams').andReturn(true);
       mockSearchContext.locationChange = jasmine.createSpy('locationChange').andCallFake(asyncRejectMock);

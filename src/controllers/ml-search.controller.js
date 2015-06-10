@@ -216,6 +216,22 @@ function MLSearchController($scope, $location, mlSearch) {
   };
 
   /**
+   * clear qtext, facet selections, boost queries, and additional queries. Then, run a search.
+   *
+   * @memberof MLSearchController
+   * @return {Promise} the promise from {@link MLSearchController#_search}
+   */
+  MLSearchController.prototype.reset = function reset() {
+    this.mlSearch
+      .clearAllFacets()
+      .clearAdditionalQueries()
+      .clearBoostQueries();
+    this.qtext = '';
+    this.page = 1;
+    return this._search();
+  };
+
+  /**
    * toggle the selection state of the specified facet value
    *
    * @memberof MLSearchController
@@ -239,6 +255,17 @@ function MLSearchController($scope, $location, mlSearch) {
    */
   MLSearchController.prototype.showMoreFacets = function showMoreFacets(facet, facetName, step) {
     return this.mlSearch.showMoreFacets(facet, facetName, step);
+  };
+
+  /**
+   * clear all facet selections, and run a search
+   *
+   * @memberof MLSearchController
+   * @return {Promise} the promise from {@link MLSearchController#_search}
+   */
+  MLSearchController.prototype.clearFacets = function clearFacets() {
+    this.mlSearch.clearAllFacets();
+    return this._search();
   };
 
   /**
