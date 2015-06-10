@@ -1,21 +1,21 @@
 /* global describe, beforeEach, module, it, expect, inject */
-'use strict';
-
-var elem, $scope, $compile, $rootScope;
-
-var response = {
-  start: 1,
-  'page-length': 10,
-  total: 45,
-  metrics: {
-    'query-resolution-time':'PT0.007575S',
-    'facet-resolution-time':'PT0.01598S',
-    'snippet-resolution-time':'PT0.017144S',
-    'total-time':'PT0.054741S'
-  }
-};
 
 describe('ml-metrics', function () {
+  'use strict';
+
+  var elem, $scope, $compile, $rootScope;
+
+  var response = {
+    start: 1,
+    'page-length': 10,
+    total: 45,
+    metrics: {
+      'query-resolution-time':'PT0.007575S',
+      'facet-resolution-time':'PT0.01598S',
+      'snippet-resolution-time':'PT0.017144S',
+      'total-time':'PT0.054741S'
+    }
+  };
 
   beforeEach(module('ml.search'));
   beforeEach(module('ml.search.tpls'));
@@ -26,83 +26,71 @@ describe('ml-metrics', function () {
 
     $scope = $rootScope.$new();
     $scope.response = response;
-    $scope.showDuration = true;
-
-    elem = angular.element('<ml-metrics search="response" show-duration="showDuration"></ml-metrics>');
-
-    $compile(elem)($scope);
-    $scope.$digest();
   }));
 
-  it('should be replaced by template', function() {
-    expect(elem).toHaveClass('search-metrics');
+  describe('#defaults', function () {
+
+    beforeEach(function() {
+      $scope.showDuration = true;
+
+      elem = angular.element('<ml-metrics search="response" show-duration="showDuration"></ml-metrics>');
+      $compile(elem)($scope);
+      $scope.$digest();
+    });
+
+    it('should be replaced by template', function() {
+      expect(elem).toHaveClass('search-metrics');
+    });
+
+    it('should toggle duration', function() {
+      //TODO: add classes to test more clearly
+      expect(elem.find('> span.ng-hide').length).toEqual(1);
+      expect(elem.find('> span.ng-isolate-scope.ng-hide').length).toEqual(0);
+
+      $scope.showDuration = false;
+      $scope.$apply();
+
+      expect(elem.find('> span.ng-isolate-scope.ng-hide').length).toEqual(1);
+    });
+
   });
 
-  it('should toggle duration', function() {
-    //TODO: add classes to test more clearly
-    expect(elem.find('> span.ng-hide').length).toEqual(1);
-    expect(elem.find('> span.ng-isolate-scope.ng-hide').length).toEqual(0);
+  describe('#default-show-duration', function () {
 
-    $scope.showDuration = false;
-    $scope.$apply();
+    beforeEach(function() {
+      $scope.showDuration = true;
 
-    expect(elem.find('> span.ng-isolate-scope.ng-hide').length).toEqual(1);
+      elem = angular.element('<ml-metrics search="response"></ml-metrics>');
+      $compile(elem)($scope);
+      $scope.$digest();
+    });
+
+    it('should show duration by deafult', function() {
+      //TODO: add classes to test more clearly
+      expect(elem.find('> span.ng-hide').length).toEqual(1);
+      expect(elem.find('> span.ng-isolate-scope.ng-hide').length).toEqual(0);
+    });
+
   });
 
-});
+  describe('#transclude', function () {
+    beforeEach(function() {
+      $scope.showDuration = true;
 
-describe('ml-metrics#default-show-duration', function () {
+      elem = angular.element(
+        '<ml-metrics search="response" show-duration="showDuration">' +
+          '<div class="blah"></div>' +
+        '</ml-metrics>'
+      );
+      // append to document, since transclusion is performed via `element.replaceWith()`
+      angular.element(document.body).append(elem);
+      $compile(elem)($scope);
+      $scope.$digest();
+    });
 
-  beforeEach(module('ml.search'));
-  beforeEach(module('ml.search.tpls'));
-
-  beforeEach(inject(function ($injector) {
-    $rootScope = $injector.get('$rootScope');
-    $compile = $injector.get('$compile');
-
-    $scope = $rootScope.$new();
-    $scope.response = response;
-    $scope.showDuration = true;
-
-    elem = angular.element('<ml-metrics search="response"></ml-metrics>');
-
-    $compile(elem)($scope);
-    $scope.$digest();
-  }));
-
-  it('should show duration by deafult', function() {
-    //TODO: add classes to test more clearly
-    expect(elem.find('> span.ng-hide').length).toEqual(1);
-    expect(elem.find('> span.ng-isolate-scope.ng-hide').length).toEqual(0);
+    it('should transclude', function() {
+      expect( angular.element(document.body).find('div') ).toHaveClass('blah');
+    });
   });
 
-});
-
-describe('ml-metrics#transclude', function () {
-  beforeEach(module('ml.search'));
-  beforeEach(module('ml.search.tpls'));
-
-  beforeEach(inject(function ($injector) {
-    $rootScope = $injector.get('$rootScope');
-    $compile = $injector.get('$compile');
-
-    $scope = $rootScope.$new();
-    $scope.response = response;
-    $scope.showDuration = true;
-
-    elem = angular.element(
-      '<ml-metrics search="response" show-duration="showDuration">' +
-        '<div class="blah"></div>' +
-      '</ml-metrics>'
-    );
-
-    // append to document, since transclusion is performed via `element.replaceWith()`
-    angular.element(document.body).append(elem);
-    $compile(elem)($scope);
-    $scope.$digest();
-  }));
-
-  it('should transclude', function() {
-    expect( angular.element(document.body).find('div') ).toHaveClass('blah');
-  });
 });
