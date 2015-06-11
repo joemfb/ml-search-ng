@@ -65,4 +65,25 @@ describe('ml-duration', function () {
     expect( elem.find('.original').text() ).toEqual(newDuration);
   });
 
+  it('should watch initially null variable', function() {
+    $scope.duration = null;
+
+    elem = angular.element(
+      '<span ml-duration="duration">' +
+        '<span class="minutes">{{ duration.minutes }}</span>' +
+        '<span class="original">{{ duration.toString() }}</span>' +
+      '</span>'
+    );
+    $compile(elem)($scope);
+    $scope.$digest();
+
+    expect( elem.find('.original').text() ).toEqual('');
+
+    $scope.duration = 'PT1M';
+    $scope.$apply();
+
+    expect( elem.find('.minutes').text() ).toEqual('1');
+    expect( elem.find('.original').text() ).toEqual($scope.duration);
+  });
+
 });
