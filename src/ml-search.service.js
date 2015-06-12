@@ -27,7 +27,7 @@
        * returns a new instance of {@link MLSearchContext}
        * @method MLSearchFactory#newContext
        *
-       * @param {Object} options
+       * @param {Object} options (to override {@link MLSearchContext.defaults})
        * @returns {MLSearchContext}
        */
       newContext: function newContext(options) {
@@ -88,7 +88,7 @@
      * @prop {Number} defaults.pageLength - results page length (`10`)
      * @prop {String} defaults.snippet - results transform operator state-name (`'compact'`)
      * @prop {String} defaults.sort - sort operator state-name (`null`)
-     * @prop {String} defaults.facetMode - combine facets with an `and-query` or an `or-query` (`'and'`)
+     * @prop {String} defaults.facetMode - determines if facets are combined in an `and-query` or an `or-query` (`and`)
      * @prop {Boolean} defaults.includeProperties - include document properties in queries (`false`)
      * @prop {Object} defaults.params - URL params settings
      * @prop {String} defaults.params.separator - constraint-name and value separator (`':'`)
@@ -123,10 +123,10 @@
     /************************************************************/
 
     /**
-     * Gets the hash of active facets
+     * Gets the object repesenting active facet selections
      * @method MLSearchContext#getActiveFacets
      *
-     * @return {MLSearchContext} `this`.activeFacets
+     * @return {Object} `this.activeFacets`
      */
     getActiveFacets: function getActiveFacets() {
       return this.activeFacets;
@@ -163,7 +163,7 @@
     },
 
     /**
-     * Gets namespace prefix-to-URI mapping objects
+     * Gets namespace prefix-to-URI mappings
      * @method MLSearchContext#getNamespaces
      *
      * @return {Object[]} namespace prefix-to-URI mapping objects
@@ -177,22 +177,23 @@
     },
 
     /**
-     * Sets namespace objects
+     * Sets namespace prefix->URI mappings
      * @method MLSearchContext#setNamespaces
      *
-     * @param {Object[]} namespace objects
+     * @param {Object[]} namespace - objects with `uri` and `prefix` properties
      * @return {MLSearchContext} `this`
      */
     setNamespaces: function setNamespaces(namespaces) {
+      // TODO: this.clearNamespaces() first?
       _.each(namespaces, this.addNamespace, this);
       return this;
     },
 
     /**
-     * Adds a namespace object
+     * Adds a namespace prefix->URI mapping
      * @method MLSearchContext#addNamespace
      *
-     * @param {Object} namespace
+     * @param {Object} namespace object with `uri` and `prefix` properties
      * @return {MLSearchContext} `this`
      */
     addNamespace: function addNamespace(namespace) {
@@ -201,7 +202,7 @@
     },
 
     /**
-     * Clears namespaces
+     * Clears namespace prefix->URI mappings
      * @method MLSearchContext#clearNamespaces
      *
      * @return {MLSearchContext} `this`
@@ -215,14 +216,14 @@
      * Gets the boost queries
      * @method MLSearchContext#getBoostQueries
      *
-     * @return {Array} `this`.boostQueries
+     * @return {Array} `this.boostQueries`
      */
     getBoostQueries: function getBoostQueries() {
       return this.boostQueries;
     },
 
     /**
-     * Adds a boost query
+     * Adds a boost query to `this.boostQueries`
      * @method MLSearchContext#addBoostQuery
      *
      * @param {Object} boost query
@@ -234,7 +235,7 @@
     },
 
     /**
-     * Clear the boost queries
+     * Clears the boost queries
      * @method MLSearchContext#clearBoostQueries
      *
      * @return {MLSearchContext} `this`
@@ -248,14 +249,14 @@
      * Gets the additional queries
      * @method MLSearchContext#getAdditionalQueries
      *
-     * @return {MLSearchContext} `this`.additionalQueries
+     * @return {Object} `this.additionalQueries`
      */
     getAdditionalQueries: function getAdditionalQueries() {
       return this.additionalQueries;
     },
 
     /**
-     * Adds a additional query
+     * Adds an additional query to `this.additionalQueries`
      * @method MLSearchContext#addAdditionalQuery
      *
      * @param {Object} query - additional query
@@ -267,7 +268,7 @@
     },
 
     /**
-     * Clear the additional queries
+     * Clears the additional queries
      * @method MLSearchContext#clearAdditionalQueries
      *
      * @return {MLSearchContext} `this`
@@ -411,7 +412,7 @@
     },
 
     /**
-     * Resets the current results transform operator state name to its default value
+     * Clears the results transform operator (resets it to its default value)
      * @method MLSearchContext#clearSnippet
      *
      * @return {MLSearchContext} `this`
@@ -444,7 +445,7 @@
     },
 
     /**
-     * Resets the current sort operator state name to its default value
+     * Clears the sort operator state name (resets it to its default value)
      * @method MLSearchContext#clearSort
      *
      * @return {MLSearchContext} `this`
@@ -455,7 +456,7 @@
     },
 
     /**
-     * Gets the current facet mode name (and|or)
+     * Gets the current facet mode (determines if facet values are combined in an `and-query` or an `or-query`)
      * @method MLSearchContext#getFacetMode
      *
      * @return {String} facet mode
@@ -465,8 +466,7 @@
     },
 
     /**
-     * Sets the current facet mode name. The facet mode determines the query used to join facet selections:
-     * `and-query` or `or-query`.
+     * Sets the current facet mode (`and`|`or`). (determines if facet values are combined in an `and-query` or an `or-query`)
      * @method MLSearchContext#setFacetMode
      *
      * @param {String} facetMode - 'and' or 'or'
@@ -616,7 +616,7 @@
      * Construct a combined query from the current state
      * @method MLSearchContext#getCombinedQuery
      *
-     * @param {Boolean} [includeOptions] - get stored search options, and include them in the combined query
+     * @param {Boolean} [includeOptions] - if `true`, get and include the stored search options (defaults to `false`)
      *
      * @return {Promise} - a promise resolved with the combined query
      */
@@ -680,7 +680,7 @@
     },
 
     /**
-     * Remove the facet/value combination from the activeFacets list
+     * Removes the facet/value combination from the activeFacets list
      * @method MLSearchContext#clearFacet
      *
      * @param {String} name - facet name
@@ -724,7 +724,7 @@
     },
 
     /**
-     * Reset the activeFacets list
+     * Clears the activeFacets list
      * @method MLSearchContext#clearAllFacets
      *
      * @return {MLSearchContext} `this`
@@ -827,10 +827,10 @@
     },
 
     /**
-     * Construct a URL query params object from the active facets
+     * Construct an array of facet selections (`name` `separator` `value`) from `this.activeFacets` for use in a URL query params object
      * @method MLSearchContext#getFacetParams
      *
-     * @return {Object} params - a URL query params object
+     * @return {Array<String>} an array of facet URL query param values
      */
     getFacetParams: function getFacetParams() {
       var self = this,
@@ -877,10 +877,10 @@
     },
 
     /**
-     * Update the current state based on the provided URL query params object
+     * Updates the current state based on the URL query params
      * @method MLSearchContext#fromParams
      *
-     * @param {Object} [params] - a URL query params object
+     * @param {Object} [params] - a URL query params object (defaults to `$location.search()`)
      * @return {Promise} a promise resolved once the params have been applied
      */
     fromParams: function fromParams(params) {
@@ -961,7 +961,7 @@
     },
 
     /**
-     * Update the current active facets based on the provided facet URL query params
+     * Updates the current active facets based on the provided facet URL query params
      * @method MLSearchContext#fromFacetParam
      * @private
      *
@@ -988,8 +988,10 @@
     },
 
     /**
-     * this function get's called in a tight loop, so loading the options async won't work
-     * (could end up requesting the options over and over ...)
+     * Gets the "facet config": either a facet response or a constraint definition object
+     *
+     * (this function is called in a tight loop, so loading the options async won't work)
+     *
      * @method MLSearchContext#getFacetConfig
      * @private
      *
@@ -1019,7 +1021,7 @@
 
     /**
      * Examines the current state, and determines if a new search is needed.
-     *   (intended to be triggered on {$locationChangeSuccess})
+     *   (intended to be triggered on `$locationChangeSuccess`)
      * @method MLSearchContext#locationChange
      *
      * @param {String} newUrl - the target URL of a location change
@@ -1080,7 +1082,7 @@
      * @method MLSearchContext#getAllStoredOptions
      *
      * @param {String[]} names - the names of the options to retrieve
-     * @return {Promise} a promise resolved with `this.storedOptions`
+     * @return {Promise} a promise resolved with an object containing the requested search options, keyed by name
      */
     getAllStoredOptions: function getAllStoredOptions(names) {
       var self = this,
@@ -1097,7 +1099,7 @@
     },
 
     /**
-     * Gets search phrase suggestions based on the current state
+     * Retrieves search phrase suggestions based on the current state
      * @method MLSearchContext#suggest
      *
      * @param {String} qtext - the partial-phrase to match
@@ -1120,7 +1122,7 @@
     },
 
     /**
-     * Runs a search based on the current state
+     * Retrieves search results based on the current state
      * @method MLSearchContext#search
      *
      * @return {Promise} a promise resolved with search results
@@ -1144,11 +1146,10 @@
     },
 
     /**
-     * Annotate the facets in the search results object with the selections from `this.activeFacets`
+     * Annotates facets (from a search response object) with the selections from `this.activeFacets`
      * @method MLSearchContext#annotateActiveFacets
      *
-     * @param {Object} [facets] - the search facets object to annotate; if `result` is falsy,
-     * `this.annotateActiveFacets` is applied to `this.results.facets`
+     * @param {Object} [facets] - the search facets object (defaults to `this.results.facets`)
      */
     annotateActiveFacets: function annotateActiveFacets(facets) {
       var self = this;
@@ -1172,11 +1173,10 @@
     },
 
     /**
-     * Transform each search result's metadata object from an array of objects to an object
+     * Transforms the metadata array in each search response result object to an object, key'd by `metadata-type`
      * @method MLSearchContext#transformMetadata
      *
-     * @param {Object} [result] - the search result to transform; if `result` is falsy,
-     * `this.transformMetadata` is applied to each result in `this.results.results`
+     * @param {Object} [result] - the search results object (defaults to `this.results.results`)
      */
     transformMetadata: function transformMetadata(result) {
       var self = this,
