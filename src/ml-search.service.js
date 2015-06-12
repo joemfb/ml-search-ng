@@ -629,17 +629,11 @@
         return d.promise;
       }
 
-      this.getStoredOptions(this.options.queryConfig).then(
-        function(data) {
-          combined.search.options = data.options;
-          d.resolve(combined);
-        },
-        function(reason) {
-          d.reject(reason);
-        }
-      );
-
-      return d.promise;
+      return this.getStoredOptions(this.options.queryConfig)
+      .then(function(data) {
+        combined.search.options = data.options;
+        return combined;
+      });
     },
 
     /************************************************************/
@@ -861,10 +855,16 @@
     },
 
     getCurrentParams: function getCurrentParams(params) {
-      return _.pick(
+      params = _.pick(
         params || $location.search(),
         this.getParamsKeys()
       );
+
+      if ( params.f ) {
+        params.f = asArray(params.f);
+      }
+
+      return params;
     },
 
     /**
@@ -1017,23 +1017,19 @@
      * @return {Promise} a promise resolved after calling {@link MLSearchContext#fromParams} (if a new search is needed)
      */
     locationChange: function locationChange(newUrl, oldUrl, params) {
+      var d = $q.defer();
+
       params = this.getCurrentParams( params );
 
-      if ( params.f ) {
-        params.f = asArray(params.f);
-      }
-
-      var d = $q.defer();
       // still on the search page, but there's a new query
       var shouldUpdate = pathsEqual(newUrl, oldUrl) &&
                          !_.isEqual( this.getParams(), params );
 
       if ( shouldUpdate ) {
-        this.fromParams(params).then( d.resolve );
-      } else {
-        d.reject();
+        return this.fromParams(params);
       }
 
+      d.reject();
       return d.promise;
     },
 
@@ -1056,18 +1052,15 @@
 
       if ( self.storedOptions[name] ) {
         d.resolve( self.storedOptions[name] );
-      } else {
-        mlRest.queryConfig(name).then(function(response) {
-            //TODO: transform?
-            self.storedOptions[name] = response.data;
-            d.resolve( self.storedOptions[name] );
-          },
-          function(reason) {
-            d.reject(reason);
-          });
+        return d.promise;
       }
 
-      return d.promise;
+      return mlRest.queryConfig(name)
+      .then(function(response) {
+        //TODO: transform?
+        self.storedOptions[name] = response.data;
+        return self.storedOptions[name];
+      });
     },
 
     /**
@@ -1079,19 +1072,16 @@
      */
     getAllStoredOptions: function getAllStoredOptions(names) {
       var self = this,
-          d = $q.defer(),
           result = {};
 
       // cache any options not already loaded
-      $q.all( _.map(names, self.getStoredOptions.bind(self)) ).then(function() {
+      return $q.all( _.map(names, self.getStoredOptions.bind(self)) ).then(function() {
         // return only the names requested
         _.each(names, function(name) {
           result[name] = self.storedOptions[name];
         });
-        d.resolve( result );
+        return result;
       });
-
-      return d.promise;
     },
 
     /**
@@ -1102,27 +1092,19 @@
      * @return {Promise} a promise resolved with search phrase suggestions
      */
     suggest: function suggest(qtext) {
-      var d = $q.defer(),
-          params = {
-            'partial-q': qtext,
-            format: 'json',
-            options: this.options.queryOptions
-          };
+      var params = {
+        'partial-q': qtext,
+        format: 'json',
+        options: this.options.queryOptions
+      };
 
-      this.getCombinedQuery(false)
+      return this.getCombinedQuery(false)
       .then(function(combined) {
         return mlRest.suggest(params, combined);
       })
-      .then(
-        function(response) {
-          d.resolve(response.data);
-        },
-        function(reason) {
-          d.reject(reason);
-        }
-      );
-
-      return d.promise;
+      .then(function(response) {
+        return response.data;
+      });
     },
 
     /**
@@ -1132,28 +1114,21 @@
      * @return {Promise} a promise resolved with search results
      */
     search: function search() {
-      var self = this,
-          d = $q.defer();
+      var self = this;
 
-      mlRest.search({
+      return mlRest.search({
         options: self.options.queryOptions,
         structuredQuery: self.getQuery(),
         start: self.start,
         pageLength: self.options.pageLength,
         transform: self.searchTransform
       })
-      .then(
-        function(response) {
-          self.results = response.data;
-          self.transformMetadata();
-          self.annotateActiveFacets();
-          d.resolve(self.results);
-        },
-        function(reason) {
-          d.reject(reason);
-        });
-
-      return d.promise;
+      .then(function(response) {
+        self.results = response.data;
+        self.transformMetadata();
+        self.annotateActiveFacets();
+        return self.results;
+      });
     },
 
     /**
