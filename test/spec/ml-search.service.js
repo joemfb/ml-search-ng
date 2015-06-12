@@ -57,7 +57,10 @@ describe('MLSearch', function () {
 
     it('gets namespace uri', function() {
       var mlSearch = factory.newContext();
-      mlSearch.setNamespaces([{ prefix: 'ex', uri: 'http://example.com' }]);
+      mlSearch.setNamespaces([
+        { prefix: 'ex', uri: 'http://example.com' },
+        { prefix: 'ot', uri: 'http://other.org' }
+      ]);
 
       expect(mlSearch.getNamespaceUri('ex')).toEqual('http://example.com');
     });
@@ -146,6 +149,10 @@ describe('MLSearch', function () {
     it('sets the query text', function() {
       var mlSearch = factory.newContext();
 
+      expect(mlSearch.getText()).toBeNull;
+      expect(mlSearch.setText('test').getText()).toEqual('test');
+      expect(mlSearch.setText('').getText()).toBeNull;
+
       expect(mlSearch.getQuery().query.queries[0]['and-query'].queries.length).toEqual(0);
       expect(mlSearch.setText('test')).toBe(mlSearch);
       expect(mlSearch.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
@@ -195,6 +202,8 @@ describe('MLSearch', function () {
 
       expect(mlSearch.getSnippet()).toBe('compact');
 
+      expect( JSON.stringify(mlSearch.getQuery()).match(/operator-state/) ).not.toBeNull;
+
       mlSearch = factory.newContext({ snippet: 'full' });
 
       expect(mlSearch.getSnippet()).toBe('full');
@@ -203,6 +212,9 @@ describe('MLSearch', function () {
 
       expect(mlSearch.clearSnippet()).toBe(mlSearch);
       expect(mlSearch.getSnippet()).toBe('compact');
+
+      expect(mlSearch.setSnippet(null)).toBe(mlSearch);
+      expect( JSON.stringify(mlSearch.getQuery()).match(/operator-state/) ).toBeNull;
 
       //TODO: getQuery()
     });
@@ -232,14 +244,12 @@ describe('MLSearch', function () {
       expect(mlSearch.getSort()).toBe(null);
     });
 
-    it('gets and sets facet mode', function() {
+    it('should include properties query', function() {
       var mlSearch = factory.newContext();
+      expect( JSON.stringify(mlSearch.getQuery()).match(/properties-query/) ).toBeNull;
 
-      expect(mlSearch.getFacetMode()).toBe('and');
-      expect(mlSearch.setFacetMode('or')).toBe(mlSearch);
-      expect(mlSearch.getFacetMode()).toBe('or');
-
-      //TODO: getQuery()
+      mlSearch = factory.newContext({ includeProperties: true });
+      expect( JSON.stringify(mlSearch.getQuery()).match(/properties-query/) ).not.toBeNull;
     });
 
     it('gets URL params config', function() {
@@ -259,7 +269,14 @@ describe('MLSearch', function () {
       var mlSearch = factory.newContext();
       var keys = ['q', 'f', 's', 'p'];
 
+      // using _.difference since param order is non-determinant
       expect( _.difference( mlSearch.getParamsKeys(), keys ).length ).toEqual(0);
+    });
+
+    it('should support deprecated functions', function() {
+      var mlSearch = factory.newContext();
+      expect( mlSearch.getStructuredQuery() ).toEqual( mlSearch.getQuery() );
+      expect( mlSearch.serializeStructuredQuery() ).toEqual( mlSearch.getParams() );
     });
   });
 
@@ -272,6 +289,24 @@ describe('MLSearch', function () {
       mockPaginatedResults = $injector.get('searchResultsPaginated');
       mockResultsFacets = $injector.get('searchResultsWithFacets');
     }));
+
+    it('should handle search errors', function() {
+      $httpBackend
+        .expectGET(/\/v1\/search\?format=json&options=all&pageLength=10&start=1&structuredQuery=.*/)
+        .respond(500, '');
+
+      var searchContext = factory.newContext();
+
+      var success;
+      searchContext.search()
+      .then(
+        function() { success = true; },
+        function() { success = false; }
+      );
+      $httpBackend.flush();
+
+      expect( success ).toEqual(false);
+    });
 
     it('should properly tag facets as active', function() {
       $httpBackend
@@ -413,6 +448,22 @@ describe('MLSearch', function () {
 
       expect(searchContext.activeFacets.cartoon).not.toBeDefined();
 
+      searchContext
+        .selectFacet('foo', 'bar')
+        .selectFacet('foo', 'baz');
+
+      expect( searchContext.isFacetActive('foo', 'bar') ).toEqual(true);
+      expect( searchContext.isFacetActive('foo', 'baz') ).toEqual(true);
+
+      searchContext.clearFacet('foo', 'bar');
+
+      expect( searchContext.isFacetActive('foo', 'bar') ).toEqual(false);
+      expect( searchContext.isFacetActive('foo', 'baz') ).toEqual(true);
+
+      searchContext.clearFacet('foo', 'baz');
+
+      expect( searchContext.isFacetActive('foo', 'bar') ).toEqual(false);
+      expect( searchContext.isFacetActive('foo', 'baz') ).toEqual(false);
     });
 
     it('clears all facets correctly', function() {
@@ -442,7 +493,9 @@ describe('MLSearch', function () {
 
     it('sets quoted value facets from parameters correctly', function() {
       var searchContext = factory.newContext();
-      searchContext.results = {facets: {cartoon: {type: 'string', values: ['bugs bunny']}}};
+      searchContext.results = {facets: {cartoon: {type: 'string', facetVvalues: [
+        { value: 'bugs bunny', name: 'bugs bunny', count: 1 }
+      ]}}};
       // select facet with space value
       searchContext.selectFacet('cartoon', 'bugs bunny');
 
@@ -456,10 +509,77 @@ describe('MLSearch', function () {
       expect(searchContext.activeFacets.cartoon.values[0]).toEqual('bugs bunny');
     });
 
+    it('should toggle facets', function() {
+      var mlSearch = factory.newContext();
+      mlSearch.results = {facets: {cartoon: {type: 'string', values: ['bugs bunny']}}};
+
+      expect( mlSearch.isFacetActive('cartoon', 'bugs bunny') ).toEqual(false);
+
+      mlSearch.toggleFacet('cartoon', 'bugs bunny');
+      expect( mlSearch.isFacetActive('cartoon', 'bugs bunny') ).toEqual(true);
+
+      mlSearch.toggleFacet('cartoon', 'bugs bunny');
+      expect( mlSearch.isFacetActive('cartoon', 'bugs bunny') ).toEqual(false);
+    });
+
+    it('should annotate active facets', function() {
+      var mlSearch = factory.newContext();
+      mlSearch.results = {facets: {cartoon: {type: 'string', facetValues: [
+        { value: 'bugs bunny', name: 'bugs bunny', count: 1 },
+        { value: 'mickey', name: 'mickey', count: 1 }
+      ]}}};
+
+      mlSearch.annotateActiveFacets();
+      expect( _.filter(mlSearch.results.facets, 'selected').length ).toEqual(0);
+
+      mlSearch.selectFacet('cartoon', 'mickey').annotateActiveFacets();
+      expect( _.filter(mlSearch.results.facets, 'selected').length ).toEqual(1);
+    });
+
+    it('should get facet query', function() {
+      var mlSearch = factory.newContext();
+      var facetQuery;
+
+      mlSearch.selectFacet('color', 'red');
+
+      facetQuery = mlSearch.getFacetQuery()['and-query'].queries[0]['range-constraint-query'];
+      expect( facetQuery['constraint-name'] ).toEqual('color');
+      expect( facetQuery.value[0] ).toEqual('red');
+
+      mlSearch.clearAllFacets();
+
+      mlSearch.activeFacets = { color: { values: [] } };
+      expect( mlSearch.getFacetQuery()['and-query'].queries.length ).toEqual(0);
+    });
+
+    it('should get/set facet mode', function() {
+      var mlSearch = factory.newContext();
+      var facetQuery;
+
+      mlSearch.selectFacet('color', 'red');
+
+      expect(mlSearch.getFacetMode()).toBe('and');
+      expect( mlSearch.getFacetQuery()['and-query'] ).toBeDefined;
+      expect( mlSearch.getFacetQuery()['or-query'] ).not.toBeDefined;
+
+      facetQuery = mlSearch.getFacetQuery()['and-query'].queries[0]['range-constraint-query'];
+      expect( facetQuery['constraint-name'] ).toEqual('color');
+      expect( facetQuery.value[0] ).toEqual('red');
+
+      expect(mlSearch.setFacetMode('or')).toBe(mlSearch);
+      expect(mlSearch.getFacetMode()).toBe('or');
+      expect( mlSearch.getFacetQuery()['and-query'] ).not.toBeDefined;
+      expect( mlSearch.getFacetQuery()['or-query'] ).toBeDefined;
+
+      facetQuery = mlSearch.getFacetQuery()['or-query'].queries[0]['range-constraint-query'];
+      expect( facetQuery['constraint-name'] ).toEqual('color');
+      expect( facetQuery.value[0] ).toEqual('red');
+    });
+
   });
 
   describe('#showMoreFacets', function(){
-    var searchContext, constraintConfig, myFacet, extraFacets;
+    var searchContext, constraintConfig, myFacet, myOtherFacet, extraFacets, extraExtraFacets;
 
     beforeEach(function() {
       searchContext = factory.newContext();
@@ -467,6 +587,9 @@ describe('MLSearch', function () {
         options: {
           constraint: [{
             name: 'MyFacetName',
+            range: { 'facet-option': 'limit=10' }
+          }, {
+            name: 'MyOtherFacetName',
             range: {}
           }] } };
       myFacet = {facetValues: []};
@@ -475,6 +598,13 @@ describe('MLSearch', function () {
           name: 'MyFacetName',
           type: 'xs:string',
           'distinct-value': [ {frequency: 10, _value: 'First'} ]
+        } };
+      myOtherFacet = {facetValues: []};
+      extraExtraFacets = {
+        'values-response': {
+          name: 'MyOtherFacetName',
+          type: 'xs:string',
+          'distinct-value': [ {frequency: 2, _value: 'Other'} ]
         } };
     });
 
@@ -490,6 +620,19 @@ describe('MLSearch', function () {
       $httpBackend.flush();
       expect(myFacet.facetValues).toContain(
           {name: 'First', value: 'First', count: 10});
+
+      $httpBackend
+        .expectGET('/v1/config/query/all/constraint?format=json')
+        .respond(constraintConfig);
+      $httpBackend
+        .expectPOST('/v1/values/MyOtherFacetName?limit=6&start=1')
+        .respond(extraExtraFacets);
+
+      searchContext.showMoreFacets(myOtherFacet, 'MyOtherFacetName');
+      $httpBackend.flush();
+      expect(myOtherFacet.facetValues).toContain(
+        {name: 'Other', value: 'Other', count: 2}
+      );
     });
 
     it('returns `step` number of additional facets', function() {
@@ -550,7 +693,7 @@ describe('MLSearch', function () {
     });
   });
 
-  describe('#url-params', function() {
+  describe('#options/url-params', function() {
     var mockOptionsConstraint, mockOptionsGrammer, mockOptionsColor;
 
     beforeEach(inject(function($injector) {
@@ -571,6 +714,56 @@ describe('MLSearch', function () {
       $httpBackend.flush();
 
       expect(actual).toEqual(mockOptionsGrammer);
+    });
+
+    it('gets all stored options', function() {
+      $httpBackend
+        .expectGET('/v1/config/query/all?format=json')
+        .respond(mockOptionsColor);
+
+      $httpBackend
+        .expectGET('/v1/config/query/some?format=json')
+        .respond(mockOptionsGrammer);
+
+      var mlSearch = factory.newContext();
+      var actual;
+
+      mlSearch.getAllStoredOptions(['all', 'some']).then(function(response) { actual = response; });
+      $httpBackend.flush();
+
+      expect(actual.all).toEqual(mockOptionsColor);
+      expect(actual.some).toEqual(mockOptionsGrammer);
+    });
+
+    it('gets combined query', function() {
+      $httpBackend
+        .expectGET('/v1/config/query/all?format=json')
+        .respond(mockOptionsGrammer);
+
+      var search = factory.newContext(),
+          actual;
+
+      search.getCombinedQuery(true).then(function(response) { actual = response; });
+      $httpBackend.flush();
+
+      expect( actual.search.query ).toEqual( search.getQuery() );
+      expect( actual.search.options ).toEqual( mockOptionsGrammer.options );
+
+      search.storedOptions = {};
+      $httpBackend
+        .expectGET('/v1/config/query/all?format=json')
+        .respond(500, '');
+
+      var success;
+      search.getCombinedQuery(true)
+      .then(
+        function() { success = true; },
+        function() { success = false; }
+      );
+
+      $httpBackend.flush();
+
+      expect(success).toEqual(false);
     });
 
     it('should set search parameters', function() {
@@ -698,6 +891,80 @@ describe('MLSearch', function () {
       expect(search.getActiveFacets()['my-facet'].values[0]).toEqual('facetvalue');
       expect(search.getActiveFacets()['my-facet'].values[1]).toEqual('facetvalue2');
       expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
+    });
+
+    it('should handle untyped facets from URL params', function() {
+      var mlSearch = factory.newContext();
+
+      mlSearch.fromFacetParam('color:red');
+
+      expect( mlSearch.isFacetActive('color', 'red') ).toEqual(true);
+      expect( mlSearch.getActiveFacets().color.type ).toBeUndefined;
+    });
+
+    it('should handle typed facets from URL params', function() {
+      var mlSearch = factory.newContext();
+
+      mlSearch.fromFacetParam('my-facet:value', mockOptionsConstraint);
+      expect( mlSearch.isFacetActive('my-facet', 'value') ).toEqual(true);
+      expect( mlSearch.getActiveFacets()['my-facet'].type ).toEqual('xs:string');
+      expect( mlSearch.getFacetParams()[0] ).toEqual('my-facet:value');
+      expect( mlSearch.getFacetQuery()['and-query'].queries[0]['range-constraint-query'] ).toBeDefined;
+
+      mlSearch.clearAllFacets();
+
+      mlSearch.fromFacetParam('my-custom-facet:value', mockOptionsConstraint);
+      expect( mlSearch.isFacetActive('my-custom-facet', 'value') ).toEqual(true);
+      expect( mlSearch.getActiveFacets()['my-custom-facet'].type ).toEqual('custom');
+      expect( mlSearch.getFacetParams()[0] ).toEqual('my-custom-facet:value');
+      expect( mlSearch.getFacetQuery()['and-query'].queries[0]['custom-constraint-query'] ).toBeDefined;
+
+      mlSearch.clearAllFacets();
+
+      mlSearch.fromFacetParam('my-collection-facet:uri', mockOptionsConstraint);
+      expect( mlSearch.isFacetActive('my-collection-facet', 'uri') ).toEqual(true);
+      expect( mlSearch.getActiveFacets()['my-collection-facet'].type ).toEqual('collection');
+      expect( mlSearch.getFacetParams()[0] ).toEqual('my-collection-facet:uri');
+      expect( mlSearch.getFacetQuery()['and-query'].queries[0]['collection-constraint-query'] ).toBeDefined;
+    });
+
+    it('should populate from invalid page parameter', function() {
+      var search = factory.newContext().setPage(10);
+
+      expect(search.getPage()).toEqual(10);
+
+      $location.search({ p: 'a' });
+      search.fromParams();
+      $rootScope.$apply();
+
+      expect(search.getPage()).toEqual(1);
+    });
+
+    it('should ignore disabled URL params', function() {
+      var search = factory.newContext().setPage(10);
+
+      expect(search.getPage()).toEqual(10);
+
+      search.fromParam('p', { p: 1 }, search.setPage);
+      expect(search.getPage()).toEqual(1);
+
+      search.setPage(10);
+      expect(search.getPage()).toEqual(10);
+
+      search.fromParam(null, { p: 1 }, search.setPage);
+      expect(search.getPage()).toEqual(10);
+
+      search = factory.newContext({
+        params: { page: null }
+      }).setPage(10);
+
+      expect(search.getPage()).toEqual(10);
+
+      $location.search({ p: 1});
+      search.fromParams();
+      $rootScope.$apply();
+
+      expect(search.getPage()).toEqual(10);
     });
 
     it('should allow prefix\'d URL params', function() {
@@ -892,6 +1159,66 @@ describe('MLSearch', function () {
       expect(params['x:f'].length).toEqual(1);
     });
 
+    it('should handle location changes', function() {
+      var mlSearch = factory.newContext();
+      expect( mlSearch.getText() ).toBeNull;
+
+      $location.search({ 'q': 'hi' });
+      mlSearch.locationChange('/', '/');
+      $rootScope.$apply();
+
+      expect( mlSearch.getText() ).toEqual('hi');
+
+      mlSearch.setText('');
+      expect( mlSearch.getText() ).toBeNull;
+
+      $httpBackend
+        .expectGET('/v1/config/query/all?format=json')
+        .respond(mockOptionsColor);
+
+      $location.search({ 'q': 'hi', 'f': 'color:blue' });
+      mlSearch.locationChange('/', '/');
+      $httpBackend.flush();
+
+      expect( mlSearch.getText() ).toEqual('hi');
+      expect( mlSearch.isFacetActive('color', 'blue') ).toEqual(true);
+
+      var success;
+      mlSearch.locationChange('/', '/')
+      .then(
+        function() { success = true; },
+        function() { success = false; }
+      );
+      $rootScope.$apply();
+
+      expect( success ).toEqual(false);
+    });
+
+    it('should handle location changes via argument', function() {
+      $httpBackend
+        .expectGET('/v1/config/query/all?format=json')
+        .respond(mockOptionsColor);
+
+      var mlSearch = factory.newContext();
+      var params = { 'q': 'hi', 'f': 'color:blue' };
+
+      mlSearch.locationChange('/', '/', params);
+      $httpBackend.flush();
+
+      expect( mlSearch.getText() ).toEqual('hi');
+      expect( mlSearch.isFacetActive('color', 'blue') ).toEqual(true);
+
+      var success;
+      mlSearch.locationChange('/', '/', params)
+      .then(
+        function() { success = true; },
+        function() { success = false; }
+      );
+      $rootScope.$apply();
+
+      expect( success ).toEqual(false);
+    });
+
   });
 
   it('gets suggests', function() {
@@ -922,6 +1249,20 @@ describe('MLSearch', function () {
 
     expect(actual2.suggestions.length).toEqual(1);
     expect(actual2.suggestions[0]).toEqual('val1');
+
+    $httpBackend
+      .expectPOST('/v1/suggest?format=json&options=all&partial-q=val1')
+      .respond(500, '');
+
+    var success;
+    search.suggest('val1')
+    .then(
+      function() { success = true; },
+      function() { success = false; }
+    );
+    $httpBackend.flush();
+
+    expect( success ).toEqual(false);
   });
 
 });

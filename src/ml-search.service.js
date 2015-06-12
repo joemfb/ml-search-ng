@@ -214,7 +214,7 @@
      * Gets the boost queries
      * @method MLSearchContext#getBoostQueries
      *
-     * @return {MLSearchContext} `this`.activeFacets
+     * @return {Array} `this`.boostQueries
      */
     getBoostQueries: function getBoostQueries() {
       return this.boostQueries;
@@ -602,7 +602,7 @@
       });
 
       if ( self.options.facetMode === 'or' ) {
-        query = qb.or(query);
+        query = qb.or(queries);
       } else {
         query = qb.and(queries);
       }
@@ -656,7 +656,7 @@
      */
     isFacetActive: function isFacetActive(name, value) {
       var active = this.activeFacets[name];
-      return active && _.contains(active.values, value);
+      return !!active && _.contains(active.values, value);
     },
 
     /**
@@ -715,13 +715,13 @@
      * @return {MLSearchContext} `this`
      */
     toggleFacet: function toggleFacet(name, value) {
-      var type;
+      var config;
 
       if ( this.isFacetActive(name, value) ) {
         this.clearFacet(name, value);
       } else {
-        type = this.results.facets[name].type;
-        this.selectFacet(name, value, type);
+        config = this.getFacetConfig(name);
+        this.selectFacet(name, value, config.type);
       }
 
       return this;
@@ -924,7 +924,6 @@
      * @param {Object} params - URL params
      * @param {Function} callback - callback invoked with the value of the URL param
      * @param {Function} defaultCallback - callback invoked if params are un-prefix'd, and no value is provided
-     * @param
      */
     fromParam: function fromParam(name, params, callback, defaultCallback) {
       var value = null,
@@ -934,10 +933,8 @@
         return;
       }
 
-      if ( this.options.params.prefix && params[prefixedName] ) {
+      if ( params[prefixedName] ) {
         value = params[prefixedName];
-      } else if ( params[name] ) {
-        value = params[name];
       } else if ( defaultCallback ) {
         return defaultCallback.call(this);
       }
@@ -957,7 +954,7 @@
      * @private
      *
      * @param {Array|String} param - facet URL query params
-     * @param {Object} storedOptions - a searchOptions object
+     * @param {Object} [storedOptions] - a searchOptions object
      */
     fromFacetParam: function fromFacetParam(param, storedOptions) {
       var self = this,
@@ -967,13 +964,7 @@
         var tokens = value.split( self.options.params.separator ),
             facetName = tokens[0],
             facetValue = tokens[1],
-            facetInfo = null;
-
-        facetInfo = !!storedOptions ?
-                    getFacetConfig( storedOptions, facetName ) :
-                    self.results.facets[facetName];
-
-        facetInfo = facetInfo || {};
+            facetInfo = self.getFacetConfig( facetName, storedOptions ) || {};
 
         if ( !facetInfo.type ) {
           console.error('don\'t have facets or options for \'' + facetName +
@@ -982,6 +973,36 @@
 
         self.selectFacet( facetName, facetValue, facetInfo.type );
       });
+    },
+
+    /**
+     * this function get's called in a tight loop, so loading the options async won't work
+     * (could end up requesting the options over and over ...)
+     * @method MLSearchContext#getFacetConfig
+     * @private
+     *
+     * @param {String} name - facet name
+     * @param {Object} [storedOptions] - a searchOptions object
+     * @return {Object} facet config
+     */
+    getFacetConfig: function getFacetConfig(name, storedOptions) {
+      var config = null;
+
+      if ( !!storedOptions ) {
+        config = _.chain( storedOptions.options.constraint )
+          .where({ name: name })
+          .first()
+          .clone()
+          .value();
+
+        config.type = config.collection ? 'collection' :
+                      config.custom ? 'custom' :
+                      config.range.type;
+      } else if ( !!this.results.facets && this.results.facets[ name ] ) {
+        config = this.results.facets[ name ];
+      }
+
+      return config;
     },
 
     /**
@@ -998,13 +1019,17 @@
     locationChange: function locationChange(newUrl, oldUrl, params) {
       params = this.getCurrentParams( params );
 
+      if ( params.f ) {
+        params.f = asArray(params.f);
+      }
+
       var d = $q.defer();
       // still on the search page, but there's a new query
       var shouldUpdate = pathsEqual(newUrl, oldUrl) &&
                          !_.isEqual( this.getParams(), params );
 
       if ( shouldUpdate ) {
-        this.fromParams().then( d.resolve );
+        this.fromParams(params).then( d.resolve );
       } else {
         d.reject();
       }
@@ -1058,7 +1083,7 @@
           result = {};
 
       // cache any options not already loaded
-      $q.all( _.map(names, self.getStoredOptions) ).then(function() {
+      $q.all( _.map(names, self.getStoredOptions.bind(self)) ).then(function() {
         // return only the names requested
         _.each(names, function(name) {
           result[name] = self.storedOptions[name];
@@ -1244,29 +1269,12 @@
     return pathName(newUrl) === pathName(oldUrl);
   }
 
-  // this function get's called in a tight loop, so loading the options async won't work
-  // (could end up requesting the options over and over ...)
-  function getFacetConfig(storedOptions, name) {
-    var constraint = _.chain( storedOptions.options.constraint )
-      .where({ name: name })
-      .first()
-      .clone()
-      .value();
-
-    constraint.type = constraint.collection ? 'collection' :
-                      constraint.custom ? 'custom' :
-                      constraint.range.type;
-
-    return constraint;
-  }
-
   //TODO: move to util module
   function asArray() {
     var args;
 
-    if ( arguments.length === 0 ) {
-      args = [];
-    } else if ( arguments.length === 1) {
+    /* istanbul ignore else */
+    if ( arguments.length === 1) {
       if (Array.isArray( arguments[0] )) {
         args = arguments[0];
       } else {

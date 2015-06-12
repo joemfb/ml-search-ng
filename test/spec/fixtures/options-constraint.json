@@ -1,1 +1,53 @@
-{"options": { "constraint": [{"name":"my-facet", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"element1"}}},{"name":"my-facet2", "range":{"type":"xs:string", "facet":true, "collation":"http://marklogic.com/collation/codepoint", "facet-option":["frequency-order", "descending"], "element":{"ns":"", "name":"element2"}}}]}}
+{
+  "options": {
+    "constraint": [
+      {
+        "name": "my-facet",
+        "range": {
+          "type": "xs:string",
+          "facet": true,
+          "collation": "http://marklogic.com/collation/codepoint",
+          "facet-option": [
+            "frequency-order",
+            "descending"
+          ],
+          "element": {
+            "ns": "",
+            "name": "element1"
+          }
+        }
+      },
+      {
+        "name": "my-facet2",
+        "range": {
+          "type": "xs:string",
+          "facet": true,
+          "collation": "http://marklogic.com/collation/codepoint",
+          "facet-option": [
+            "frequency-order",
+            "descending"
+          ],
+          "element": {
+            "ns": "",
+            "name": "element2"
+          }
+        }
+      },
+      {
+        "name": "my-custom-facet",
+        "custom": {
+          "facet": true,
+          "parse": {
+            "apply": "parse",
+            "ns": "http://marklogic.com/demo",
+            "at": "/lib/demo-constraints.xqy"
+          }
+        }
+      },
+      {
+        "name": "my-collection-facet",
+        "collection": { "prefix":"" }
+      }
+    ]
+  }
+}
