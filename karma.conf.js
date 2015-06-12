@@ -20,7 +20,9 @@ module.exports = function(config) {
 
       'bower_components/angular/angular.js',
       'bower_components/angular-route/angular-route.js',
-      'bower_components/lodash/dist/lodash.min.js',
+
+      'bower_components/lodash/dist/lodash.min.js', // v2.4.x
+      'bower_components/lodash/lodash.js', // v3.x
       'bower_components/ml-common-ng/dist/ml-common-ng.js',
 
       'dist/ml-search-ng-tpls.min.js',

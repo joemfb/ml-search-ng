@@ -158,7 +158,8 @@
           }
         })
         .compact()
-        .valueOf()[0];
+        .first()
+        .value();
     },
 
     /**
@@ -1153,7 +1154,8 @@
             })
             .each(function(value) {
               facet.selected = value.selected = true;
-            });
+            })
+            .value(); // thwart lazy evaluation
         }
       });
     },
