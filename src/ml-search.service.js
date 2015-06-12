@@ -345,6 +345,7 @@
      * @return {MLSearchContext} `this`
      */
     setPage: function setPage(page) {
+      page = parseInt(page) || 1;
       this.start = 1 + (page - 1) * this.options.pageLength;
       return this;
     },
@@ -855,6 +856,13 @@
       return facets;
     },
 
+    /**
+     * Gets the current search related URL params (excluding any params not controlled by {@link MLSearchContext})
+     * @method MLSearchContext#getCurrentParams
+     *
+     * @param {Object} [params] - URL params (defaults to `$location.search()`)
+     * @return {Object} search-related URL params
+     */
     getCurrentParams: function getCurrentParams(params) {
       params = _.pick(
         params || $location.search(),
@@ -873,32 +881,34 @@
      * @method MLSearchContext#fromParams
      *
      * @param {Object} [params] - a URL query params object
-     * @return a {Promise} resolved once the params have been applied
+     * @return {Promise} a promise resolved once the params have been applied
      */
     fromParams: function fromParams(params) {
       var self = this,
-          d = $q.defer();
+          d = $q.defer(),
+          paramsConf = this.options.params;
 
-      params = self.getCurrentParams( params );
+      params = this.getCurrentParams( params );
 
-      self.fromParam(self.options.params.qtext, params, self.setText, function() {
-        self.setText(null);
-      });
+      this.fromParam( paramsConf.qtext, params,
+        this.setText.bind(this),
+        this.setText.bind(this, null)
+      );
 
-      self.fromParam(self.options.params.page, params,
-        function(val) {
-          val = parseInt(val) || 1;
-          self.setPage( val );
-        }, function() {
-          self.setPage(1);
-        });
+      this.fromParam( paramsConf.page, params,
+        this.setPage.bind(this),
+        this.setPage.bind(this, 1)
+      );
 
-      self.fromParam(self.options.params.sort, params, self.setSort);
+      this.fromParam( paramsConf.sort, params,
+        this.setSort.bind(this)
+      );
 
-      self.fromParam(self.options.params.facets, params,
+      this.fromParam( paramsConf.facets, params,
         function(val) {
           self.clearAllFacets();
 
+          // ensure that facet type information is available
           if ( self.results.facets ) {
             self.fromFacetParam(val);
             d.resolve();
@@ -908,10 +918,12 @@
               d.resolve();
             });
           }
-        }, function() {
+        },
+        function() {
           self.clearAllFacets();
           d.resolve();
-        });
+        }
+      );
 
       return d.promise;
     },
@@ -924,29 +936,28 @@
      * @param {String} name - URL param name
      * @param {Object} params - URL params
      * @param {Function} callback - callback invoked with the value of the URL param
-     * @param {Function} defaultCallback - callback invoked if params are un-prefix'd, and no value is provided
+     * @param {Function} defaultCallback - callback invoked if params are un-prefix'd and no value is provided
      */
     fromParam: function fromParam(name, params, callback, defaultCallback) {
-      var value = null,
-          prefixedName = this.getParamsPrefix() + name;
+      var prefixedName = this.getParamsPrefix() + name,
+          value = params[ prefixedName ];
 
       if ( name === null ) {
         return;
       }
 
-      if ( params[prefixedName] ) {
-        value = params[prefixedName];
-      } else if ( defaultCallback ) {
-        return defaultCallback.call(this);
-      }
-
-      if ( value !== null ) {
-        if ( _.isString(value) ) {
-          value = decodeParam(value);
+      if ( !value ) {
+        if ( defaultCallback ) {
+          defaultCallback.call(this);
         }
-
-        callback.call( this, value );
+        return;
       }
+
+      if ( _.isString(value) ) {
+        value = decodeParam(value);
+      }
+
+      callback.call( this, value );
     },
 
     /**
