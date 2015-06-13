@@ -12,6 +12,13 @@ module.exports = function(config) {
     // testing framework to use (jasmine/mocha/qunit/...)
     frameworks: ['jasmine'],
 
+    plugins: [
+      'karma-jasmine',
+      'karma-phantomjs-launcher',
+      'karma-ng-json2js-preprocessor',
+      'karma-coverage'
+    ],
+
     // list of files / patterns to load in the browser
     files: [
       // Required libraries
