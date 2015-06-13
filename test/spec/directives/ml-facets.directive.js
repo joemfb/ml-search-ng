@@ -55,7 +55,7 @@ describe('ml-facets', function () {
       elem.find('.facet > div > a').eq(0).click();
       expect($scope.toggleFacet).toHaveBeenCalled();
 
-      var args = $scope.toggleFacet.mostRecentCall.args;
+      var args = $scope.toggleFacet.calls.mostRecent().args;
       expect( args[0] ).toEqual( 'myFacet' );
       expect( args[1] ).toEqual( facets.myFacet.facetValues[0].name );
     });
@@ -64,7 +64,7 @@ describe('ml-facets', function () {
       elem.find('.facet > div:last-child() > a').eq(0).click();
       expect($scope.showMoreFacets).toHaveBeenCalled();
 
-      var args = $scope.showMoreFacets.mostRecentCall.args;
+      var args = $scope.showMoreFacets.calls.mostRecent().args;
       expect( args[1] ).toEqual( 'myFacet' );
     });
 
@@ -95,7 +95,7 @@ describe('ml-facets', function () {
       elem.find('.facet > div > a').eq(0).click();
       expect($scope.toggleFacet).toHaveBeenCalled();
 
-      var args = $scope.toggleFacet.mostRecentCall.args;
+      var args = $scope.toggleFacet.calls.mostRecent().args;
       expect( args[0] ).toEqual( 'myFacet' );
       expect( args[1] ).toEqual( facets.myFacet.facetValues[0].name );
     });
@@ -104,7 +104,7 @@ describe('ml-facets', function () {
       elem.find('.facet > div:last-child() > a').eq(0).click();
       expect($scope.showMoreFacets).toHaveBeenCalled();
 
-      var args = $scope.showMoreFacets.mostRecentCall.args;
+      var args = $scope.showMoreFacets.calls.mostRecent().args;
       expect( args[1] ).toEqual( 'myFacet' );
     });
 

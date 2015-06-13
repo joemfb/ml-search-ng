@@ -20,7 +20,7 @@ describe('ml-remote-input', function () {
   beforeEach(function() {
     mockLocation = { path: jasmine.createSpy('path') };
     mockSearchContext = {
-      suggest: jasmine.createSpy('suggest').andCallFake(function() {
+      suggest: jasmine.createSpy('suggest').and.callFake(function() {
         var d = $q.defer();
         d.resolve(arguments);
         return d.promise;
@@ -140,7 +140,7 @@ describe('ml-remote-input', function () {
       elem.find('.custom-search').eq(0).click();
       expect(mockSearchContext.suggest).toHaveBeenCalled();
 
-      var args = mockSearchContext.suggest.mostRecentCall.args;
+      var args = mockSearchContext.suggest.calls.mostRecent().args;
       expect( args[0] ).toEqual('hi');
     });
 

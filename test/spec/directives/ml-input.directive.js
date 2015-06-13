@@ -44,7 +44,7 @@ describe('ml-input', function () {
       elem.find('button').eq(0).click();
       expect($scope.search).toHaveBeenCalled();
 
-      var args = $scope.search.mostRecentCall.args;
+      var args = $scope.search.calls.mostRecent().args;
       expect( args[0] ).toEqual( 'hi' );
     });
 
@@ -55,7 +55,7 @@ describe('ml-input', function () {
       elem.find('button').eq(1).click();
       expect($scope.search).toHaveBeenCalled();
 
-      var args = $scope.search.mostRecentCall.args;
+      var args = $scope.search.calls.mostRecent().args;
       expect( args[0] ).toEqual('');
     });
 
@@ -87,7 +87,7 @@ describe('ml-input', function () {
       elem.find('.search-submit').eq(0).click();
       expect($scope.search).toHaveBeenCalled();
 
-      var args = $scope.search.mostRecentCall.args;
+      var args = $scope.search.calls.mostRecent().args;
       expect( args[0] ).toEqual( 'hi' );
     });
 
@@ -98,7 +98,7 @@ describe('ml-input', function () {
       elem.find('.search-input-clear').eq(0).click();
       expect($scope.search).toHaveBeenCalled();
 
-      var args = $scope.search.mostRecentCall.args;
+      var args = $scope.search.calls.mostRecent().args;
       expect( args[0] ).toEqual('');
     });
 
@@ -128,7 +128,7 @@ describe('ml-input', function () {
       elem.find('.custom-search').eq(0).click();
       expect($scope.suggest).toHaveBeenCalled();
 
-      var args = $scope.suggest.mostRecentCall.args;
+      var args = $scope.suggest.calls.mostRecent().args;
       expect( args[0] ).toEqual('hi');
     });
 

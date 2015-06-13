@@ -59,7 +59,7 @@ describe('ml-results', function () {
 
     it('should call custom link function', function() {
       expect( $scope.linkTarget ).toHaveBeenCalled();
-      expect( $scope.linkTarget.callCount ).toEqual( results.length );
+      expect( $scope.linkTarget.calls.count() ).toEqual( results.length );
     });
   });
 

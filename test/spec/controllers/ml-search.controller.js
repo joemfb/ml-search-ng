@@ -29,21 +29,21 @@ describe('MLSearchController', function () {
 
   beforeEach(function() {
     mockSearchContext = {
-      fromParams: jasmine.createSpy('fromParams').andCallFake(asyncResolveMock),
-      locationChange: jasmine.createSpy('locationChange').andCallFake(asyncMock),
-      search: jasmine.createSpy('search').andCallFake(asyncMock),
-      suggest: jasmine.createSpy('suggest').andCallFake(asyncResolveMock),
-      showMoreFacets: jasmine.createSpy('showMoreFacets').andCallFake(asyncMock),
+      fromParams: jasmine.createSpy('fromParams').and.callFake(asyncResolveMock),
+      locationChange: jasmine.createSpy('locationChange').and.callFake(asyncMock),
+      search: jasmine.createSpy('search').and.callFake(asyncMock),
+      suggest: jasmine.createSpy('suggest').and.callFake(asyncResolveMock),
+      showMoreFacets: jasmine.createSpy('showMoreFacets').and.callFake(asyncMock),
       getParamsKeys: jasmine.createSpy('getParamsKeys'),
       getParams: jasmine.createSpy('getParams'),
       getText: jasmine.createSpy('getText'),
       getPage: jasmine.createSpy('getPage'),
-      setText: jasmine.createSpy('setText').andCallFake(function() { return this; }),
-      setPage: jasmine.createSpy('setPage').andCallFake(function() { return this; }),
-      toggleFacet: jasmine.createSpy('toggleFacet').andCallFake(function() { return this; }),
-      clearAllFacets: jasmine.createSpy('clearAllFacets').andCallFake(function() { return this; }),
-      clearAdditionalQueries: jasmine.createSpy('clearAdditionalQueries').andCallFake(function() { return this; }),
-      clearBoostQueries: jasmine.createSpy('clearBoostQueries').andCallFake(function() { return this; })
+      setText: jasmine.createSpy('setText').and.callFake(function() { return this; }),
+      setPage: jasmine.createSpy('setPage').and.callFake(function() { return this; }),
+      toggleFacet: jasmine.createSpy('toggleFacet').and.callFake(function() { return this; }),
+      clearAllFacets: jasmine.createSpy('clearAllFacets').and.callFake(function() { return this; }),
+      clearAdditionalQueries: jasmine.createSpy('clearAdditionalQueries').and.callFake(function() { return this; }),
+      clearBoostQueries: jasmine.createSpy('clearBoostQueries').and.callFake(function() { return this; })
     };
   });
 
@@ -94,7 +94,7 @@ describe('MLSearchController', function () {
     });
 
     it('should update search results', function() {
-      mockSearchContext.search = jasmine.createSpy('search').andCallFake(asyncResolveMock);
+      mockSearchContext.search = jasmine.createSpy('search').and.callFake(asyncResolveMock);
       var ctrl = new MLSearchController($scope, $location, mockSearchContext);
       ctrl.init();
       $scope.$apply();
@@ -104,8 +104,8 @@ describe('MLSearchController', function () {
     });
 
     it('should call extension functions init (when they exist)', function() {
-      var spyParse = jasmine.createSpy('parseExtraURLParams').andReturn(false);
-      var spyUpdate = jasmine.createSpy('updateExtraURLParams').andReturn(false);
+      var spyParse = jasmine.createSpy('parseExtraURLParams').and.returnValue(false);
+      var spyUpdate = jasmine.createSpy('updateExtraURLParams').and.returnValue(false);
       var ctrl = new MLSearchController($scope, $location, mockSearchContext);
 
       ctrl.parseExtraURLParams = spyParse;
@@ -201,7 +201,7 @@ describe('MLSearchController', function () {
       $rootScope.$apply();
 
       expect(mockSearchContext.showMoreFacets).toHaveBeenCalled();
-      var args = mockSearchContext.showMoreFacets.mostRecentCall.args;
+      var args = mockSearchContext.showMoreFacets.calls.mostRecent().args;
       expect( args[0] ).toBeNull;
       expect( args[1] ).toEqual('color');
       expect( args[2] ).toEqual(10);
@@ -230,8 +230,8 @@ describe('MLSearchController', function () {
     });
 
     it('should parse extra URL params and search', function() {
-      var spy = jasmine.createSpy('parseExtraURLParams').andReturn(true);
-      mockSearchContext.locationChange = jasmine.createSpy('locationChange').andCallFake(asyncRejectMock);
+      var spy = jasmine.createSpy('parseExtraURLParams').and.returnValue(true);
+      mockSearchContext.locationChange = jasmine.createSpy('locationChange').and.callFake(asyncRejectMock);
 
       ctrl.parseExtraURLParams = spy;
       ctrl.locationChange();
@@ -242,14 +242,14 @@ describe('MLSearchController', function () {
     });
 
     it('should parse extra URL params and not search', function() {
-      var spy = jasmine.createSpy('parseExtraURLParams').andReturn(false);
+      var spy = jasmine.createSpy('parseExtraURLParams').and.returnValue(false);
 
       $rootScope.$apply();
       expect(mockSearchContext.search).toHaveBeenCalled();
-      mockSearchContext.search.reset();
+      mockSearchContext.search.calls.reset();
 
       ctrl.parseExtraURLParams = spy;
-      mockSearchContext.locationChange = jasmine.createSpy('locationChange').andCallFake(asyncRejectMock);
+      mockSearchContext.locationChange = jasmine.createSpy('locationChange').and.callFake(asyncRejectMock);
 
       ctrl.locationChange();
 

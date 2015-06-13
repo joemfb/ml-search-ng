@@ -1,13 +1,17 @@
 'use strict';
 
 beforeEach(function() {
-  this.addMatchers({
-    toHaveClass: function(cls) {
-      this.message = function() {
-        return 'Expected "' + angular.mock.dump(this.actual) + '" to have class "' + cls + '".';
+  jasmine.addMatchers({
+    toHaveClass: function(util, customEqualityTesters) {
+      return {
+        compare: function(actual, expected) {
+          var passed = actual.hasClass( expected );
+          return {
+            pass: passed,
+            message: 'Expected ' + actual + (passed ? '' : ' not') + ' to equal ' + expected
+          };
+        }
       };
-
-      return this.actual.hasClass(cls);
     }
   });
 });
