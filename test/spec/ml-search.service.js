@@ -24,12 +24,11 @@ describe('MLSearch', function () {
     factory = $injector.get('MLSearchFactory');
   }));
 
-  describe('#getters-setters', function () {
+  afterEach(function() {
+    $httpBackend.verifyNoOutstandingExpectation();
+  });
 
-    it('returns a search object', function() {
-      var mlSearch = factory.newContext();
-      expect(mlSearch.search()).toBeDefined;
-    });
+  describe('#getters-setters', function () {
 
     it('has a query builder', function() {
       var mlSearch = factory.newContext();
