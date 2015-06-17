@@ -15,6 +15,11 @@
   /**
    * @class MLSearchFactory
    * @classdesc angular factory for creating instances of {@link MLSearchContext}
+   *
+   * @param {Object} $q - angular promise service
+   * @param {Object} $location - angular location service
+   * @param {MLRest} MLRest - low-level ML REST API wrapper (from {@link https://github.com/joemfb/ml-common-ng})
+   * @param {MLQueryBuilder} MLQueryBuilder - structured query builder (from {@link https://github.com/joemfb/ml-common-ng})
    */
   function MLSearchFactory($injectQ, $injectLocation, $injectMlRest, $injectQb) {
     $q = $injectQ;

@@ -10,6 +10,8 @@
   /**
    * @class MLRemoteInputService
    * @classdesc angular service for working with {@link ml-remote-input}
+   *
+   * @param {Object} $injector - angular dependency resolution service
    */
   function MLRemoteInputService($injector) {
     var service = this;
