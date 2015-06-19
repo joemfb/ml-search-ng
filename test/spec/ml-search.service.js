@@ -1,154 +1,5 @@
 /* global describe, beforeEach, module, it, expect, inject */
 
-describe('MLSearchContext#mock-service', function () {
-
-  var factory, mockMLRest, mockResults, $rootScope, $q;
-
-  // fixture
-  beforeEach(module('search-results.json'));
-
-  beforeEach(module('ml.search'));
-
-  beforeEach(function() {
-    mockMLRest = {
-      search: jasmine.createSpy('search').and.callFake(function() {
-        var d = $q.defer();
-        d.resolve({ data: mockResults });
-        return d.promise;
-      }),
-      transformMetadata: jasmine.createSpy('transformMetadata'),
-      annotateActiveFacets: jasmine.createSpy('annotateActiveFacets')
-    };
-  });
-
-  beforeEach(module(function($provide) {
-    $provide.value('MLRest', mockMLRest);
-  }));
-
-  beforeEach(inject(function ($injector) {
-    mockResults = $injector.get('searchResults');
-    $q = $injector.get('$q');
-    // $httpBackend = $injector.get('$httpBackend');
-    // $location = $injector.get('$location');
-    $rootScope = $injector.get('$rootScope');
-
-    factory = $injector.get('MLSearchFactory');
-  }));
-
-  it('should search with an adhoc combined query', function() {
-    var mlSearch = factory.newContext();
-    var count = 0;
-
-    mlSearch.search({
-      search: { query: {
-        queries: [{
-          'and-query': { queries: [] }
-        }]
-      } }
-    }).then(function() { count++; });
-    $rootScope.$apply();
-
-    expect( count ).toEqual(1);
-    expect( mockMLRest.search ).toHaveBeenCalled();
-
-    var args = mockMLRest.search.calls.mostRecent().args;
-    expect( args[0].options ).toBe(undefined);
-    expect( args[0].start ).toEqual(1);
-    expect( args[1].search ).not.toBe(undefined);
-    expect( args[1].search.query ).not.toBe(undefined);
-    expect( args[1].search.query.queries.length ).toEqual(1);
-    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
-    expect( args[1].search.options ).toBe(undefined);
-  });
-
-  it('should construct an adhoc combined query with options and search', function() {
-    var mlSearch = factory.newContext();
-    var count = 0;
-
-    mlSearch.search({
-      options: {
-        'return-facets': false,
-        'return-metrics': true
-      }
-    }).then(function() { count++; });
-    $rootScope.$apply();
-
-    expect( count ).toEqual(1);
-    expect( mockMLRest.search ).toHaveBeenCalled();
-
-    var args = mockMLRest.search.calls.mostRecent().args;
-    expect( args[0].options ).toBe(undefined);
-    expect( args[0].start ).toEqual(1);
-    expect( args[1].search ).not.toBe(undefined);
-    expect( args[1].search.query ).not.toBe(undefined);
-    expect( args[1].search.query.queries.length ).toEqual(2);
-    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
-    expect( args[1].search.options ).not.toBe(undefined);
-    expect( args[1].search.options['return-facets'] ).toEqual(false);
-    expect( args[1].search.options['return-metrics'] ).toEqual(true);
-  });
-
-  it('should construct an adhoc combined query from a structured query and search', function() {
-    var mlSearch = factory.newContext();
-    var count = 0;
-
-    mlSearch.search({
-      query: { queries: [{
-        'and-query': {
-          queries: [
-            { 'range-constraint-query': {
-              'constraint-name': 'facet',
-              'value': ['val']
-            }},
-            { 'collection-constraint-query': {
-              'constraint-name': 'type',
-              'uri': ['my-docs']
-            }},
-          ]
-        }
-      }]}
-    }).then(function() { count++; });
-    $rootScope.$apply();
-
-    expect( count ).toEqual(1);
-    expect( mockMLRest.search ).toHaveBeenCalled();
-
-    var args = mockMLRest.search.calls.mostRecent().args;
-    expect( args[0].options ).toEqual('all');
-    expect( args[0].start ).toEqual(1);
-    expect( args[1].search ).not.toBe(undefined);
-    expect( args[1].search.query ).not.toBe(undefined);
-    expect( args[1].search.query.queries.length ).toEqual(1);
-    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
-    expect( args[1].search.query.queries[0]['and-query'].queries.length ).toEqual(2);
-    expect( args[1].search.query.queries[0]['and-query'].queries[0]['range-constraint-query'] ).not.toBe(undefined);
-    expect( args[1].search.query.queries[0]['and-query'].queries[1]['collection-constraint-query'] ).not.toBe(undefined);
-    expect( args[1].search.options ).toBe(undefined);
-  });
-
-  it('should construct an adhoc combined query from specific options and search', function() {
-    var mlSearch = factory.newContext();
-    var count = 0;
-
-    mlSearch.search({ 'return-facets': false }).then(function() { count++; });
-    $rootScope.$apply();
-
-    expect( count ).toEqual(1);
-    expect( mockMLRest.search ).toHaveBeenCalled();
-
-    var args = mockMLRest.search.calls.mostRecent().args;
-    expect( args[0].options ).toEqual('all');
-    expect( args[0].start ).toEqual(1);
-    expect( args[1].search ).not.toBe(undefined);
-    expect( args[1].search.query ).not.toBe(undefined);
-    expect( args[1].search.query.queries.length ).toEqual(2);
-    expect( args[1].search.query.queries[0]['and-query'] ).toBeDefined;
-    expect( args[1].search.options ).not.toBe(undefined);
-    expect( args[1].search.options['return-facets'] ).toEqual(false);
-  });
-
-});
-
 describe('MLSearchContext', function () {
   'use strict';
 
@@ -758,7 +609,7 @@ describe('MLSearchContext', function () {
 
     it('returns additional facets correctly', function() {
       $httpBackend
-        .expectGET('/v1/config/query/all/constraint?format=json')
+        .expectGET('/v1/config/query/all?format=json')
         .respond(constraintConfig);
       $httpBackend
         .expectPOST('/v1/values/MyFacetName?limit=6&start=1')
@@ -769,9 +620,6 @@ describe('MLSearchContext', function () {
       expect(myFacet.facetValues).toContain(
           {name: 'First', value: 'First', count: 10});
 
-      $httpBackend
-        .expectGET('/v1/config/query/all/constraint?format=json')
-        .respond(constraintConfig);
       $httpBackend
         .expectPOST('/v1/values/MyOtherFacetName?limit=6&start=1')
         .respond(extraExtraFacets);
@@ -793,7 +641,7 @@ describe('MLSearchContext', function () {
       myExtraFacets['values-response']['distinct-value'] = _.take(myFacetValues, 5);
 
       $httpBackend
-        .expectGET('/v1/config/query/all/constraint?format=json')
+        .expectGET('/v1/config/query/all?format=json')
         .respond(constraintConfig);
       $httpBackend
         .expectPOST('/v1/values/MyFacetName?limit=6&start=1')
@@ -806,9 +654,6 @@ describe('MLSearchContext', function () {
       myExtraFacets['values-response']['distinct-value'] = myFacetValues;
 
       $httpBackend
-        .expectGET('/v1/config/query/all/constraint?format=json')
-        .respond(constraintConfig);
-      $httpBackend
         .expectPOST('/v1/values/MyFacetName?limit=16&start=6')
         .respond(myExtraFacets);
 
@@ -820,7 +665,7 @@ describe('MLSearchContext', function () {
     it('correctly uses saved queryOption', function() {
       searchContext.options.queryOptions = 'queryOption';
       $httpBackend
-        .expectGET('/v1/config/query/queryOption/constraint?format=json')
+        .expectGET('/v1/config/query/queryOption?format=json')
         .respond(constraintConfig);
 
       $httpBackend
@@ -833,7 +678,7 @@ describe('MLSearchContext', function () {
     it('should reject when no matching constraints', function() {
       var emptyConstraintConfig = { options: { constraint: [] } };
       $httpBackend
-        .whenGET('/v1/config/query/all/constraint?format=json')
+        .whenGET('/v1/config/query/all?format=json')
         .respond(emptyConstraintConfig);
 
       var error;
@@ -1414,6 +1259,195 @@ describe('MLSearchContext', function () {
     $httpBackend.flush();
 
     expect( success ).toEqual(false);
+  });
+
+});
+
+describe('MLSearchContext#mock-service', function () {
+
+  var factory, mockMLRest, mockResults, $rootScope, $q;
+
+  var mockValues = {
+    'values-response': {
+      name: 'MyOtherFacetName',
+      type: 'xs:string',
+      'distinct-value': [ {frequency: 2, _value: 'Other'} ]
+    }
+  };
+
+  // fixture
+  beforeEach(module('search-results.json'));
+
+  beforeEach(module('ml.search'));
+
+  beforeEach(function() {
+    mockMLRest = {
+      search: jasmine.createSpy('search').and.callFake(function() {
+        var d = $q.defer();
+        d.resolve({ data: mockResults });
+        return d.promise;
+      }),
+      values: jasmine.createSpy('values').and.callFake(function() {
+        var d = $q.defer();
+        d.resolve({ data: mockValues });
+        return d.promise;
+      })
+    };
+  });
+
+  beforeEach(module(function($provide) {
+    $provide.value('MLRest', mockMLRest);
+  }));
+
+  beforeEach(inject(function ($injector) {
+    mockResults = $injector.get('searchResults');
+    $q = $injector.get('$q');
+    $rootScope = $injector.get('$rootScope');
+    factory = $injector.get('MLSearchFactory');
+  }));
+
+  it('should search with an adhoc combined query', function() {
+    var mlSearch = factory.newContext();
+    var count = 0;
+
+    mlSearch.search({
+      search: { query: {
+        queries: [{
+          'and-query': { queries: [] }
+        }]
+      } }
+    }).then(function() { count++; });
+    $rootScope.$apply();
+
+    expect( count ).toEqual(1);
+    expect( mockMLRest.search ).toHaveBeenCalled();
+
+    var args = mockMLRest.search.calls.mostRecent().args;
+    expect( args[0].options ).toBe(undefined);
+    expect( args[0].start ).toEqual(1);
+    expect( args[1].search ).not.toBe(undefined);
+    expect( args[1].search.query ).not.toBe(undefined);
+    expect( args[1].search.query.queries.length ).toEqual(1);
+    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
+    expect( args[1].search.options ).toBe(undefined);
+  });
+
+  it('should construct an adhoc combined query with options and search', function() {
+    var mlSearch = factory.newContext();
+    var count = 0;
+
+    mlSearch.search({
+      options: {
+        'return-facets': false,
+        'return-metrics': true
+      }
+    }).then(function() { count++; });
+    $rootScope.$apply();
+
+    expect( count ).toEqual(1);
+    expect( mockMLRest.search ).toHaveBeenCalled();
+
+    var args = mockMLRest.search.calls.mostRecent().args;
+    expect( args[0].options ).toBe(undefined);
+    expect( args[0].start ).toEqual(1);
+    expect( args[1].search ).not.toBe(undefined);
+    expect( args[1].search.query ).not.toBe(undefined);
+    expect( args[1].search.query.queries.length ).toEqual(2);
+    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
+    expect( args[1].search.options ).not.toBe(undefined);
+    expect( args[1].search.options['return-facets'] ).toEqual(false);
+    expect( args[1].search.options['return-metrics'] ).toEqual(true);
+  });
+
+  it('should construct an adhoc combined query from a structured query and search', function() {
+    var mlSearch = factory.newContext();
+    var count = 0;
+
+    mlSearch.search({
+      query: { queries: [{
+        'and-query': {
+          queries: [
+            { 'range-constraint-query': {
+              'constraint-name': 'facet',
+              'value': ['val']
+            }},
+            { 'collection-constraint-query': {
+              'constraint-name': 'type',
+              'uri': ['my-docs']
+            }},
+          ]
+        }
+      }]}
+    }).then(function() { count++; });
+    $rootScope.$apply();
+
+    expect( count ).toEqual(1);
+    expect( mockMLRest.search ).toHaveBeenCalled();
+
+    var args = mockMLRest.search.calls.mostRecent().args;
+    expect( args[0].options ).toEqual('all');
+    expect( args[0].start ).toEqual(1);
+    expect( args[1].search ).not.toBe(undefined);
+    expect( args[1].search.query ).not.toBe(undefined);
+    expect( args[1].search.query.queries.length ).toEqual(1);
+    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
+    expect( args[1].search.query.queries[0]['and-query'].queries.length ).toEqual(2);
+    expect( args[1].search.query.queries[0]['and-query'].queries[0]['range-constraint-query'] ).not.toBe(undefined);
+    expect( args[1].search.query.queries[0]['and-query'].queries[1]['collection-constraint-query'] ).not.toBe(undefined);
+    expect( args[1].search.options ).toBe(undefined);
+  });
+
+  it('should construct an adhoc combined query from specific options and search', function() {
+    var mlSearch = factory.newContext();
+    var count = 0;
+
+    mlSearch.search({ 'return-facets': false }).then(function() { count++; });
+    $rootScope.$apply();
+
+    expect( count ).toEqual(1);
+    expect( mockMLRest.search ).toHaveBeenCalled();
+
+    var args = mockMLRest.search.calls.mostRecent().args;
+    expect( args[0].options ).toEqual('all');
+    expect( args[0].start ).toEqual(1);
+    expect( args[1].search ).not.toBe(undefined);
+    expect( args[1].search.query ).not.toBe(undefined);
+    expect( args[1].search.query.queries.length ).toEqual(2);
+    expect( args[1].search.query.queries[0]['and-query'] ).toBeDefined;
+    expect( args[1].search.options ).not.toBe(undefined);
+    expect( args[1].search.options['return-facets'] ).toEqual(false);
+  });
+
+  it('should get values', function() {
+    var mlSearch = factory.newContext();
+
+    var actual;
+    mlSearch.values('blah').then(function(response) { actual = response.data; });
+    $rootScope.$apply();
+
+    expect(actual['values-response'].name).toEqual('MyOtherFacetName');
+
+    var args = mockMLRest.values.calls.mostRecent().args;
+    expect(args[0]).toEqual('blah');
+    expect(args[1].start).toEqual(1);
+    expect(args[1].limit).toEqual(20);
+    expect(args[1].options).toEqual( mlSearch.getQueryOptions() );
+  });
+
+  it('should get values with combined query, without params', function() {
+    var mlSearch = factory.newContext();
+
+    var actual;
+    mlSearch.values('blah', {
+      options: { values: { name:'blah', 'values-option':'limit=10' }}
+    }).then(function(response) { actual = response.data; });
+    $rootScope.$apply();
+
+    var args = mockMLRest.values.calls.mostRecent().args;
+    expect(args[0]).toEqual('blah');
+    expect(args[1].start).toEqual(1);
+    expect(args[1].limit).toEqual(20);
+    expect(args[1].options).toBe(undefined);
   });
 
 });
