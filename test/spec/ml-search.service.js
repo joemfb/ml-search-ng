@@ -830,14 +830,17 @@ describe('MLSearchContext', function () {
       $httpBackend.flush();
     });
 
-    it('errors when no matching constraints', function() {
+    it('should reject when no matching constraints', function() {
       var emptyConstraintConfig = { options: { constraint: [] } };
       $httpBackend
         .whenGET('/v1/config/query/all/constraint?format=json')
         .respond(emptyConstraintConfig);
-      expect(function() {
-        searchContext.showMoreFacets(myFacet, 'MyFacetName');
-        $httpBackend.flush(); }).toThrow('No constraint exists matching MyFacetName');
+
+      var error;
+      searchContext.showMoreFacets(myFacet, 'MyFacetName').catch(function(err) { error = err; });
+      $httpBackend.flush();
+
+      expect( error ).toEqual(new Error('No constraint exists matching MyFacetName'));
     });
   });
 

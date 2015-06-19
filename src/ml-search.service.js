@@ -751,19 +751,21 @@
      * @param {String} facetName - facet name
      * @param {Number} [step] - the number of additional facet values to retrieve (defaults to `5`)
      *
-     * @return {MLSearchContext} `this`
+     * @return {Promise} a promise resolved once additional facets have been retrieved
      */
     showMoreFacets: function showMoreFacets(facet, facetName, step) {
       var _this = this;
       step = step || 5;
 
-      mlRest.queryConfig(this.getQueryOptions(), 'constraint').then(function(resp) {
+      return mlRest.queryConfig(this.getQueryOptions(), 'constraint').then(function(resp) {
         var options = resp.data.options.constraint;
 
         var myOption = options.filter(function (option) {
           return option.name === facetName;
         })[0];
-        if (!myOption) {throw 'No constraint exists matching ' + facetName;}
+        if (!myOption) {
+          return $q.reject(new Error('No constraint exists matching ' + facetName));
+        }
 
         var searchOptions = _this.getQuery();
         searchOptions.options = {};
@@ -778,7 +780,7 @@
         var start = facet.facetValues.length + 1;
         var limit = start + step;
 
-        mlRest.values(facetName, {start: start, limit: limit}, searchConfig).then(function(resp) {
+        return mlRest.values(facetName, {start: start, limit: limit}, searchConfig).then(function(resp) {
           var newFacets = resp.data['values-response']['distinct-value'];
           if (!newFacets || newFacets.length < (limit - start)) {
             facet.displayingAll = true;
@@ -793,7 +795,6 @@
           });
         });
       });
-      return this;
     },
 
     /************************************************************/

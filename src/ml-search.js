@@ -1,6 +1,6 @@
 (function () {
   'use strict';
 
-  angular.module('ml.search', ['ml.common'])
+  angular.module('ml.search', ['ml.common']);
 
 }());
