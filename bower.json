@@ -7,13 +7,13 @@
     "dist/ml-search-ng-tpls.min.js"
   ],
   "dependencies": {
-    "angular": "1.2.14",
+    "angular": "^1.2.14",
     "lodash": ">= 2.4.x",
-    "ml-common-ng": "~0.0.4"
+    "ml-common-ng": "^0.0.5"
   },
   "devDependencies": {
-    "angular-mocks": "1.2.14",
-    "angular-route": "1.2.14"
+    "angular-mocks": "^1.2.14",
+    "angular-route": "^1.2.14"
   },
   "homepage": "https://github.com/joemfb/ml-search-ng",
   "authors": [
