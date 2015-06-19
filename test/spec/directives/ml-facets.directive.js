@@ -19,6 +19,7 @@ describe('ml-facets', function () {
     }
   };
 
+  beforeEach(module('ml.common'));
   beforeEach(module('ml.search'));
   beforeEach(module('ml.search.tpls'));
 
