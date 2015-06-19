@@ -1,6 +1,155 @@
 /* global describe, beforeEach, module, it, expect, inject */
 
-describe('MLSearch', function () {
+describe('MLSearchContext#mock-service', function () {
+
+  var factory, mockMLRest, mockResults, $rootScope, $q;
+
+  // fixture
+  beforeEach(module('search-results.json'));
+
+  beforeEach(module('ml.search'));
+
+  beforeEach(function() {
+    mockMLRest = {
+      search: jasmine.createSpy('search').and.callFake(function() {
+        var d = $q.defer();
+        d.resolve({ data: mockResults });
+        return d.promise;
+      }),
+      transformMetadata: jasmine.createSpy('transformMetadata'),
+      annotateActiveFacets: jasmine.createSpy('annotateActiveFacets')
+    };
+  });
+
+  beforeEach(module(function($provide) {
+    $provide.value('MLRest', mockMLRest);
+  }));
+
+  beforeEach(inject(function ($injector) {
+    mockResults = $injector.get('searchResults');
+    $q = $injector.get('$q');
+    // $httpBackend = $injector.get('$httpBackend');
+    // $location = $injector.get('$location');
+    $rootScope = $injector.get('$rootScope');
+
+    factory = $injector.get('MLSearchFactory');
+  }));
+
+  it('should search with an adhoc combined query', function() {
+    var mlSearch = factory.newContext();
+    var count = 0;
+
+    mlSearch.search({
+      search: { query: {
+        queries: [{
+          'and-query': { queries: [] }
+        }]
+      } }
+    }).then(function() { count++; });
+    $rootScope.$apply();
+
+    expect( count ).toEqual(1);
+    expect( mockMLRest.search ).toHaveBeenCalled();
+
+    var args = mockMLRest.search.calls.mostRecent().args;
+    expect( args[0].options ).toBe(undefined);
+    expect( args[0].start ).toEqual(1);
+    expect( args[1].search ).not.toBe(undefined);
+    expect( args[1].search.query ).not.toBe(undefined);
+    expect( args[1].search.query.queries.length ).toEqual(1);
+    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
+    expect( args[1].search.options ).toBe(undefined);
+  });
+
+  it('should construct an adhoc combined query with options and search', function() {
+    var mlSearch = factory.newContext();
+    var count = 0;
+
+    mlSearch.search({
+      options: {
+        'return-facets': false,
+        'return-metrics': true
+      }
+    }).then(function() { count++; });
+    $rootScope.$apply();
+
+    expect( count ).toEqual(1);
+    expect( mockMLRest.search ).toHaveBeenCalled();
+
+    var args = mockMLRest.search.calls.mostRecent().args;
+    expect( args[0].options ).toBe(undefined);
+    expect( args[0].start ).toEqual(1);
+    expect( args[1].search ).not.toBe(undefined);
+    expect( args[1].search.query ).not.toBe(undefined);
+    expect( args[1].search.query.queries.length ).toEqual(2);
+    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
+    expect( args[1].search.options ).not.toBe(undefined);
+    expect( args[1].search.options['return-facets'] ).toEqual(false);
+    expect( args[1].search.options['return-metrics'] ).toEqual(true);
+  });
+
+  it('should construct an adhoc combined query from a structured query and search', function() {
+    var mlSearch = factory.newContext();
+    var count = 0;
+
+    mlSearch.search({
+      query: { queries: [{
+        'and-query': {
+          queries: [
+            { 'range-constraint-query': {
+              'constraint-name': 'facet',
+              'value': ['val']
+            }},
+            { 'collection-constraint-query': {
+              'constraint-name': 'type',
+              'uri': ['my-docs']
+            }},
+          ]
+        }
+      }]}
+    }).then(function() { count++; });
+    $rootScope.$apply();
+
+    expect( count ).toEqual(1);
+    expect( mockMLRest.search ).toHaveBeenCalled();
+
+    var args = mockMLRest.search.calls.mostRecent().args;
+    expect( args[0].options ).toEqual('all');
+    expect( args[0].start ).toEqual(1);
+    expect( args[1].search ).not.toBe(undefined);
+    expect( args[1].search.query ).not.toBe(undefined);
+    expect( args[1].search.query.queries.length ).toEqual(1);
+    expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
+    expect( args[1].search.query.queries[0]['and-query'].queries.length ).toEqual(2);
+    expect( args[1].search.query.queries[0]['and-query'].queries[0]['range-constraint-query'] ).not.toBe(undefined);
+    expect( args[1].search.query.queries[0]['and-query'].queries[1]['collection-constraint-query'] ).not.toBe(undefined);
+    expect( args[1].search.options ).toBe(undefined);
+  });
+
+  it('should construct an adhoc combined query from specific options and search', function() {
+    var mlSearch = factory.newContext();
+    var count = 0;
+
+    mlSearch.search({ 'return-facets': false }).then(function() { count++; });
+    $rootScope.$apply();
+
+    expect( count ).toEqual(1);
+    expect( mockMLRest.search ).toHaveBeenCalled();
+
+    var args = mockMLRest.search.calls.mostRecent().args;
+    expect( args[0].options ).toEqual('all');
+    expect( args[0].start ).toEqual(1);
+    expect( args[1].search ).not.toBe(undefined);
+    expect( args[1].search.query ).not.toBe(undefined);
+    expect( args[1].search.query.queries.length ).toEqual(2);
+    expect( args[1].search.query.queries[0]['and-query'] ).toBeDefined;
+    expect( args[1].search.options ).not.toBe(undefined);
+    expect( args[1].search.options['return-facets'] ).toEqual(false);
+  });
+
+});
+
+describe('MLSearchContext', function () {
   'use strict';
 
   var factory, $httpBackend, $q, $location, $rootScope;

@@ -1128,22 +1128,68 @@
 
     /**
      * Retrieves search results based on the current state
+     *
+     * If an object is passed as the `adhoc` parameter, the search will be run as a `POST`
+     * with a combined query, and the results will not be saved to `MLSearchContext.results`.
+     * If `adhoc` is a combined query, or a search options object, the `options` URL parameter
+     * will not be included (ignoring stored search options).
+     *
      * @method MLSearchContext#search
      *
+     * @param {Object} [adhoc] - structured query || combined query || partial search options object
      * @return {Promise} a promise resolved with search results
      */
-    search: function search() {
-      var self = this;
+    search: function search(adhoc) {
+      var self = this,
+          query = this.getQuery(),
+          combined = null,
+          includeOptionsParam = true,
+          params = {
+            start: this.start,
+            pageLength: this.options.pageLength,
+            transform: this.searchTransform
+          };
 
-      return mlRest.search({
-        options: self.options.queryOptions,
-        structuredQuery: self.getQuery(),
-        start: self.start,
-        pageLength: self.options.pageLength,
-        transform: self.searchTransform
-      })
+      if ( adhoc ) {
+        combined = {};
+
+        if ( adhoc.search ) {
+          includeOptionsParam = false;
+          combined.search = adhoc.search;
+        } else {
+          combined = { search: {} };
+
+          if ( adhoc.options ) {
+            includeOptionsParam = false;
+            combined.search.options = adhoc.options;
+            combined.search.query = query.query;
+          } else if ( adhoc.query ) {
+            combined.search.query = adhoc.query;
+          } else {
+            combined.search.options = adhoc;
+            combined.search.query = query.query;
+          }
+        }
+      } else {
+        params.structuredQuery = query;
+      }
+
+      if ( includeOptionsParam ) {
+        params.options = this.options.queryOptions;
+      }
+
+      return mlRest.search(params, combined)
       .then(function(response) {
-        self.results = response.data;
+        var results = response.data;
+
+        // the results of adhoc queries aren't preserved
+        if ( combined ) {
+          self.transformMetadata(results);
+          self.annotateActiveFacets(results);
+          return results;
+        }
+
+        self.results = results;
         self.transformMetadata();
         self.annotateActiveFacets();
         return self.results;
