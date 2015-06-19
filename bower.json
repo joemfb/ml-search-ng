@@ -2,7 +2,10 @@
   "name": "ml-search-ng",
   "version": "0.0.12",
   "description": "An angular module for common search-app use cases",
-  "main": "/dist/ml-search-ng.min.js",
+  "main": [
+    "dist/ml-search-ng.min.js",
+    "dist/ml-search-ng-tpls.min.js"
+  ],
   "dependencies": {
     "angular": "1.2.14",
     "lodash": ">= 2.4.x",
