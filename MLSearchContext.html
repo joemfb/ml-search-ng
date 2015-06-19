@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <meta name="generator" content="JSDoc 3.3.0-beta3">
+  <meta name="generator" content="JSDoc 3.3.1">
   <meta charset="utf-8">
   <title>Class: MLSearchContext</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
@@ -25,7 +25,7 @@
         <div id="jsdoc-main" role="main">
           <header class="page-header">
             <h1><div class="symbol-detail-labels"><span class="label label-kind">class</span></div><small></small><span class="symbol-name">MLSearchContext</span></h1>
-            <p class="source-link">Source: <a href="ml-search.service.js.html#source-line-39">ml-search.<wbr>service.<wbr>js:39</a></p>
+            <p class="source-link">Source: <a href="ml-search.service.js.html#source-line-44">ml-search.<wbr>service.<wbr>js:44</a></p>
             <div class="symbol-classdesc">
               <p>class for maintaining and manipulating the state of a search context</p>
             </div>
@@ -54,7 +54,7 @@
               <div class="summary-content">
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="MLSearchContext.html#addAdditionalQuery">addAdditionalQuery(additional)</a></dt>
+                    <dt><a href="MLSearchContext.html#addAdditionalQuery">addAdditionalQuery(query)</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="MLSearchContext.html#addBoostQuery">addBoostQuery(boost)</a></dt>
@@ -87,10 +87,7 @@
                     <dt><a href="MLSearchContext.html#clearSort">clearSort()</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchContext.html#fromFacetParam">fromFacetParam(params, storedOptions)</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="MLSearchContext.html#fromParams">fromParams(params)</a></dt>
+                    <dt><a href="MLSearchContext.html#fromParams">fromParams([params])</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="MLSearchContext.html#getActiveFacets">getActiveFacets()</a></dt>
@@ -105,7 +102,10 @@
                     <dt><a href="MLSearchContext.html#getBoostQueries">getBoostQueries()</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchContext.html#getCombinedQuery">getCombinedQuery()</a></dt>
+                    <dt><a href="MLSearchContext.html#getCombinedQuery">getCombinedQuery([includeOptions])</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="MLSearchContext.html#getCurrentParams">getCurrentParams([params])</a></dt>
                     <dd>
                     </dd>
                   </dl>
@@ -142,6 +142,12 @@
                     <dt><a href="MLSearchContext.html#getParamsConfig">getParamsConfig()</a></dt>
                     <dd>
                     </dd>
+                    <dt><a href="MLSearchContext.html#getParamsKeys">getParamsKeys()</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="MLSearchContext.html#getParamsPrefix">getParamsPrefix()</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="MLSearchContext.html#getQuery">getQuery()</a></dt>
                     <dd>
                     </dd>
@@ -160,16 +166,16 @@
                     <dt><a href="MLSearchContext.html#getStructuredQuery">getStructuredQuery()</a></dt>
                     <dd>
                     </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
                     <dt><a href="MLSearchContext.html#getText">getText()</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="MLSearchContext.html#getTransform">getTransform()</a></dt>
                     <dd>
                     </dd>
-                  </dl>
-                </div>
-                <div class="summary-column">
-                  <dl class="dl-summary-callout">
                     <dt><a href="MLSearchContext.html#isFacetActive">isFacetActive(name, value)</a></dt>
                     <dd>
                     </dd>
@@ -194,16 +200,16 @@
                     <dt><a href="MLSearchContext.html#setPage">setPage(search)</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchContext.html#setPageLength">setPageLength(page)</a></dt>
+                    <dt><a href="MLSearchContext.html#setPageLength">setPageLength(pageLength)</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchContext.html#setSnippet">setSnippet(operator)</a></dt>
+                    <dt><a href="MLSearchContext.html#setSnippet">setSnippet(snippet)</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="MLSearchContext.html#setSort">setSort(sort)</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchContext.html#setText">setText(search)</a></dt>
+                    <dt><a href="MLSearchContext.html#setText">setText(text)</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="MLSearchContext.html#setTransform">setTransform(transform)</a></dt>
@@ -248,7 +254,7 @@
                       <p>&nbsp;</p>
                     </td>
                     <td>
-                      <p>provided object properties will override defaults</p>
+                      <p>provided object properties will override <a href="MLSearchContext.html#.defaults">MLSearchContext.defaults</a></p>
                     </td>
                   </tr>
                 </tbody>
@@ -430,7 +436,7 @@
             <h2>Property</h2>
             <section>
               <h3 id=".defaults"><div class="symbol-detail-labels"><span class="label label-static">static</span></div><span class="symbol-name">defaults</span><small class="property-type">
-                &nbsp;object</small></h3>
+            &nbsp;object</small></h3>
               <p>pass an object to <code>new MLSearchContext()</code> or <a href="MLSearchFactory.html#newContext">MLSearchFactory#newContext</a> with any of these properties to override their values</p>
               <section>
                 <h4>Properties</h4>
@@ -455,7 +461,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>stored search options name ('all')</p>
+                        <p>stored search options name (<code>'all'</code>)</p>
                       </td>
                     </tr>
                     <tr>
@@ -469,7 +475,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>results page length (10)</p>
+                        <p>results page length (<code>10</code>)</p>
                       </td>
                     </tr>
                     <tr>
@@ -483,7 +489,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>results transform operator state-name ('compact')</p>
+                        <p>results transform operator state-name (<code>'compact'</code>)</p>
                       </td>
                     </tr>
                     <tr>
@@ -497,7 +503,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>sort operator state-name (null)</p>
+                        <p>sort operator state-name (<code>null</code>)</p>
                       </td>
                     </tr>
                     <tr>
@@ -511,7 +517,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>combine facets with an <code>and-query</code> or an <code>or-query</code> ('and')</p>
+                        <p>determines if facets are combined in an <code>and-query</code> or an <code>or-query</code> (<code>and</code>)</p>
                       </td>
                     </tr>
                     <tr>
@@ -525,7 +531,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>include document properties in queries (false)</p>
+                        <p>include document properties in queries (<code>false</code>)</p>
                       </td>
                     </tr>
                     <tr>
@@ -556,13 +562,13 @@
                                 <p>separator</p>
                               </td>
                               <td>
-                                <p>&nbsp;</p>
+                                <p>String</p>
                               </td>
                               <td>
                                 <p>&nbsp;</p>
                               </td>
                               <td>
-                                <p>constraint-name and value separator (':')</p>
+                                <p>constraint-name and value separator (<code>':'</code>)</p>
                               </td>
                             </tr>
                             <tr>
@@ -570,13 +576,13 @@
                                 <p>qtext</p>
                               </td>
                               <td>
-                                <p>&nbsp;</p>
+                                <p>String</p>
                               </td>
                               <td>
                                 <p>&nbsp;</p>
                               </td>
                               <td>
-                                <p>qtext parameter name ('qtext')</p>
+                                <p>qtext parameter name (<code>'qtext'</code>)</p>
                               </td>
                             </tr>
                             <tr>
@@ -584,13 +590,13 @@
                                 <p>facets</p>
                               </td>
                               <td>
-                                <p>&nbsp;</p>
+                                <p>String</p>
                               </td>
                               <td>
                                 <p>&nbsp;</p>
                               </td>
                               <td>
-                                <p>facets parameter name ('f')</p>
+                                <p>facets parameter name (<code>'f'</code>)</p>
                               </td>
                             </tr>
                             <tr>
@@ -598,13 +604,13 @@
                                 <p>sort</p>
                               </td>
                               <td>
-                                <p>&nbsp;</p>
+                                <p>String</p>
                               </td>
                               <td>
                                 <p>&nbsp;</p>
                               </td>
                               <td>
-                                <p>sort parameter name ('s')</p>
+                                <p>sort parameter name (<code>'s'</code>)</p>
                               </td>
                             </tr>
                             <tr>
@@ -612,13 +618,42 @@
                                 <p>page</p>
                               </td>
                               <td>
-                                <p>&nbsp;</p>
+                                <p>String</p>
                               </td>
                               <td>
                                 <p>&nbsp;</p>
                               </td>
                               <td>
-                                <p>page parameter name ('p')</p>
+                                <p>page parameter name (<code>'p'</code>)</p>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <p>prefix</p>
+                              </td>
+                              <td>
+                                <p>String</p>
+                              </td>
+                              <td>
+                                <p>&nbsp;</p>
+                              </td>
+                              <td>
+                                <p>optional string prefix for each parameter name (<code>null</code>)</p>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <p>prefixSeparator</p>
+                              </td>
+                              <td>
+                                <p>String</p>
+                              </td>
+                              <td>
+                                <p>&nbsp;</p>
+                              </td>
+                              <td>
+                                <p>separator for prefix and parameter name. (<code>null</code>)
+                                  <br>if <code>null</code>, <code>options.params.separator</code> is used as the prefix separator</p>
                               </td>
                             </tr>
                           </tbody>
@@ -633,8 +668,8 @@
             </section>
             <h2>Methods</h2>
             <section>
-              <h3 id="addAdditionalQuery"><span class="symbol-name">addAdditionalQuery</span><span class="signature"><span class="signature-params">(additional)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Adds a additional query</p>
+              <h3 id="addAdditionalQuery"><span class="symbol-name">addAdditionalQuery</span><span class="signature"><span class="signature-params">(query)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
+              <p>Adds an additional query to <code>this.additionalQueries</code></p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -649,7 +684,7 @@
                   <tbody>
                     <tr>
                       <td>
-                        <p>additional</p>
+                        <p>query</p>
                       </td>
                       <td>
                         <p>Object</p>
@@ -658,7 +693,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>query</p>
+                        <p>additional query</p>
                       </td>
                     </tr>
                   </tbody>
@@ -671,7 +706,7 @@
                 </dd>
               </dl>
               <h3 id="addBoostQuery"><span class="symbol-name">addBoostQuery</span><span class="signature"><span class="signature-params">(boost)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Adds a boost query</p>
+              <p>Adds a boost query to <code>this.boostQueries</code></p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -708,7 +743,7 @@
                 </dd>
               </dl>
               <h3 id="addNamespace"><span class="symbol-name">addNamespace</span><span class="signature"><span class="signature-params">(namespace)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Adds a namespace object</p>
+              <p>Adds a namespace prefix-&gt;URI mapping</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -732,6 +767,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
+                        <p>object with <code>uri</code> and <code>prefix</code> properties</p>
                       </td>
                     </tr>
                   </tbody>
@@ -744,7 +780,7 @@
                 </dd>
               </dl>
               <h3 id="annotateActiveFacets"><span class="symbol-name">annotateActiveFacets</span><span class="signature"><span class="signature-params">([facets])</span></span></h3>
-              <p>Annotate the facets in the search results object with the selections from <code>this.activeFacets</code></p>
+              <p>Annotates facets (from a search response object) with the selections from <code>this.activeFacets</code></p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -768,8 +804,7 @@
                         <p>Yes</p>
                       </td>
                       <td>
-                        <p>the search facets object to annotate; if <code>result</code> is falsy,
-                          <code>this.annotateActiveFacets</code> is applied to <code>this.results.facets</code></p>
+                        <p>the search facets object (defaults to <code>this.results.facets</code>)</p>
                       </td>
                     </tr>
                   </tbody>
@@ -778,7 +813,7 @@
               <dl class="dl-compact">
               </dl>
               <h3 id="clearAdditionalQueries"><span class="symbol-name">clearAdditionalQueries</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Clear the additional queries</p>
+              <p>Clears the additional queries</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -786,7 +821,7 @@
                 </dd>
               </dl>
               <h3 id="clearAllFacets"><span class="symbol-name">clearAllFacets</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Reset the activeFacets list</p>
+              <p>Clears the activeFacets list</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -794,7 +829,7 @@
                 </dd>
               </dl>
               <h3 id="clearBoostQueries"><span class="symbol-name">clearBoostQueries</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Clear the boost queries</p>
+              <p>Clears the boost queries</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -802,7 +837,7 @@
                 </dd>
               </dl>
               <h3 id="clearFacet"><span class="symbol-name">clearFacet</span><span class="signature"><span class="signature-params">(name, value)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Remove the facet/value combination from the activeFacets list</p>
+              <p>Removes the facet/value combination from the activeFacets list</p>
               <section>
                 <h4>Parameters</h4>
                 <table class="jsdoc-details-table">
@@ -853,7 +888,7 @@
                 </dd>
               </dl>
               <h3 id="clearNamespaces"><span class="symbol-name">clearNamespaces</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Clears namespaces</p>
+              <p>Clears namespace prefix-&gt;URI mappings</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -861,7 +896,7 @@
                 </dd>
               </dl>
               <h3 id="clearSnippet"><span class="symbol-name">clearSnippet</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Resets the current results transform operator state name to its default value</p>
+              <p>Clears the results transform operator (resets it to its default value)</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -869,66 +904,15 @@
                 </dd>
               </dl>
               <h3 id="clearSort"><span class="symbol-name">clearSort</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Resets the current sort operator state name to its default value</p>
+              <p>Clears the sort operator state name (resets it to its default value)</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
                   <p><code><a href="MLSearchContext.html">MLSearchContext</a></code>&nbsp;<code>this</code></p>
                 </dd>
               </dl>
-              <h3 id="fromFacetParam"><span class="symbol-name">fromFacetParam</span><span class="signature"><span class="signature-params">(params, storedOptions)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>Update the current active facets based on the provided URL query params object</p>
-              <section>
-                <h4>Parameters</h4>
-                <table class="jsdoc-details-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Optional</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <p>params</p>
-                      </td>
-                      <td>
-                        <p>Object</p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>a URL query params object</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <p>storedOptions</p>
-                      </td>
-                      <td>
-                        <p>Object</p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>a searchOptions object</p>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </section>
-              <dl class="dl-compact">
-                <dt>Returns</dt>
-                <dd>
-                  <p><code>Promise</code>&nbsp;a resolved once the params have been applied</p>
-                </dd>
-              </dl>
-              <h3 id="fromParams"><span class="symbol-name">fromParams</span><span class="signature"><span class="signature-params">(params)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>Update the current state based on the provided URL query params object</p>
+              <h3 id="fromParams"><span class="symbol-name">fromParams</span><span class="signature"><span class="signature-params">([params])</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
+              <p>Updates the current state based on the URL query params</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -949,10 +933,10 @@
                         <p>Object</p>
                       </td>
                       <td>
-                        <p>&nbsp;</p>
+                        <p>Yes</p>
                       </td>
                       <td>
-                        <p>a URL query params object</p>
+                        <p>a URL query params object (defaults to <code>$location.search()</code>)</p>
                       </td>
                     </tr>
                   </tbody>
@@ -961,23 +945,23 @@
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;a resolved once the params have been applied</p>
+                  <p><code>Promise</code>&nbsp;a promise resolved once the params have been applied</p>
                 </dd>
               </dl>
-              <h3 id="getActiveFacets"><span class="symbol-name">getActiveFacets</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Gets the hash of active facets</p>
+              <h3 id="getActiveFacets"><span class="symbol-name">getActiveFacets</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Object</span></span></h3>
+              <p>Gets the object repesenting active facet selections</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code><a href="MLSearchContext.html">MLSearchContext</a></code>&nbsp;<code>this</code>.activeFacets</p>
+                  <p><code>Object</code>&nbsp;<code>this.activeFacets</code></p>
                 </dd>
               </dl>
-              <h3 id="getAdditionalQueries"><span class="symbol-name">getAdditionalQueries</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
+              <h3 id="getAdditionalQueries"><span class="symbol-name">getAdditionalQueries</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Object</span></span></h3>
               <p>Gets the additional queries</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code><a href="MLSearchContext.html">MLSearchContext</a></code>&nbsp;<code>this</code>.additionalQueries</p>
+                  <p><code>Object</code>&nbsp;<code>this.additionalQueries</code></p>
                 </dd>
               </dl>
               <h3 id="getAllStoredOptions"><span class="symbol-name">getAllStoredOptions</span><span class="signature"><span class="signature-params">(names)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
@@ -1014,39 +998,105 @@
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;a promise resolved with <code>this.storedOptions</code></p>
+                  <p><code>Promise</code>&nbsp;a promise resolved with an object containing the requested search options, keyed by name</p>
                 </dd>
               </dl>
-              <h3 id="getBoostQueries"><span class="symbol-name">getBoostQueries</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
+              <h3 id="getBoostQueries"><span class="symbol-name">getBoostQueries</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Array</span></span></h3>
               <p>Gets the boost queries</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code><a href="MLSearchContext.html">MLSearchContext</a></code>&nbsp;<code>this</code>.activeFacets</p>
+                  <p><code>Array</code>&nbsp;<code>this.boostQueries</code></p>
                 </dd>
               </dl>
-              <h3 id="getCombinedQuery"><span class="symbol-name">getCombinedQuery</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
+              <h3 id="getCombinedQuery"><span class="symbol-name">getCombinedQuery</span><span class="signature"><span class="signature-params">([includeOptions])</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
               <p>Construct a combined query from the current state</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>includeOptions</p>
+                      </td>
+                      <td>
+                        <p>Boolean</p>
+                      </td>
+                      <td>
+                        <p>Yes</p>
+                      </td>
+                      <td>
+                        <p>if <code>true</code>, get and include the stored search options (defaults to <code>false</code>)</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
                   <p><code>Promise</code>&nbsp;- a promise resolved with the combined query</p>
                 </dd>
               </dl>
+              <h3 id="getCurrentParams"><span class="symbol-name">getCurrentParams</span><span class="signature"><span class="signature-params">([params])</span>&nbsp;&rarr; <span class="signature-returns"> Object</span></span></h3>
+              <p>Gets the current search related URL params (excluding any params not controlled by <a href="MLSearchContext.html">MLSearchContext</a>)</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>params</p>
+                      </td>
+                      <td>
+                        <p>Object</p>
+                      </td>
+                      <td>
+                        <p>Yes</p>
+                      </td>
+                      <td>
+                        <p>URL params (defaults to <code>$location.search()</code>)</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Object</code>&nbsp;search-related URL params</p>
+                </dd>
+              </dl>
               <h3 id="getFacetMode"><span class="symbol-name">getFacetMode</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> String</span></span></h3>
-              <p>Gets the current facet mode name (and|or)</p>
+              <p>Gets the current facet mode (determines if facet values are combined in an <code>and-query</code> or an <code>or-query</code>)</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
                   <p><code>String</code>&nbsp;facet mode</p>
                 </dd>
               </dl>
-              <h3 id="getFacetParams"><span class="symbol-name">getFacetParams</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Object</span></span></h3>
-              <p>Construct a URL query params object from the active facets</p>
+              <h3 id="getFacetParams"><span class="symbol-name">getFacetParams</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Array of String</span></span></h3>
+              <p>Construct an array of facet selections (<code>name</code> <code>separator</code> <code>value</code>) from <code>this.activeFacets</code> for use in a URL query params object</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Object</code>&nbsp;params - a URL query params object</p>
+                  <p><code>Array of String</code>&nbsp;an array of facet URL query param values</p>
                 </dd>
               </dl>
               <h3 id="getFacetQuery"><span class="symbol-name">getFacetQuery</span><span class="signature"><span class="signature-params">()</span></span></h3>
@@ -1094,7 +1144,7 @@
                 </dd>
               </dl>
               <h3 id="getNamespaces"><span class="symbol-name">getNamespaces</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Array of Object</span></span></h3>
-              <p>Gets namespace prefix-to-URI mapping objects</p>
+              <p>Gets namespace prefix-to-URI mappings</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -1161,12 +1211,28 @@
                   <p><code>Object</code>&nbsp;params - a URL query params object</p>
                 </dd>
               </dl>
-              <h3 id="getParamsConfig"><span class="symbol-name">getParamsConfig</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> String</span></span></h3>
+              <h3 id="getParamsConfig"><span class="symbol-name">getParamsConfig</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Object</span></span></h3>
               <p>Gets the current URL params config object</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>String</code>&nbsp;facet mode</p>
+                  <p><code>Object</code>&nbsp;params config</p>
+                </dd>
+              </dl>
+              <h3 id="getParamsKeys"><span class="symbol-name">getParamsKeys</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Array of String</span></span></h3>
+              <p>Gets the key of the enabled URL params</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Array of String</code>&nbsp;URL params keys</p>
+                </dd>
+              </dl>
+              <h3 id="getParamsPrefix"><span class="symbol-name">getParamsPrefix</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> String</span></span></h3>
+              <p>Gets the URL params prefix</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>String</code>&nbsp;the defined params prefix + separator</p>
                 </dd>
               </dl>
               <h3 id="getQuery"><span class="symbol-name">getQuery</span><span class="signature"><span class="signature-params">()</span></span></h3>
@@ -1313,7 +1379,7 @@
                 </dd>
               </dl>
               <h3 id="locationChange"><span class="symbol-name">locationChange</span><span class="signature"><span class="signature-params">(newUrl, oldUrl, params)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>Examines the current state, and determines if a new search is needed. (intended to be triggered on {$locationChangeSuccess})</p>
+              <p>Examines the current state, and determines if a new search is needed. (intended to be triggered on <code>$locationChangeSuccess</code>)</p>
               <section>
                 <h4>Parameters</h4>
                 <table class="jsdoc-details-table">
@@ -1378,7 +1444,7 @@
                 </dd>
               </dl>
               <h3 id="search"><span class="symbol-name">search</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>Runs a search based on the current state</p>
+              <p>Retrieves search results based on the current state</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -1458,8 +1524,7 @@
                 <dd><a href="MLSearchContext.html#getParams">MLSearchContext#getParams</a></dd>
               </dl>
               <h3 id="setFacetMode"><span class="symbol-name">setFacetMode</span><span class="signature"><span class="signature-params">(facetMode)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Sets the current facet mode name. The facet mode determines the query used to join facet selections:
-                <code>and-query</code> or <code>or-query</code>.</p>
+              <p>Sets the current facet mode (<code>and</code>|<code>or</code>). (determines if facet values are combined in an <code>and-query</code> or an <code>or-query</code>)</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -1496,7 +1561,7 @@
                 </dd>
               </dl>
               <h3 id="setNamespaces"><span class="symbol-name">setNamespaces</span><span class="signature"><span class="signature-params">(namespace)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
-              <p>Sets namespace objects</p>
+              <p>Sets namespace prefix-&gt;URI mappings</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -1520,7 +1585,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>objects</p>
+                        <p>objects with <code>uri</code> and <code>prefix</code> properties</p>
                       </td>
                     </tr>
                   </tbody>
@@ -1569,7 +1634,7 @@
                   <p><code><a href="MLSearchContext.html">MLSearchContext</a></code>&nbsp;<code>this</code></p>
                 </dd>
               </dl>
-              <h3 id="setPageLength"><span class="symbol-name">setPageLength</span><span class="signature"><span class="signature-params">(page)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
+              <h3 id="setPageLength"><span class="symbol-name">setPageLength</span><span class="signature"><span class="signature-params">(pageLength)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
               <p>Sets the current page length</p>
               <section>
                 <h4>Parameter</h4>
@@ -1585,7 +1650,7 @@
                   <tbody>
                     <tr>
                       <td>
-                        <p>page</p>
+                        <p>pageLength</p>
                       </td>
                       <td>
                         <p>Number</p>
@@ -1594,7 +1659,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>length</p>
+                        <p>page length</p>
                       </td>
                     </tr>
                   </tbody>
@@ -1606,7 +1671,7 @@
                   <p><code><a href="MLSearchContext.html">MLSearchContext</a></code>&nbsp;<code>this</code></p>
                 </dd>
               </dl>
-              <h3 id="setSnippet"><span class="symbol-name">setSnippet</span><span class="signature"><span class="signature-params">(operator)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
+              <h3 id="setSnippet"><span class="symbol-name">setSnippet</span><span class="signature"><span class="signature-params">(snippet)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
               <p>Sets the current results transform operator state name</p>
               <section>
                 <h4>Parameter</h4>
@@ -1622,7 +1687,7 @@
                   <tbody>
                     <tr>
                       <td>
-                        <p>operator</p>
+                        <p>snippet</p>
                       </td>
                       <td>
                         <p>String</p>
@@ -1631,7 +1696,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>state name</p>
+                        <p>operator state name</p>
                       </td>
                     </tr>
                   </tbody>
@@ -1668,7 +1733,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>operator state name</p>
+                        <p>sort operator state name</p>
                       </td>
                     </tr>
                   </tbody>
@@ -1680,7 +1745,7 @@
                   <p><code><a href="MLSearchContext.html">MLSearchContext</a></code>&nbsp;<code>this</code></p>
                 </dd>
               </dl>
-              <h3 id="setText"><span class="symbol-name">setText</span><span class="signature"><span class="signature-params">(search)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
+              <h3 id="setText"><span class="symbol-name">setText</span><span class="signature"><span class="signature-params">(text)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchContext.html">MLSearchContext</a></span></span></h3>
               <p>Sets the current search phrase</p>
               <section>
                 <h4>Parameter</h4>
@@ -1696,7 +1761,7 @@
                   <tbody>
                     <tr>
                       <td>
-                        <p>search</p>
+                        <p>text</p>
                       </td>
                       <td>
                         <p>String</p>
@@ -1705,7 +1770,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>phrase</p>
+                        <p>search phrase</p>
                       </td>
                     </tr>
                   </tbody>
@@ -1742,7 +1807,7 @@
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>name</p>
+                        <p>transform name</p>
                       </td>
                     </tr>
                   </tbody>
@@ -1755,7 +1820,7 @@
                 </dd>
               </dl>
               <h3 id="suggest"><span class="symbol-name">suggest</span><span class="signature"><span class="signature-params">(qtext)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>Gets search phrase suggestions based on the current state</p>
+              <p>Retrieves search phrase suggestions based on the current state</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -1843,7 +1908,7 @@
                 </dd>
               </dl>
               <h3 id="transformMetadata"><span class="symbol-name">transformMetadata</span><span class="signature"><span class="signature-params">([result])</span></span></h3>
-              <p>Transform each search result's metadata object from an array of objects to an object</p>
+              <p>Transforms the metadata array in each search response result object to an object, key'd by <code>metadata-type</code></p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -1867,8 +1932,7 @@
                         <p>Yes</p>
                       </td>
                       <td>
-                        <p>the search result to transform; if <code>result</code> is falsy,
-                          <code>this.transformMetadata</code> is applied to each result in <code>this.results.results</code></p>
+                        <p>the search results object (defaults to <code>this.results.results</code>)</p>
                       </td>
                     </tr>
                   </tbody>
@@ -1886,7 +1950,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.0-beta3 on April 26, 2015.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.1 on June 19, 2015.
       </p>
     </div>
   </footer>

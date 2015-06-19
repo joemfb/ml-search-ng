@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <meta name="generator" content="JSDoc 3.3.0-beta3">
+  <meta name="generator" content="JSDoc 3.3.1">
   <meta charset="utf-8">
   <title>Home</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
@@ -33,7 +33,7 @@
             <h4>services</h4>
             <ul>
               <li><code>MLSearchFactory</code>: factory for generating instances of <code>MLSearchContext</code> (which manages search config/query state, and provides APIs for searches)</li>
-              <li><code>MLRemoteInputService</code>: for communicating with the ml-remote-input (search input outside of controller scope)</li>
+              <li><code>MLRemoteInputService</code>: for communicating with the <code>ml-remote-input</code> (search input outside of controller scope)</li>
             </ul>
             <h4>directives</h4>
             <ul>
@@ -44,18 +44,22 @@
               <li><code>ml-remote-input</code>: remote wrapper for <code>ml-input</code></li>
               <li><code>ml-results</code>: display search results / snippets / highlights</li>
             </ul>
+            <h4>controllers</h4>
+            <ul>
+              <li><code>MLSearchController</code>: prototypically inherit to setup default search behavior</li>
+            </ul>
             <p>See <a href="https://joemfb.github.io/ml-search-ng/">https://joemfb.github.io/ml-search-ng/</a> for API docs and directive examples.</p>
             <p>See <a href="https://github.com/marklogic/slush-marklogic-node">https://github.com/marklogic/slush-marklogic-node</a> for a quick way to get started with an angular search application on top of the MarkLogic REST API.</p>
           </article>
           <div class="symbol-index">
             <section>
               <div class="symbol-index-content">
-                <h2 id="$scope.search">$scope.search</h2>
+                <h2 id="* MLSearchContext">* MLSearchContext</h2>
                 <div class="symbol-index-section">
                   <div class="symbol-index-column">
                     <dl class="symbol-index-list">
                       <dt class="symbol-index-name">
-                <a href="$scope.html#.search" class="!symbol-index-name">$scope.<wbr>search(qtext)</a>
+                <a href="-_%2520MLSearchContext.html#showMoreFacets" class="!symbol-index-name">* MLSearchContext#<wbr>showMoreFacets(facet, facetName[, step])</a>
             </dt>
                       <dd>
                       </dd>
@@ -63,11 +67,6 @@
                   </div>
                   <div class="symbol-index-column">
                     <dl class="symbol-index-list">
-                      <dt class="symbol-index-name">
-                <a href="$scope.html#.suggest" class="!symbol-index-name">$scope.<wbr>suggest(partial)</a>
-            </dt>
-                      <dd>
-                      </dd>
                     </dl>
                   </div>
                   <div class="symbol-index-column">
@@ -84,7 +83,7 @@
                   <div class="symbol-index-column">
                     <dl class="symbol-index-list">
                       <dt class="symbol-index-name">
-                <a href="MLRemoteInputService.html" class="!symbol-index-name">MLRemoteInputService()</a>
+                <a href="MLRemoteInputService.html" class="!symbol-index-name">MLRemoteInputService($injector)</a>
             </dt>
                       <dd>
                       </dd>
@@ -143,7 +142,7 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#addAdditionalQuery" class="!symbol-index-name">MLSearchContext#<wbr>addAdditionalQuery(additional)</a>
+                <a href="MLSearchContext.html#addAdditionalQuery" class="!symbol-index-name">MLSearchContext#<wbr>addAdditionalQuery(query)</a>
             </dt>
                       <dd>
                       </dd>
@@ -198,12 +197,7 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#fromFacetParam" class="!symbol-index-name">MLSearchContext#<wbr>fromFacetParam(params, storedOptions)</a>
-            </dt>
-                      <dd>
-                      </dd>
-                      <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#fromParams" class="!symbol-index-name">MLSearchContext#<wbr>fromParams(params)</a>
+                <a href="MLSearchContext.html#fromParams" class="!symbol-index-name">MLSearchContext#<wbr>fromParams([params])</a>
             </dt>
                       <dd>
                       </dd>
@@ -222,17 +216,22 @@
             </dt>
                       <dd>
                       </dd>
-                    </dl>
-                  </div>
-                  <div class="symbol-index-column">
-                    <dl class="symbol-index-list">
                       <dt class="symbol-index-name">
                 <a href="MLSearchContext.html#getBoostQueries" class="!symbol-index-name">MLSearchContext#<wbr>getBoostQueries()</a>
             </dt>
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#getCombinedQuery" class="!symbol-index-name">MLSearchContext#<wbr>getCombinedQuery()</a>
+                <a href="MLSearchContext.html#getCombinedQuery" class="!symbol-index-name">MLSearchContext#<wbr>getCombinedQuery([includeOptions])</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="MLSearchContext.html#getCurrentParams" class="!symbol-index-name">MLSearchContext#<wbr>getCurrentParams([params])</a>
             </dt>
                       <dd>
                       </dd>
@@ -283,6 +282,16 @@
                       </dd>
                       <dt class="symbol-index-name">
                 <a href="MLSearchContext.html#getParamsConfig" class="!symbol-index-name">MLSearchContext#<wbr>getParamsConfig()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchContext.html#getParamsKeys" class="!symbol-index-name">MLSearchContext#<wbr>getParamsKeys()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchContext.html#getParamsPrefix" class="!symbol-index-name">MLSearchContext#<wbr>getParamsPrefix()</a>
             </dt>
                       <dd>
                       </dd>
@@ -371,12 +380,12 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#setPageLength" class="!symbol-index-name">MLSearchContext#<wbr>setPageLength(page)</a>
+                <a href="MLSearchContext.html#setPageLength" class="!symbol-index-name">MLSearchContext#<wbr>setPageLength(pageLength)</a>
             </dt>
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#setSnippet" class="!symbol-index-name">MLSearchContext#<wbr>setSnippet(operator)</a>
+                <a href="MLSearchContext.html#setSnippet" class="!symbol-index-name">MLSearchContext#<wbr>setSnippet(snippet)</a>
             </dt>
                       <dd>
                       </dd>
@@ -386,7 +395,7 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#setText" class="!symbol-index-name">MLSearchContext#<wbr>setText(search)</a>
+                <a href="MLSearchContext.html#setText" class="!symbol-index-name">MLSearchContext#<wbr>setText(text)</a>
             </dt>
                       <dd>
                       </dd>
@@ -417,12 +426,101 @@
             </section>
             <section>
               <div class="symbol-index-content">
+                <h2 id="MLSearchController">MLSearchController</h2>
+                <div class="symbol-index-section">
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html" class="!symbol-index-name">MLSearchController($scope, $location, mlSearch)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#_search" class="!symbol-index-name">MLSearchController#<wbr>_search()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#clearFacets" class="!symbol-index-name">MLSearchController#<wbr>clearFacets()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#init" class="!symbol-index-name">MLSearchController#<wbr>init()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#locationChange" class="!symbol-index-name">MLSearchController#<wbr>locationChange(e, newUrl, oldUrl)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#parseExtraURLParams" class="!symbol-index-name">MLSearchController#<wbr>parseExtraURLParams()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#reset" class="!symbol-index-name">MLSearchController#<wbr>reset()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#search" class="!symbol-index-name">MLSearchController#<wbr>search([qtext])</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#showMoreFacets" class="!symbol-index-name">MLSearchController#<wbr>showMoreFacets(facet, facetName[, step])</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#suggest" class="!symbol-index-name">MLSearchController#<wbr>suggest(qtext)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#toggleFacet" class="!symbol-index-name">MLSearchController#<wbr>toggleFacet(facetName, value)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#updateExtraURLParams" class="!symbol-index-name">MLSearchController#<wbr>updateExtraURLParams()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#updateSearchResults" class="!symbol-index-name">MLSearchController#<wbr>updateSearchResults(data)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchController.html#updateURLParams" class="!symbol-index-name">MLSearchController#<wbr>updateURLParams()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section>
+              <div class="symbol-index-content">
                 <h2 id="MLSearchFactory">MLSearchFactory</h2>
                 <div class="symbol-index-section">
                   <div class="symbol-index-column">
                     <dl class="symbol-index-list">
                       <dt class="symbol-index-name">
-                <a href="MLSearchFactory.html" class="!symbol-index-name">MLSearchFactory()</a>
+                <a href="MLSearchFactory.html" class="!symbol-index-name">MLSearchFactory($q, $location, MLRest, MLQueryBuilder)</a>
             </dt>
                       <dd>
                       </dd>
@@ -597,7 +695,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.0-beta3 on April 26, 2015.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.1 on June 19, 2015.
       </p>
     </div>
   </footer>
