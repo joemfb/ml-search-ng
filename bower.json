@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "An angular module for common search-app use cases",
   "main": [
-    "dist/ml-search-ng.min.js",
-    "dist/ml-search-ng-tpls.min.js"
+    "dist/ml-search-ng.js",
+    "dist/ml-search-ng-tpls.js"
   ],
   "dependencies": {
     "angular": "^1.2.14",

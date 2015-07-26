@@ -48,7 +48,9 @@ gulp.task('templates', ['test'], function() {
       moduleName: 'ml.search.tpls',
       prefix: '/'
     }))
-    .pipe(concat('ml-search-ng-tpls.min.js'))
+    .pipe(concat('ml-search-ng-tpls.js'))
+    .pipe(gulp.dest('dist'))
+    .pipe(rename('ml-search-ng-tpls.min.js'))
     .pipe(uglify())
     .pipe(gulp.dest('dist'));
 });
