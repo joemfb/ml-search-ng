@@ -85,5 +85,62 @@ describe('ml-duration', function () {
     expect( elem.find('.minutes').text() ).toEqual('1');
     expect( elem.find('.original').text() ).toEqual($scope.duration);
   });
+  
+  it('should provide a filter', function() {
+    $scope.duration = 'P1Y1M1DT1H1M1S';
+    
+    elem = angular.element(
+      '<span>{{ duration | duration }}</span>'
+    );
+    $compile(elem)($scope);
+    $scope.$digest();
+    
+    expect( elem.text() ).toEqual('1 year, 1 month, 1 day, 1 hour, 1 minute, and 1 second');
+    
+    $scope.duration = 'P3Y4M75DT23H31M14.54S';
+    
+    elem = angular.element(
+      '<span>{{ duration | duration }}</span>'
+    );
+    $compile(elem)($scope);
+    $scope.$digest();
+    
+    expect( elem.text() ).toEqual('3 years, 4 months, 75 days, 23 hours, 31 minutes, and 14.54 seconds');
+
+    $scope.options = {
+      year: 'year(s)',
+      years: 'year(s)',
+      month: 'month(s)',
+      months: 'month(s)',
+      week: 'week(s)',
+      weeks: 'week(s)',
+      day: 'day(s)',
+      days: 'day(s)',
+      hour: 'hour(s)',
+      hours: 'hour(s)',
+      minute: 'minute(s)',
+      minutes: 'minute(s)',
+      second: 'second(s)',
+      seconds: 'second(s)',
+    };
+    
+    elem = angular.element(
+      '<span>{{ duration | duration:options }}</span>'
+    );
+    $compile(elem)($scope);
+    $scope.$digest();
+    
+    expect( elem.text() ).toEqual('3 year(s), 4 month(s), 75 day(s), 23 hour(s), 31 minute(s), and 14.54 second(s)');
+    $scope.duration = 'P0Y0M0DT0H0M0S';
+    
+    elem = angular.element(
+      '<span>{{ duration | duration }}</span>'
+    );
+    $compile(elem)($scope);
+    $scope.$digest();
+    
+    expect( elem.text() ).toEqual('0 seconds');
+    
+  });
 
 });
