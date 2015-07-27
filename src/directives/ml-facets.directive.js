@@ -21,11 +21,13 @@
    * @namespace ml-facets
    */
   angular.module('ml.search')
-    .directive('mlFacets', mlFacets);
+    .directive('mlFacets', mlFacets)
+    .controller('mlFacetsController', ['$scope', '$filter', mlFacetsController]);
 
   function mlFacets() {
     return {
       restrict: 'E',
+      controller: 'mlFacetsController',
       scope: {
         facets: '=',
         toggle: '&',
@@ -56,6 +58,10 @@
   function link($scope, element, attrs) {
     $scope.truncateLength = parseInt(attrs.truncate) || 20;
     $scope.shouldShowMore = !!attrs.showMore;
+  }
+  
+  function mlFacetsController($scope, $filter) {
+    $scope.filter = $filter('filter');
   }
 
 }());
