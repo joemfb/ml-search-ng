@@ -1234,7 +1234,7 @@
       var self = this,
           metadata;
 
-      result = result || this.results.results;
+      result = result || this.results.results || {};
 
       if ( _.isArray(result) ) {
         _.each(result, this.transformMetadata, self);
