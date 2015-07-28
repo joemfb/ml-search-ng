@@ -95,6 +95,7 @@
      * @prop {String} defaults.sort - sort operator state-name (`null`)
      * @prop {String} defaults.facetMode - determines if facets are combined in an `and-query` or an `or-query` (`and`)
      * @prop {Boolean} defaults.includeProperties - include document properties in queries (`false`)
+     * @prop {Boolean} defaults.includeAggregates - automatically get aggregates for facets (`false`)
      * @prop {Object} defaults.params - URL params settings
      * @prop {String} defaults.params.separator - constraint-name and value separator (`':'`)
      * @prop {String} defaults.params.qtext - qtext parameter name (`'qtext'`)
@@ -111,6 +112,7 @@
       sort: null,
       facetMode: 'and',
       includeProperties: false,
+      includeAggregates: false,
       params: {
         separator: ':',
         qtext: 'q',
@@ -636,7 +638,7 @@
         return d.promise;
       }
 
-      return this.getStoredOptions(this.options.queryConfig)
+      return this.getStoredOptions()
       .then(function(data) {
         combined.search.options = data.options;
         return combined;
@@ -767,13 +769,13 @@
           return $q.reject(new Error('No constraint exists matching ' + facetName));
         }
 
-        var newOptions = { constraint: constraint, values: constraint };
-        newOptions.values['values-option'] = newOptions.values.range['facet-option'];
+        var newOptions = { constraint: constraint, values: _.cloneDeep(constraint) };
+        newOptions.values['values-option'] = constraint.range && constraint.range['facet-option'];
 
         return self.values(facetName, { start: start, limit: limit }, newOptions);
       })
       .then(function(resp) {
-        var newFacets = resp.data['values-response']['distinct-value'];
+        var newFacets = resp && resp.data && resp.data['values-response'] && resp.data['values-response']['distinct-value'];
         if (!newFacets || newFacets.length < (limit - start)) {
           facet.displayingAll = true;
         }
@@ -1054,14 +1056,14 @@
      * Retrieves stored search options, caching the result in `this.storedOptions`
      * @method MLSearchContext#getStoredOptions
      *
-     * @param {String} [name] - the name of the options to retrieve (defaults to `this.options.queryOptions`)
+     * @param {String} [name] - the name of the options to retrieve (defaults to `this.getQueryOptions()`)
      * @return {Promise} a promise resolved with the stored options
      */
     getStoredOptions: function getStoredOptions(name) {
       var self = this,
           d = $q.defer();
 
-      name = name || self.options.queryOptions;
+      name = name || self.getQueryOptions();
 
       if ( self.storedOptions[name] ) {
         d.resolve( self.storedOptions[name] );
@@ -1108,7 +1110,7 @@
       var params = {
         'partial-q': qtext,
         format: 'json',
-        options: this.options.queryOptions
+        options: this.getQueryOptions()
       };
 
       return this.getCombinedQuery(false)
@@ -1130,6 +1132,8 @@
      * @return {Promise} a promise resolved with values
      */
     values: function values(name, params, options) {
+      var self = this;
+      
       // TODO: what other conditions
       if ( !options && params && params.options) {
         options = params;
@@ -1137,16 +1141,16 @@
       }
 
       params = params || {};
-      params.start = params.start || 1;
-      params.limit = params.limit || 20;
+      params.start = params.start !== undefined ? params.start : 1;
+      params.limit = params.limit !== undefined ? params.limit : 20;
 
       if ( !options ) {
-        params.options = this.options.queryOptions;
+        params.options = self.getQueryOptions();
       }
 
-      return this.getCombinedQuery(false)
+      return self.getCombinedQuery(false)
       .then(function(combined) {
-        combined.options = options;
+        combined.search.options = options;
         return mlRest.values(name, params, combined);
       });
     },
@@ -1200,7 +1204,7 @@
       }
 
       if ( includeOptionsParam ) {
-        params.options = this.options.queryOptions;
+        params.options = this.getQueryOptions();
       }
 
       return mlRest.search(params, combined)
@@ -1211,12 +1215,18 @@
         if ( combined ) {
           self.transformMetadata(results);
           self.annotateActiveFacets(results);
+          if (self.options.includeAggregates) {
+            self.getAggregates(results);
+          }
           return results;
         }
 
         self.results = results;
         self.transformMetadata();
         self.annotateActiveFacets();
+        if (self.options.includeAggregates) {
+          self.getAggregates();
+        }
         return self.results;
       });
     },
@@ -1245,6 +1255,70 @@
             })
             .value(); // thwart lazy evaluation
         }
+      });
+    },
+
+    /**
+     * Gets aggregates for facets (from a search response object) based on facet type
+     * @method MLSearchContext#getAggregates
+     *
+     * @param {Object} [facets] - the search facets object (defaults to `this.results.facets`)
+     */
+    getAggregates: function getAggregates(facets) {
+      var self = this;
+
+      facets = facets || self.results.facets;
+      
+      return self.getStoredOptions()
+      .then(function(storedOptions) {
+        var promisses = [];
+  
+        _.forIn( facets, function(facet, facetName) {
+          var facetType = facet.type,
+              constraint = _.where(storedOptions.options.constraint, { name: facetName })[0];
+
+          if ( !constraint ) {
+            return $q.reject(new Error('No constraint exists matching ' + facetName));
+          }
+
+          var newOptions = { constraint: constraint, values: _.cloneDeep(constraint) };
+          newOptions.values['values-option'] = constraint.range && constraint.range['facet-option'];
+
+          // these work for all index types
+          newOptions.values.aggregate = [
+            { apply: 'count' },
+            { apply: 'min' },
+            { apply: 'max' }
+          ];
+
+          var numberTypes = ['xs:int', 'xs:unsignedInt', 'xs:long', 'xs:unsignedLong', 'xs:float', 'xs:double', 'xs:decimal'];
+          if ( _.contains(numberTypes, facetType) ) {
+          
+            newOptions.values.aggregate = newOptions.values.aggregate.concat([
+              { apply: 'sum' },
+              { apply: 'avg' },
+              // TODO: allow enabling these from config?
+              // { apply: 'median' },
+              // { apply: 'stddev' },
+              // { apply: 'stddev-population' },
+              // { apply: 'variance' },
+              // { apply: 'variance-population' }
+            ]);
+          
+          }
+
+          promisses.push(
+            self.values(facetName, { start: 1, limit: 0 }, newOptions)
+            .then(function(resp) {
+              var aggregates = resp.data && resp.data['values-response'] && resp.data['values-response']['aggregate-result'];
+              _.each( aggregates, function(aggregate) {
+                facet[aggregate.name] = aggregate._value;
+              });
+            })
+          );
+        });
+        
+        return $q.all(promisses);
       });
     },
 
