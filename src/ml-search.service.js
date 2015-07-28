@@ -756,7 +756,7 @@
       step = step || 5;
 
       var start = facet.facetValues.length + 1,
-          limit = start + step,
+          limit = start + step - 1,
           self = this;
 
       return this.getStoredOptions()
