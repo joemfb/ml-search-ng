@@ -740,12 +740,11 @@
     },
 
     /**
+     * Retrieve additional values for the provided `facet` object,
+     * appending them to the facet's `facetValues` array. Sets `facet.displayingAll = true`
+     * once no more values are available.
      *
-     * POST to /v1/values to return the next 5 facets. This function first
-     * calls `mlRest.queryConfig` to get the current constraints. Once the
-     * POST returns less than 5 facets, `facet.displayingAll` is set to true.
-     *
-     * @method * MLSearchContext#showMoreFacets
+     * @method MLSearchContext#showMoreFacets
      *
      * @param {Object} facet - a facet object returned from {@link MLSearchContext#search}
      * @param {String} facetName - facet name
@@ -754,46 +753,40 @@
      * @return {Promise} a promise resolved once additional facets have been retrieved
      */
     showMoreFacets: function showMoreFacets(facet, facetName, step) {
-      var _this = this;
       step = step || 5;
 
-      return mlRest.queryConfig(this.getQueryOptions(), 'constraint').then(function(resp) {
-        var options = resp.data.options.constraint;
+      var start = facet.facetValues.length + 1,
+          limit = start + step,
+          self = this;
 
-        var myOption = options.filter(function (option) {
-          return option.name === facetName;
-        })[0];
-        if (!myOption) {
+      return this.getStoredOptions()
+      .then(function(storedOptions) {
+        var constraint = _.where(storedOptions.options.constraint, { name: facetName })[0];
+
+        if ( !constraint ) {
           return $q.reject(new Error('No constraint exists matching ' + facetName));
         }
 
-        var searchOptions = _this.getQuery();
-        searchOptions.options = {};
-        searchOptions.options.constraint = _.cloneDeep(options);
-        if (myOption.range && myOption.range['facet-option']) {
-          myOption['values-option'] = myOption.range['facet-option'];
+        var newOptions = { constraint: constraint, values: constraint };
+        newOptions.values['values-option'] = newOptions.values.range['facet-option'];
+
+        return self.values(facetName, { start: start, limit: limit }, newOptions);
+      })
+      .then(function(resp) {
+        var newFacets = resp.data['values-response']['distinct-value'];
+        if (!newFacets || newFacets.length < (limit - start)) {
+          facet.displayingAll = true;
         }
-        searchOptions.options.values = myOption;
 
-        var searchConfig = { search: searchOptions };
-
-        var start = facet.facetValues.length + 1;
-        var limit = start + step;
-
-        return mlRest.values(facetName, {start: start, limit: limit}, searchConfig).then(function(resp) {
-          var newFacets = resp.data['values-response']['distinct-value'];
-          if (!newFacets || newFacets.length < (limit - start)) {
-            facet.displayingAll = true;
-          }
-
-          _.each(newFacets, function(newFacetValue) {
-            var newFacet = {};
-            newFacet.name = newFacetValue._value;
-            newFacet.value = newFacetValue._value;
-            newFacet.count = newFacetValue.frequency;
-            facet.facetValues.push(newFacet);
-          });
+        _.each(newFacets, function(newFacetValue) {
+          var newFacet = {};
+          newFacet.name = newFacetValue._value;
+          newFacet.value = newFacetValue._value;
+          newFacet.count = newFacetValue.frequency;
+          facet.facetValues.push(newFacet);
         });
+
+        return facet;
       });
     },
 
@@ -1124,6 +1117,37 @@
       })
       .then(function(response) {
         return response.data;
+      });
+    },
+
+    /**
+     * Retrieves values or tuples from 1-or-more lexicons
+     * @method MLSearchContext#values
+     *
+     * @param {String} name - the name of a `value-option` definition
+     * @param {Object} [params] - URL params
+     * @param {Object} [options] - search options, used in a combined query
+     * @return {Promise} a promise resolved with values
+     */
+    values: function values(name, params, options) {
+      // TODO: what other conditions
+      if ( !options && params && params.options) {
+        options = params;
+        params = null;
+      }
+
+      params = params || {};
+      params.start = params.start || 1;
+      params.limit = params.limit || 20;
+
+      if ( !options ) {
+        params.options = this.options.queryOptions;
+      }
+
+      return this.getCombinedQuery(false)
+      .then(function(combined) {
+        combined.options = options;
+        return mlRest.values(name, params, combined);
       });
     },
 
