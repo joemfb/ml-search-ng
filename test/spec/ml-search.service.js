@@ -1342,6 +1342,14 @@ describe('MLSearchContext#mock-service', function () {
       'distinct-value': [ {frequency: 2, _value: 'Other'} ]
     }
   };
+  var mockConfig = {
+    options: {
+      constraint: [{
+        name: 'MyOtherFacetName',
+        range: { 'facet-option': 'limit=10' }
+      }]
+    }
+  };
 
   // fixture
   beforeEach(module('search-results.json'));
@@ -1358,6 +1366,11 @@ describe('MLSearchContext#mock-service', function () {
       values: jasmine.createSpy('values').and.callFake(function() {
         var d = $q.defer();
         d.resolve({ data: mockValues });
+        return d.promise;
+      }),
+      queryConfig: jasmine.createSpy('queryConfig').and.callFake(function() {
+        var d = $q.defer();
+        d.resolve({ data: mockConfig });
         return d.promise;
       })
     };
@@ -1490,16 +1503,16 @@ describe('MLSearchContext#mock-service', function () {
     var mlSearch = factory.newContext();
 
     var actual;
-    mlSearch.values('blah').then(function(response) { actual = response.data; });
+    mlSearch.values('MyOtherFacetName').then(function(response) { actual = response.data; });
     $rootScope.$apply();
 
     expect(actual['values-response'].name).toEqual('MyOtherFacetName');
 
     var args = mockMLRest.values.calls.mostRecent().args;
-    expect(args[0]).toEqual('blah');
+    expect(args[0]).toEqual('MyOtherFacetName');
     expect(args[1].start).toEqual(1);
     expect(args[1].limit).toEqual(20);
-    expect(args[1].options).toEqual( mlSearch.getQueryOptions() );
+    expect(args[1].options).toBe(undefined);
   });
 
   it('should get values with combined query, without params', function() {

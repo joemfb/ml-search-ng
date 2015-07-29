@@ -629,9 +629,9 @@
      */
     getCombinedQuery: function getCombinedQuery(includeOptions) {
       var d = $q.defer(),
-          combined = {
-            search: { query: this.getQuery() }
-          };
+        combined = {
+          search: { query: this.getQuery() }
+        };
 
       if ( !includeOptions ) {
         d.resolve(combined);
@@ -763,7 +763,7 @@
 
       return this.getStoredOptions()
       .then(function(storedOptions) {
-        var constraint = _.where(storedOptions.options.constraint, { name: facetName })[0];
+        var constraint = storedOptions && storedOptions.options && storedOptions.options.constraint && _.where(asArray(storedOptions.options.constraint), { name: facetName })[0];
 
         if ( !constraint ) {
           return $q.reject(new Error('No constraint exists matching ' + facetName));
@@ -772,7 +772,7 @@
         var newOptions = { constraint: constraint, values: _.cloneDeep(constraint) };
         newOptions.values['values-option'] = constraint.range && constraint.range['facet-option'];
 
-        return self.values(facetName, { start: start, limit: limit }, newOptions);
+        return self.getValues(facetName, { start: start, limit: limit }, newOptions);
       })
       .then(function(resp) {
         var newFacets = resp && resp.data && resp.data['values-response'] && resp.data['values-response']['distinct-value'];
@@ -1126,7 +1126,7 @@
      * Retrieves values or tuples from 1-or-more lexicons
      * @method MLSearchContext#values
      *
-     * @param {String} name - the name of a `value-option` definition
+     * @param {String} name - the name of a `values` or search `constraint` definition
      * @param {Object} [params] - URL params
      * @param {Object} [options] - search options, used in a combined query
      * @return {Promise} a promise resolved with values
@@ -1135,11 +1135,55 @@
       var self = this;
       
       // TODO: what other conditions
+      // [GJo] This looks a bit peculiar. If you have start and limit in params, but no options, then they get lost?
       if ( !options && params && params.options) {
         options = params;
         params = null;
       }
 
+      var value = options && options.options && options.options.values && _.where(asArray(options.options.values), { 'name': name })[0];
+
+      if ( value ) {
+        return self.getValues(name, params, options);
+      }
+
+      return self.getStoredOptions()
+      .then(function(storedOptions) {
+        var constraint, newOptions;
+
+        value = storedOptions && storedOptions.options && storedOptions.options.values && _.where(asArray(storedOptions.options.values), { name: name })[0];
+        
+        if ( !value ) {
+          constraint = storedOptions && storedOptions.options && storedOptions.options.constraint && _.where(asArray(storedOptions.options.constraint), { name: name })[0];
+          
+          if ( !constraint ) {
+            return $q.reject(new Error('No values or constraint exists matching ' + name));
+          }
+          
+          newOptions = { constraint: constraint, values: _.cloneDeep(constraint) };
+          newOptions.values['values-option'] = newOptions.values.range['facet-option'];
+        } else {
+          newOptions = {};
+          _.extend(newOptions, options);
+          newOptions.values = value;
+        }
+
+        return self.getValues(name, params, newOptions);
+      });
+    },
+    
+    /**
+     * Retrieves values or tuples from 1-or-more lexicons
+     * @method MLSearchContext#getValues
+     *
+     * @param {String} name - the name of a `value-option` definition
+     * @param {Object} [params] - URL params
+     * @param {Object} [options] - search options, used in a combined query
+     * @return {Promise} a promise resolved with values
+     */
+    getValues: function getValues(name, params, options) {
+      var self = this;
+      
       params = params || {};
       params.start = params.start !== undefined ? params.start : 1;
       params.limit = params.limit !== undefined ? params.limit : 20;
@@ -1170,14 +1214,14 @@
      */
     search: function search(adhoc) {
       var self = this,
-          query = this.getQuery(),
-          combined = null,
-          includeOptionsParam = true,
-          params = {
-            start: this.start,
-            pageLength: this.options.pageLength,
-            transform: this.searchTransform
-          };
+        query = this.getQuery(),
+        combined = null,
+        includeOptionsParam = true,
+        params = {
+          start: this.start,
+          pageLength: this.options.pageLength,
+          transform: this.searchTransform
+        };
 
       if ( adhoc ) {
         combined = {};
@@ -1275,7 +1319,7 @@
   
         _.forIn( facets, function(facet, facetName) {
           var facetType = facet.type,
-              constraint = _.where(storedOptions.options.constraint, { name: facetName })[0];
+              constraint = storedOptions && storedOptions.options && storedOptions.options.constraint && _.where(asArray(storedOptions.options.constraint), { name: facetName })[0];
 
           if ( !constraint ) {
             return $q.reject(new Error('No constraint exists matching ' + facetName));
@@ -1308,7 +1352,7 @@
           }
 
           promisses.push(
-            self.values(facetName, { start: 1, limit: 0 }, newOptions)
+            self.getValues(facetName, { start: 1, limit: 0 }, newOptions)
             .then(function(resp) {
               var aggregates = resp.data && resp.data['values-response'] && resp.data['values-response']['aggregate-result'];
               _.each( aggregates, function(aggregate) {
