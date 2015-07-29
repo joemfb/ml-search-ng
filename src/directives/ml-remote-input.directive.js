@@ -17,14 +17,7 @@
    * ```
    * <ml-remote-input search-ctrl="MySearchCtrl" template="fa"></ml-remote-input>```
    *
-   * In the controller:
-   *
-   * ```javascript
-   * remoteInput.initCtrl($scope, model, mlSearch, search);```
-   *
-   * Note: this function assumes `mlSearch` is an instance of {@link MLSearchContext}, `search` is a function, and `model` has a `qtext` property. If these assumptions don't hold, a more verbose approach is required:
-   *
-   * `// TODO: complex example`
+   * In the search controller, inherit from {@link MLRemoteSearchController}, as documented at that link
    *
    * @namespace ml-remote-input
    */

@@ -91,7 +91,9 @@
      * - sets the mlSearch instance property
      * - initializes the qtext property of the model parameter
      *   (unless it's already set and the instance input property is not)
+     *
      * @method MLRemoteInputService#initCtrl
+     * @deprecated
      *
      * @param {object} $scope - search controller scope
      * @param {object} model - search controller model
