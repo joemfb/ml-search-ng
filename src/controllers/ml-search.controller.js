@@ -287,10 +287,11 @@ function MLSearchController($scope, $location, mlSearch) {
    *
    * @memberof MLSearchController
    * @param {String} qtext - the partial-phrase to match
+   * @param {String|Object} [options] - string options name (to override suggestOptions), or object for adhoc combined query options
    * @return {Promise} the promise from {@link MLSearchContext#suggest}
    */
-  MLSearchController.prototype.suggest = function suggest(qtext) {
-    return this.mlSearch.suggest(qtext).then(function(res) {
+  MLSearchController.prototype.suggest = function suggest(qtext, options) {
+    return this.mlSearch.suggest(qtext, options).then(function(res) {
       return res.suggestions || [];
     });
   };

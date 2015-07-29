@@ -1490,6 +1490,7 @@ describe('MLSearchContext', function () {
       'val3'
     ]};
 
+    // regular call
     $httpBackend
       .expectPOST('/v1/suggest?format=json&options=all&partial-q=val')
       .respond(suggestions);
@@ -1502,6 +1503,38 @@ describe('MLSearchContext', function () {
 
     expect(actual1).toEqual(suggestions);
 
+    // call with alt-options string
+    $httpBackend
+      .expectPOST('/v1/suggest?format=json&options=alt-options&partial-q=val')
+      .respond(suggestions);
+
+    search.suggest('val', 'alt-options').then(function(response) { actual1 = response; });
+    $httpBackend.flush();
+
+    expect(actual1).toEqual(suggestions);
+
+    // call with adhoc query object
+    var allResults = {
+      'term': {
+        'empty': {
+          'apply': 'all-results'
+        }
+      }
+    };
+    $httpBackend
+      .expectPOST('/v1/suggest?format=json&options=all&partial-q=val', function(body) {
+        var json = JSON.parse(body);
+        expect(json.search.options).toEqual(allResults);
+        return true;
+      })
+      .respond(suggestions);
+
+    search.suggest('val', allResults).then(function(response) { actual1 = response; });
+    $httpBackend.flush();
+
+    expect(actual1).toEqual(suggestions);
+
+    // call with one response
     $httpBackend
       .expectPOST('/v1/suggest?format=json&options=all&partial-q=val1')
       .respond({ suggestions: [ 'val1' ]});
@@ -1512,6 +1545,7 @@ describe('MLSearchContext', function () {
     expect(actual2.suggestions.length).toEqual(1);
     expect(actual2.suggestions[0]).toEqual('val1');
 
+    // exception handling
     $httpBackend
       .expectPOST('/v1/suggest?format=json&options=all&partial-q=val1')
       .respond(500, '');

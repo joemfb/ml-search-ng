@@ -91,6 +91,7 @@
      * @static
      *
      * @prop {String} defaults.queryOptions - stored search options name (`'all'`)
+     * @prop {String} defaults.suggestOptions - stored search options name for suggestions (`same as queryOptions`)
      * @prop {Number} defaults.pageLength - results page length (`10`)
      * @prop {String} defaults.snippet - results transform operator state-name (`'compact'`)
      * @prop {String} defaults.sort - sort operator state-name (`null`)
@@ -108,6 +109,7 @@
      */
     defaults: {
       queryOptions: 'all',
+      suggestOptions: null,
       pageLength: 10,
       snippet: 'compact',
       sort: null,
@@ -374,7 +376,15 @@
       return this.options.queryOptions;
     },
 
-    //TODO: setQueryOptions ?
+    /**
+     * Gets the current suggestOptions (name of stored params for suggestions)
+     * @method MLSearchContext#getSuggestOptions
+     *
+     * @return {String} suggestOptions
+     */
+    getSuggestOptions: function getSuggestOptions() {
+      return this.options.suggestOptions;
+    },
 
     /**
      * Gets the current page length
@@ -1156,17 +1166,21 @@
      * @method MLSearchContext#suggest
      *
      * @param {String} qtext - the partial-phrase to match
+     * @param {String|Object} [options] - string options name (to override suggestOptions), or object for adhoc combined query options
      * @return {Promise} a promise resolved with search phrase suggestions
      */
-    suggest: function suggest(qtext) {
+    suggest: function suggest(qtext, options) {
       var params = {
         'partial-q': qtext,
         format: 'json',
-        options: this.getQueryOptions()
+        options: (_.isString(options) && options) || this.getSuggestOptions() || this.getQueryOptions()
       };
 
       return this.getCombinedQuery(false)
       .then(function(combined) {
+        if ( _.isObject(options) ) {
+          combined.search.options = options;
+        }
         return mlRest.suggest(params, combined);
       })
       .then(function(response) {
