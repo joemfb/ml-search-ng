@@ -19,6 +19,12 @@ describe('ml-facets', function () {
     }
   };
 
+  var activeFacets = {
+    myFacet: {
+      values: [{value:'value1', negated:'true'}]
+    }
+  };
+
   beforeEach(module('ml.common'));
   beforeEach(module('ml.search'));
   beforeEach(module('ml.search.tpls'));
@@ -29,7 +35,9 @@ describe('ml-facets', function () {
 
     $scope = $rootScope.$new();
     $scope.facets = facets;
+    $scope.activeFacets = activeFacets;
     $scope.toggleFacet = jasmine.createSpy('toggleFacet');
+    $scope.toggleNegatedFacet = jasmine.createSpy('toggleNegatedFacet');
     $scope.showMoreFacets = jasmine.createSpy('showMoreFacets');
   }));
 
@@ -38,7 +46,7 @@ describe('ml-facets', function () {
     beforeEach(function() {
       elem = angular.element(
         '<ml-facets facets="facets" toggle="toggleFacet(facet, value)" ' +
-                   'show-more="showMoreFacets(facet, facetName)"></ml-facets>');
+                  'show-more="showMoreFacets(facet, facetName)"></ml-facets>');
       $compile(elem)($scope);
       $scope.$digest();
     });
@@ -53,12 +61,16 @@ describe('ml-facets', function () {
     });
 
     it('should toggle facet', function() {
-      elem.find('.facet > div > a').eq(0).click();
+      elem.find('.facet > div > .facet-add-pos').eq(0).click();
       expect($scope.toggleFacet).toHaveBeenCalled();
 
       var args = $scope.toggleFacet.calls.mostRecent().args;
       expect( args[0] ).toEqual( 'myFacet' );
       expect( args[1] ).toEqual( facets.myFacet.facetValues[0].name );
+    });
+
+    it('should NOT be able to negate a facet', function() {
+      expect(elem.find('.facet > div > .facet-add-neg').length).toEqual(0);
     });
 
     it('should show more facets', function() {
@@ -69,6 +81,53 @@ describe('ml-facets', function () {
       expect( args[1] ).toEqual( 'myFacet' );
     });
 
+  });
+
+  describe('#negatedSupport', function() {
+    beforeEach(function() {
+      elem = angular.element(
+        '<ml-facets facets="facets" toggle="toggleFacet(facet, value)" ' +
+                  'negate="toggleNegatedFacet(facet, value)" ' +
+                  'active-facets="activeFacets" ' +
+                  'show-more="showMoreFacets(facet, facetName)"></ml-facets>');
+      $compile(elem)($scope);
+      $scope.$digest();
+    });
+
+    it('should contain template', function() {
+      expect(elem.find('.facet-list').length).toEqual(1);
+    });
+
+    it('should render each facet and facetValue', function() {
+      expect(elem.find('.facet-list > .facet').length).toEqual(1); // _.keys(facets).length
+      expect(elem.find('.facet-list > .facet > div').length).toEqual( facets.myFacet.facetValues.length + 1 );
+    });
+
+    it('should toggle facet', function() {
+      elem.find('.facet > div > .facet-add-pos').eq(0).click();
+      expect($scope.toggleFacet).toHaveBeenCalled();
+
+      var args = $scope.toggleFacet.calls.mostRecent().args;
+      expect( args[0] ).toEqual( 'myFacet' );
+      expect( args[1] ).toEqual( facets.myFacet.facetValues[0].name );
+    });
+
+    it('should toggle negative facet', function() {
+      elem.find('.facet > div > .facet-add-neg').eq(0).click();
+      expect($scope.toggleNegatedFacet).toHaveBeenCalled();
+
+      var args = $scope.toggleNegatedFacet.calls.mostRecent().args;
+      expect( args[0] ).toEqual( 'myFacet' );
+      expect( args[1] ).toEqual( activeFacets.myFacet.values[0].value );
+    });
+
+    it('should show more facets', function() {
+      elem.find('.facet > div:last-child() > a').eq(0).click();
+      expect($scope.showMoreFacets).toHaveBeenCalled();
+
+      var args = $scope.showMoreFacets.calls.mostRecent().args;
+      expect( args[1] ).toEqual( 'myFacet' );
+    });
   });
 
   describe('#inline', function () {

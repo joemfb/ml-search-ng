@@ -117,6 +117,7 @@
         separator: ':',
         qtext: 'q',
         facets: 'f',
+        negatedFacets: 'n',
         sort: 's',
         page: 'p',
         prefix: null,
@@ -598,15 +599,15 @@
 
       _.forIn( self.activeFacets, function(facet, facetName) {
         if ( facet.values.length ) {
-          constraintFn = function(values) {
-            return qb.constraint( facet.type )( facetName, values );
+          constraintFn = function(facetValueObject) {
+            var constraintQuery = qb.constraint( facet.type )( facetName, facetValueObject.value );
+            if (facetValueObject.negated === true){
+              constraintQuery = qb.not(constraintQuery);
+            }
+            return constraintQuery;
           };
 
-          if ( self.options.facetMode === 'or' ) {
-            queries.push( constraintFn( facet.values ) );
-          } else {
-            queries = queries.concat( _.map(facet.values, constraintFn) );
-          }
+          queries = queries.concat( _.map(facet.values, constraintFn) );
         }
       });
 
@@ -658,8 +659,33 @@
      * @return {Boolean} isSelected
      */
     isFacetActive: function isFacetActive(name, value) {
-      var active = this.activeFacets[name];
-      return !!active && _.contains(active.values, value);
+      var active = this.activeFacets[name],
+          valueFilter = {value:value};
+      return !!active && !!_.find(active.values, valueFilter);
+    },
+
+    /**
+     * Check if the facet/value combination selected & negated
+     * @method MLSearchContext#isFacetNegated
+     *
+     * @param {String} name - facet name
+     * @param {String} value - facet value
+     * @return {Boolean} isNegated
+     */
+    isFacetNegated: function isFacetNegated(name, value) {
+      var active = this.activeFacets[name],
+          valueFilter = {value:value};
+
+      if (!active){
+        return false;
+      }
+      var facet = _.find(active.values, valueFilter);
+
+      if (!!facet){
+        return facet.negated;
+      } else {
+        return false;
+      }
     },
 
     /**
@@ -669,18 +695,21 @@
      * @param {String} name - facet name
      * @param {String} value - facet value
      * @param {String} type - facet type
+     * @param {Boolean} isNegated - facet negated (default to false)
      * @return {MLSearchContext} `this`
      */
-    selectFacet: function selectFacet(name, value, type) {
+    selectFacet: function selectFacet(name, value, type, isNegated) {
       if (/^"(.*)"$/.test(value)) {
         value = value.replace(/^"(.*)"$/, '$1');
       }
-      var active = this.activeFacets[name];
+      var active = this.activeFacets[name],
+          negated = isNegated || false,
+          valueObject = {value:value, negated: negated};
 
-      if ( active && !_.contains(active.values, value) ) {
-        active.values.push(value);
+      if (active && !this.isFacetActive(name, value) ) {
+        active.values.push(valueObject);
       } else {
-        this.activeFacets[name] = { type: type, values: [value] };
+        this.activeFacets[name] = { type: type, values: [valueObject] };
       }
 
       return this;
@@ -697,8 +726,8 @@
     clearFacet: function clearFacet(name, value) {
       var active = this.activeFacets[name];
 
-      active.values = _.filter( active.values, function(facetValue) {
-        return facetValue !== value;
+      active.values = _.filter( active.values, function(facetValueObject) {
+        return facetValueObject.value !== value;
       });
 
       if ( !active.values.length ) {
@@ -715,16 +744,18 @@
      *
      * @param {String} name - facet name
      * @param {String} value - facet value
+     * @param {Boolean} isNegated - facet negated
      * @return {MLSearchContext} `this`
      */
-    toggleFacet: function toggleFacet(name, value) {
+    toggleFacet: function toggleFacet(name, value, isNegated) {
       var config;
 
       if ( this.isFacetActive(name, value) ) {
         this.clearFacet(name, value);
       } else {
         config = this.getFacetConfig(name);
-        this.selectFacet(name, value, config.type);
+
+        this.selectFacet(name, value, config.type, isNegated);
       }
 
       return this;
@@ -804,12 +835,18 @@
      */
     getParams: function getParams() {
       var page = this.getPage(),
-          facets = this.getFacetParams(),
+          facetParams = this.getFacetParams(),
+          facets = facetParams.facets,
+          negated = facetParams.negatedFacets,
           params = {},
           prefix = this.getParamsPrefix();
 
       if ( facets.length && this.options.params.facets !== null ) {
         params[ prefix + this.options.params.facets ] = facets;
+      }
+
+      if ( negated.length && this.options.params.negatedFacets !== null ) {
+        params[ prefix + this.options.params.negatedFacets ] = negated;
       }
 
       if ( page > 1 && this.options.params.page !== null ) {
@@ -837,20 +874,34 @@
       var self = this,
           facetQuery = self.getFacetQuery(),
           queries = [],
-          facets = [];
+          facets = {facets:[],negatedFacets:[]};
 
       queries = ( facetQuery['or-query'] || facetQuery['and-query'] ).queries;
-
       _.each(queries, function(query) {
-        var constraint = query[ _.keys(query)[0] ],
-            name = constraint['constraint-name'];
+        var queryType = _.keys(query)[0],
+            constraint,
+            name,
+            arrayToPushTo;
+
+
+        if (queryType === 'not-query'){
+          constraint = query[queryType][_.keys(query[queryType])[0]];
+          arrayToPushTo = facets.negatedFacets;
+        }
+        else
+        {
+          constraint = query[ queryType ];
+          arrayToPushTo = facets.facets;
+        }
+
+        name = constraint['constraint-name'];
 
         _.each( constraint.value || constraint.uri, function(value) {
           // quote values with spaces
           if (/\s+/.test(value) && !/^"(.*)"$/.test(value)) {
             value = '"' + value + '"';
           }
-          facets.push( name + self.options.params.separator + value );
+          arrayToPushTo.push( name + self.options.params.separator + value );
         });
       });
 
@@ -872,6 +923,10 @@
 
       if ( params.f ) {
         params.f = asArray(params.f);
+      }
+
+      if ( params.n ) {
+        params.n = asArray(params.n);
       }
 
       return params;
@@ -905,26 +960,40 @@
         this.setSort.bind(this)
       );
 
+      self.clearAllFacets();
+
+      //this parses the facets then the negated ones since they both depend on the same MarkLogic facet data
       this.fromParam( paramsConf.facets, params,
         function(val) {
-          self.clearAllFacets();
 
           // ensure that facet type information is available
           if ( self.results.facets ) {
             self.fromFacetParam(val);
-            d.resolve();
+
+            self.fromParam( paramsConf.negatedFacets, params,
+              function(val){
+                self.fromFacetParam(val, undefined, true);
+                d.resolve();
+              },
+              d.resolve
+            );
           } else {
             self.getStoredOptions().then(function(options) {
               self.fromFacetParam(val, options);
-              d.resolve();
+              self.fromParam( paramsConf.negatedFacets, params,
+                function(val){
+                  self.fromFacetParam(val, options, true);
+                  d.resolve();
+                },
+                d.resolve
+              );
             });
           }
         },
-        function() {
-          self.clearAllFacets();
-          d.resolve();
-        }
+        d.resolve
       );
+
+
 
       return d.promise;
     },
@@ -968,10 +1037,12 @@
      *
      * @param {Array|String} param - facet URL query params
      * @param {Object} [storedOptions] - a searchOptions object
+     * @param {Boolean} isNegated - whether the facet should be negated (defaults to false)
      */
-    fromFacetParam: function fromFacetParam(param, storedOptions) {
+    fromFacetParam: function fromFacetParam(param, storedOptions, isNegated) {
       var self = this,
-          values = _.map( asArray(param), decodeParam );
+          values = _.map( asArray(param), decodeParam ),
+          negated = isNegated || false;
 
       _.each(values, function(value) {
         var tokens = value.split( self.options.params.separator ),
@@ -984,7 +1055,7 @@
                         '\', falling back to un-typed range queries');
         }
 
-        self.selectFacet( facetName, facetValue, facetInfo.type );
+        self.selectFacet( facetName, facetValue, facetInfo.type, negated );
       });
     },
 
@@ -1243,10 +1314,11 @@
         if ( selected ) {
           _.chain(facet.facetValues)
             .filter(function(value) {
-              return _.contains( selected.values, value.name );
+              return self.isFacetActive(name, value.name);
             })
             .each(function(value) {
               facet.selected = value.selected = true;
+              value.negated = self.isFacetNegated(name, value.name);
             })
             .value(); // thwart lazy evaluation
         }
