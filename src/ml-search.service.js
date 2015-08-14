@@ -1133,7 +1133,7 @@
      */
     values: function values(name, params, options) {
       var self = this;
-      
+
       // TODO: what other conditions
       if ( !options && params && params.options) {
         options = params;
@@ -1212,22 +1212,19 @@
         var results = response.data;
 
         // the results of adhoc queries aren't preserved
-        if ( combined ) {
-          self.transformMetadata(results);
-          self.annotateActiveFacets(results);
-          if (self.options.includeAggregates) {
-            self.getAggregates(results);
-          }
-          return results;
+        if ( !combined ) {
+          self.results = results;
         }
 
-        self.results = results;
-        self.transformMetadata();
-        self.annotateActiveFacets();
+        self.transformMetadata(results.results);
+        self.annotateActiveFacets(results.facets);
+
         if (self.options.includeAggregates) {
-          self.getAggregates();
+          // TODO: find some way to conditionally chain this, so that errors are propagated
+          self.getAggregates(results.facets);
         }
-        return self.results;
+
+        return results;
       });
     },
 
@@ -1235,12 +1232,10 @@
      * Annotates facets (from a search response object) with the selections from `this.activeFacets`
      * @method MLSearchContext#annotateActiveFacets
      *
-     * @param {Object} [facets] - the search facets object (defaults to `this.results.facets`)
+     * @param {Object} facets - facets object from a search response
      */
     annotateActiveFacets: function annotateActiveFacets(facets) {
       var self = this;
-
-      facets = facets || self.results.facets;
 
       _.forIn( facets, function(facet, name) {
         var selected = self.activeFacets[name];
@@ -1262,63 +1257,73 @@
      * Gets aggregates for facets (from a search response object) based on facet type
      * @method MLSearchContext#getAggregates
      *
-     * @param {Object} [facets] - the search facets object (defaults to `this.results.facets`)
+     * @param {Object} facets - facets object from a search response
+     * @return {Promise} a promise resolved once facet aggregates have been retrieved
      */
     getAggregates: function getAggregates(facets) {
       var self = this;
 
-      facets = facets || self.results.facets;
-      
       return self.getStoredOptions()
       .then(function(storedOptions) {
-        var promisses = [];
-  
-        _.forIn( facets, function(facet, facetName) {
-          var facetType = facet.type,
-              constraint = _.where(storedOptions.options.constraint, { name: facetName })[0];
+        var promises = [];
 
-          if ( !constraint ) {
-            return $q.reject(new Error('No constraint exists matching ' + facetName));
-          }
+        try {
+          _.forIn( facets, function(facet, facetName) {
+            var facetType = facet.type,
+                constraint = _.where(storedOptions.options.constraint, { name: facetName })[0];
 
-          var newOptions = { constraint: constraint, values: _.cloneDeep(constraint) };
-          newOptions.values['values-option'] = constraint.range && constraint.range['facet-option'];
+            if ( !constraint ) {
+              throw new Error('No constraint exists matching ' + facetName);
+            }
 
-          // these work for all index types
-          newOptions.values.aggregate = [
-            { apply: 'count' },
-            { apply: 'min' },
-            { apply: 'max' }
-          ];
+            // TODO: update facetType from constraint ?
 
-          var numberTypes = ['xs:int', 'xs:unsignedInt', 'xs:long', 'xs:unsignedLong', 'xs:float', 'xs:double', 'xs:decimal'];
-          if ( _.contains(numberTypes, facetType) ) {
-          
-            newOptions.values.aggregate = newOptions.values.aggregate.concat([
-              { apply: 'sum' },
-              { apply: 'avg' },
-              // TODO: allow enabling these from config?
-              // { apply: 'median' },
-              // { apply: 'stddev' },
-              // { apply: 'stddev-population' },
-              // { apply: 'variance' },
-              // { apply: 'variance-population' }
-            ]);
-          
-          }
+            var newOptions = { constraint: constraint, values: _.cloneDeep(constraint) };
+            newOptions.values['values-option'] = constraint.range && constraint.range['facet-option'];
 
-          promisses.push(
-            self.values(facetName, { start: 1, limit: 0 }, newOptions)
-            .then(function(resp) {
-              var aggregates = resp.data && resp.data['values-response'] && resp.data['values-response']['aggregate-result'];
-              _.each( aggregates, function(aggregate) {
-                facet[aggregate.name] = aggregate._value;
-              });
-            })
-          );
-        });
-        
-        return $q.all(promisses);
+            // TODO: make the choice of aggregates configurable
+
+            // these work for all index types
+            newOptions.values.aggregate = [
+              { apply: 'count' },
+              { apply: 'min' },
+              { apply: 'max' }
+            ];
+
+            // TODO: move the scalar-type -> aggregate mappings to MLRest (see https://gist.github.com/joemfb/b682504c7c19cd6fae11)
+
+            var numberTypes = ['xs:int', 'xs:unsignedInt', 'xs:long', 'xs:unsignedLong', 'xs:float', 'xs:double', 'xs:decimal'];
+            if ( _.contains(numberTypes, facetType) ) {
+
+              newOptions.values.aggregate = newOptions.values.aggregate.concat([
+                { apply: 'sum' },
+                { apply: 'avg' },
+                // TODO: allow enabling these from config?
+                // { apply: 'median' },
+                // { apply: 'stddev' },
+                // { apply: 'stddev-population' },
+                // { apply: 'variance' },
+                // { apply: 'variance-population' }
+              ]);
+
+            }
+
+            promises.push(
+              self.values(facetName, { start: 1, limit: 0 }, newOptions)
+              .then(function(resp) {
+                var aggregates = resp.data && resp.data['values-response'] && resp.data['values-response']['aggregate-result'];
+                _.each( aggregates, function(aggregate) {
+                  facet[aggregate.name] = aggregate._value;
+                });
+              })
+            );
+          });
+        }
+        catch (err) {
+          return $q.reject(err);
+        }
+
+        return $q.all(promises);
       });
     },
 
@@ -1326,13 +1331,11 @@
      * Transforms the metadata array in each search response result object to an object, key'd by `metadata-type`
      * @method MLSearchContext#transformMetadata
      *
-     * @param {Object} [result] - the search results object (defaults to `this.results.results`)
+     * @param {Object} result - results array from a search response (or one result object from the array)
      */
     transformMetadata: function transformMetadata(result) {
       var self = this,
           metadata;
-
-      result = result || this.results.results || {};
 
       if ( _.isArray(result) ) {
         _.each(result, this.transformMetadata, self);

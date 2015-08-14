@@ -528,10 +528,10 @@ describe('MLSearchContext', function () {
         { value: 'mickey', name: 'mickey', count: 1 }
       ]}}};
 
-      mlSearch.annotateActiveFacets();
+      mlSearch.annotateActiveFacets(mlSearch.results.facets);
       expect( _.filter(mlSearch.results.facets, 'selected').length ).toEqual(0);
 
-      mlSearch.selectFacet('cartoon', 'mickey').annotateActiveFacets();
+      mlSearch.selectFacet('cartoon', 'mickey').annotateActiveFacets(mlSearch.results.facets);
       expect( _.filter(mlSearch.results.facets, 'selected').length ).toEqual(1);
     });
 
@@ -724,13 +724,33 @@ describe('MLSearchContext', function () {
 
       var searchContext = factory.newContext();
       var facets;
-      
+
       searchContext
         .search()
         .then(function(response){ facets = response.facets; });
       $httpBackend.flush();
 
       expect( facets['my-facet'].count ).not.toBeDefined();
+    });
+
+    // this should be basically impossible, unless you're appending new facets manually
+    it('should reject when no matching constraints', function() {
+      $httpBackend
+        .expectGET('/v1/config/query/all?format=json')
+        .respond({ options: { constraint: [] } });
+
+      var searchContext = factory.newContext();
+      var success = false,
+          error = null;
+
+      searchContext.getAggregates( mockResultsFacets.facets )
+        .then(
+          function(){ success = true;  },
+          function(err){ error = err; }
+        );
+      $httpBackend.flush();
+
+      expect( error ).toEqual(new Error('No constraint exists matching my-facet'));
     });
 
     it('returns aggregates when enabled', function() {
@@ -746,13 +766,62 @@ describe('MLSearchContext', function () {
 
       var searchContext = factory.newContext({ includeAggregates: true });
       var facets;
-      
+
       searchContext
         .search()
         .then(function(response){ facets = response.facets; });
       $httpBackend.flush();
-      
+
       expect( facets['my-facet'].count ).toBeDefined();
+    });
+
+    it('returns numeric aggregates for numeric facets', function() {
+      mockResultsFacets.facets['my-facet'] = {
+        "type": "xs:int",
+        "facetValues": [
+          { "name": "2", "count": 1, "value": 2 },
+          { "name": "3", "count": 2, "value": 3 }
+        ]
+      };
+
+      constraintConfig.options.constraint = [{
+        name: 'my-facet',
+        range: { 'facet-option': 'limit=10' }
+      }];
+
+      aggregateValues = {
+        'values-response': {
+          name: 'my-facet',
+          type: 'xs:int',
+          'aggregate-result': [
+            { name: 'sum', _value: 5 },
+            { name: 'avg', _value: 2.5 }
+          ]
+        }
+      };
+
+      $httpBackend
+        .expectGET(/\/v1\/search\?format=json&options=all&pageLength=10&start=1.*/)
+        .respond(mockResultsFacets);
+      $httpBackend
+        .expectGET('/v1/config/query/all?format=json')
+        .respond(constraintConfig);
+      $httpBackend
+        .expectPOST('/v1/values/my-facet?limit=0&start=1')
+        .respond(aggregateValues);
+
+      var searchContext = factory.newContext({ includeAggregates: true });
+      var facets;
+
+      searchContext
+        .search()
+        .then(function(response){ facets = response.facets; });
+      $httpBackend.flush();
+
+      expect( facets['my-facet'].sum ).toBeDefined();
+      expect( facets['my-facet'].sum ).toEqual(5);
+      expect( facets['my-facet'].avg ).toBeDefined();
+      expect( facets['my-facet'].avg ).toEqual(2.5);
     });
   });
 
@@ -1398,6 +1467,8 @@ describe('MLSearchContext#mock-service', function () {
     expect( args[1].search.query.queries.length ).toEqual(1);
     expect( args[1].search.query.queries[0]['and-query'] ).not.toBe(undefined);
     expect( args[1].search.options ).toBe(undefined);
+
+    expect( mlSearch.results ).toEqual({});
   });
 
   it('should construct an adhoc combined query with options and search', function() {
@@ -1425,6 +1496,8 @@ describe('MLSearchContext#mock-service', function () {
     expect( args[1].search.options ).not.toBe(undefined);
     expect( args[1].search.options['return-facets'] ).toEqual(false);
     expect( args[1].search.options['return-metrics'] ).toEqual(true);
+
+    expect( mlSearch.results ).toEqual({});
   });
 
   it('should construct an adhoc combined query from a structured query and search', function() {
@@ -1463,6 +1536,8 @@ describe('MLSearchContext#mock-service', function () {
     expect( args[1].search.query.queries[0]['and-query'].queries[0]['range-constraint-query'] ).not.toBe(undefined);
     expect( args[1].search.query.queries[0]['and-query'].queries[1]['collection-constraint-query'] ).not.toBe(undefined);
     expect( args[1].search.options ).toBe(undefined);
+
+    expect( mlSearch.results ).toEqual({});
   });
 
   it('should construct an adhoc combined query from specific options and search', function() {
@@ -1484,6 +1559,8 @@ describe('MLSearchContext#mock-service', function () {
     expect( args[1].search.query.queries[0]['and-query'] ).toBeDefined();
     expect( args[1].search.options ).not.toBe(undefined);
     expect( args[1].search.options['return-facets'] ).toEqual(false);
+
+    expect( mlSearch.results ).toEqual({});
   });
 
   it('should get values', function() {
