@@ -25,7 +25,7 @@ gulp.task('jshint', function() {
     .pipe(jshint.reporter('default'));
 });
 
-gulp.task('scripts', ['test'], function() {
+gulp.task('scripts', function() {
   return gulp.src([
       './src/ml-search.js',
       './src/**/*.js'
@@ -37,7 +37,7 @@ gulp.task('scripts', ['test'], function() {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('styles', [], function() {
+gulp.task('styles', function() {
   return gulp.src('./src/styles/*.less')
     .pipe(concat('ml-search-ng-tpls.less'))
     .pipe(gulp.dest('dist'))
@@ -46,7 +46,7 @@ gulp.task('styles', [], function() {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('templates', ['test'], function() {
+gulp.task('templates', function() {
   return gulp.src([ './src/**/*.html' ])
     .pipe(minifyHtml({
         empty: true,
@@ -65,25 +65,19 @@ gulp.task('templates', ['test'], function() {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('test', function() {
+gulp.task('test', ['templates'], function(done) {
   karma.start({
     configFile: path.join(__dirname, './karma.conf.js'),
     singleRun: true,
     autoWatch: false
-  }, function (exitCode) {
-    console.log('Karma has exited with ' + exitCode);
-    process.exit(exitCode);
-  });
+  }, done);
 });
 
-gulp.task('autotest', function() {
+gulp.task('autotest', function(done) {
   karma.start({
     configFile: path.join(__dirname, './karma.conf.js'),
     autoWatch: true
-  }, function (exitCode) {
-    console.log('Karma has exited with ' + exitCode);
-    process.exit(exitCode);
-  });
+  }, done);
 });
 
 gulp.task('docs', function() {
@@ -108,4 +102,4 @@ gulp.task('publish-docs', function() {
   .pipe(ghpages());
 });
 
-gulp.task('default', ['jshint', 'scripts', 'templates', 'styles']);
+gulp.task('default', ['jshint', 'test', 'scripts', 'templates', 'styles']);
