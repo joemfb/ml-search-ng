@@ -1,4 +1,4 @@
-<form ng-submit="search({ qtext: qtext })" class="ml-input form-inline" role="search">
+<form ng-submit="search({ qtext: qtext })" class="ml-input ml-search form-inline" role="search">
   <div class="input-group">
     <input ng-model="qtext" type="text" class="form-control" placeholder="Search..." autocomplete="off"
         typeahead="suggestion for suggestion in suggest({ val: $viewValue })" typeahead-suggest-on-select="true" typeahead-loading="loadingSuggestions"/>
