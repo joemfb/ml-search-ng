@@ -8,6 +8,7 @@ var gulp = require('gulp'),
     jshint = require('gulp-jshint'),
     karma = require('karma').server,
     minifyHtml = require('gulp-minify-html'),
+    less = require('gulp-less'),
     path = require('path'),
     rename = require('gulp-rename'),
     uglify = require('gulp-uglify'),
@@ -33,6 +34,15 @@ gulp.task('scripts', ['test'], function() {
     .pipe(gulp.dest('dist'))
     .pipe(rename('ml-search-ng.min.js'))
     .pipe(uglify())
+    .pipe(gulp.dest('dist'));
+});
+
+gulp.task('styles', [], function() {
+  return gulp.src('./src/styles/*.less')
+    .pipe(concat('ml-search-ng-tpls.less'))
+    .pipe(gulp.dest('dist'))
+    .pipe(rename('ml-search-ng-tpls.css'))
+    .pipe(less())
     .pipe(gulp.dest('dist'));
 });
 
@@ -98,4 +108,4 @@ gulp.task('publish-docs', function() {
   .pipe(ghpages());
 });
 
-gulp.task('default', ['jshint', 'scripts', 'templates']);
+gulp.task('default', ['jshint', 'scripts', 'templates', 'styles']);
