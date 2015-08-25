@@ -6,6 +6,7 @@ var gulp = require('gulp'),
     concat = require('gulp-concat'),
     html2Js = require('gulp-ng-html2js'),
     jshint = require('gulp-jshint'),
+    jscs = require('gulp-jscs'),
     karma = require('karma').server,
     minifyHtml = require('gulp-minify-html'),
     less = require('gulp-less'),
@@ -16,7 +17,19 @@ var gulp = require('gulp'),
     ghpages = require('gulp-gh-pages'),
     cp = require('child_process');
 
-gulp.task('jshint', function() {
+gulp.task('lint-style', function(done) {
+  gulp.src([
+      './gulpfile.js',
+      './src/**/*.js'
+    ])
+    .pipe(jscs())
+    .on('error',function(err) {
+      console.error(err.message);
+      done();
+    });
+});
+
+gulp.task('lint', ['lint-style'], function() {
   gulp.src([
       './gulpfile.js',
       './src/**/*.js'
@@ -65,7 +78,7 @@ gulp.task('templates', function() {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('test', ['templates'], function(done) {
+gulp.task('test', ['templates', 'lint'], function(done) {
   karma.start({
     configFile: path.join(__dirname, './karma.conf.js'),
     singleRun: true,
@@ -102,4 +115,4 @@ gulp.task('publish-docs', function() {
   .pipe(ghpages());
 });
 
-gulp.task('default', ['jshint', 'test', 'scripts', 'templates', 'styles']);
+gulp.task('default', ['lint', 'test', 'scripts', 'templates', 'styles']);
