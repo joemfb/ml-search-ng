@@ -18,19 +18,19 @@ var gulp = require('gulp'),
     cp = require('child_process');
 
 gulp.task('lint-style', function(done) {
-  gulp.src([
+  return gulp.src([
       './gulpfile.js',
       './src/**/*.js'
     ])
     .pipe(jscs())
-    .on('error',function(err) {
+    .on('error', function(err) {
       console.error(err.message);
-      done();
+      this.emit('end');
     });
 });
 
 gulp.task('lint', ['lint-style'], function() {
-  gulp.src([
+  return gulp.src([
       './gulpfile.js',
       './src/**/*.js'
     ])
