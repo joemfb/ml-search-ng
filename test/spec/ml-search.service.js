@@ -44,7 +44,19 @@ describe('MLSearchContext', function () {
 
       expect(actual.name).toBeDefined();
       expect(actual.name.values.length).toEqual(1);
-      expect(actual.name.values[0]).toEqual('value');
+      expect(actual.name.values[0].value).toEqual('value');
+      expect(actual.name.values[0].negated).toEqual(false);
+
+      mlSearch.selectFacet('name', 'value2', undefined, true);
+      actual = mlSearch.getActiveFacets();
+
+      expect(actual.name).toBeDefined();
+      expect(actual.name.values.length).toEqual(2);
+      expect(actual.name.values[0].value).toEqual('value');
+      expect(actual.name.values[1].value).toEqual('value2');
+      expect(actual.name.values[0].negated).toEqual(false);
+      expect(actual.name.values[1].negated).toEqual(true);
+
     });
 
     it('gets namespace prefix', function() {
@@ -258,6 +270,7 @@ describe('MLSearchContext', function () {
       expect(mlSearch.getParamsConfig().separator).toEqual(':');
       expect(mlSearch.getParamsConfig().qtext).toEqual('q');
       expect(mlSearch.getParamsConfig().facets).toEqual('f');
+      expect(mlSearch.getParamsConfig().negatedFacets).toEqual('n');
       expect(mlSearch.getParamsConfig().sort).toEqual('s');
       expect(mlSearch.getParamsConfig().page).toEqual('p');
 
@@ -266,7 +279,7 @@ describe('MLSearchContext', function () {
 
     it('gets URL params keys', function() {
       var mlSearch = factory.newContext();
-      var keys = ['q', 'f', 's', 'p'];
+      var keys = ['q', 'f', 'n', 's', 'p'];
 
       // using _.difference since param order is non-determinant
       expect( _.difference( mlSearch.getParamsKeys(), keys ).length ).toEqual(0);
@@ -321,6 +334,25 @@ describe('MLSearchContext', function () {
       $httpBackend.flush();
 
       expect( facets['my-facet'].facetValues[0].selected ).toBeTruthy();
+      expect( facets['my-facet'].facetValues[0].negated ).not.toBeTruthy();
+      expect( facets['my-facet'].facetValues[1].selected ).not.toBeTruthy();
+    });
+
+    it('should properly tag NEGATED facets as active', function() {
+      $httpBackend
+        .expectGET(/\/v1\/search\?format=json&options=all&pageLength=10&start=1&structuredQuery=.*/)
+        .respond(mockResultsFacets);
+
+      var search = factory.newContext();
+      var facets;
+
+      search.selectFacet('my-facet', 'test', undefined, true)
+      .search()
+      .then(function(response){ facets = response.facets; });
+      $httpBackend.flush();
+
+      expect( facets['my-facet'].facetValues[0].selected ).toBeTruthy();
+      expect( facets['my-facet'].facetValues[0].negated ).toBeTruthy();
       expect( facets['my-facet'].facetValues[1].selected ).not.toBeTruthy();
     });
 
@@ -415,6 +447,17 @@ describe('MLSearchContext', function () {
       expect(facetQuery['range-constraint-query'].value[0]).toEqual('bar');
     });
 
+    it('selects negated facets correctly', function() {
+      var searchContext = factory.newContext();
+      var fullQuery = searchContext.selectFacet('foo', 'bar', undefined, true).getQuery();
+      var facetQuery = fullQuery.query.queries[0]['and-query'].queries[0];
+
+      expect(facetQuery['not-query']['range-constraint-query']['constraint-name']).toEqual('foo');
+      expect(Array.isArray(facetQuery['not-query']['range-constraint-query'].value)).toBeTruthy();
+      expect(facetQuery['not-query']['range-constraint-query'].value.length).toEqual(1);
+      expect(facetQuery['not-query']['range-constraint-query'].value[0]).toEqual('bar');
+    });
+
     it('clears a facet correctly', function() {
       var searchContext = factory.newContext();
       // make one facet selection:
@@ -453,6 +496,8 @@ describe('MLSearchContext', function () {
 
       expect( searchContext.isFacetActive('foo', 'bar') ).toEqual(true);
       expect( searchContext.isFacetActive('foo', 'baz') ).toEqual(true);
+      expect( searchContext.isFacetNegated('foo', 'baz') ).toEqual(false);
+      expect( searchContext.isFacetNegated('foo', 'baz') ).toEqual(false);
 
       searchContext.clearFacet('foo', 'bar');
 
@@ -463,21 +508,50 @@ describe('MLSearchContext', function () {
 
       expect( searchContext.isFacetActive('foo', 'bar') ).toEqual(false);
       expect( searchContext.isFacetActive('foo', 'baz') ).toEqual(false);
+
+      //Now to try negated facets
+      searchContext
+        .selectFacet('foo','bar', undefined, true)
+        .selectFacet('foo','baz', undefined, true);
+
+      expect( searchContext.isFacetActive('foo', 'bar') ).toEqual(true);
+      expect( searchContext.isFacetActive('foo', 'baz') ).toEqual(true);
+      expect( searchContext.isFacetNegated('foo', 'baz') ).toEqual(true);
+      expect( searchContext.isFacetNegated('foo', 'baz') ).toEqual(true);
+
+      searchContext.clearFacet('foo', 'bar');
+
+      expect( searchContext.isFacetActive('foo', 'bar') ).toEqual(false);
+      expect( searchContext.isFacetActive('foo', 'baz') ).toEqual(true);
+      expect( searchContext.isFacetNegated('foo', 'bar') ).toEqual(false);
+      expect( searchContext.isFacetNegated('foo', 'baz') ).toEqual(true);
+
+      searchContext.clearFacet('foo', 'baz');
+
+      expect( searchContext.isFacetActive('foo', 'bar') ).toEqual(false);
+      expect( searchContext.isFacetActive('foo', 'baz') ).toEqual(false);
+      expect( searchContext.isFacetNegated('foo', 'baz') ).toEqual(false);
+      expect( searchContext.isFacetNegated('foo', 'baz') ).toEqual(false);
+
     });
 
     it('clears all facets correctly', function() {
-      var fullQuery, fooQuery, cartoonQuery;
+      var fullQuery, fooQuery, cartoonQuery, comicQuery;
       var searchContext = factory.newContext();
       // make one facet selection:
       searchContext.selectFacet('foo', 'bar');
       // make another
       searchContext.selectFacet('cartoon', 'bugs bunny');
+      // and a negative one
+      searchContext.selectFacet('comic', 'spiderman', undefined, true);
 
       fullQuery = JSON.stringify(searchContext.getQuery());
       fooQuery = fullQuery.match(/"constraint-name":\s*"foo"/);
       expect(fooQuery).not.toBeNull();
       cartoonQuery = fullQuery.match(/"constraint-name":\s*"cartoon"/);
       expect(cartoonQuery).not.toBeNull();
+      comicQuery = fullQuery.match(/"constraint-name":\s*"comic"/);
+      expect(comicQuery).not.toBeNull();
 
       // clear both selections
       searchContext.clearAllFacets();
@@ -487,12 +561,14 @@ describe('MLSearchContext', function () {
       expect(fooQuery).toBeNull();
       cartoonQuery = fullQuery.match(/"constraint-name":\s*"cartoon"/);
       expect(cartoonQuery).toBeNull();
+      comicQuery = fullQuery.match(/"constraint-name":\s*"comic"/);
+      expect(comicQuery).toBeNull();
 
     });
 
     it('sets quoted value facets from parameters correctly', function() {
       var searchContext = factory.newContext();
-      searchContext.results = {facets: {cartoon: {type: 'string', facetVvalues: [
+      searchContext.results = {facets: {cartoon: {type: 'string', facetValues: [
         { value: 'bugs bunny', name: 'bugs bunny', count: 1 }
       ]}}};
       // select facet with space value
@@ -505,7 +581,7 @@ describe('MLSearchContext', function () {
 
       expect(searchContext.getParams().f[0]).toEqual('cartoon:"bugs bunny"');
 
-      expect(searchContext.activeFacets.cartoon.values[0]).toEqual('bugs bunny');
+      expect(searchContext.activeFacets.cartoon.values[0].value).toEqual('bugs bunny');
     });
 
     it('should toggle facets', function() {
@@ -563,7 +639,7 @@ describe('MLSearchContext', function () {
 
       facetQuery = mlSearch.getFacetQuery()['and-query'].queries[0]['range-constraint-query'];
       expect( facetQuery['constraint-name'] ).toEqual('color');
-      expect( facetQuery.value[0] ).toEqual('red');
+      expect( facetQuery.value[0]).toEqual('red');
 
       expect(mlSearch.setFacetMode('or')).toBe(mlSearch);
       expect(mlSearch.getFacetMode()).toBe('or');
@@ -572,7 +648,7 @@ describe('MLSearchContext', function () {
 
       facetQuery = mlSearch.getFacetQuery()['or-query'].queries[0]['range-constraint-query'];
       expect( facetQuery['constraint-name'] ).toEqual('color');
-      expect( facetQuery.value[0] ).toEqual('red');
+      expect( facetQuery.value[0]).toEqual('red');
     });
 
   });
@@ -777,10 +853,10 @@ describe('MLSearchContext', function () {
 
     it('returns numeric aggregates for numeric facets', function() {
       mockResultsFacets.facets['my-facet'] = {
-        "type": "xs:int",
-        "facetValues": [
-          { "name": "2", "count": 1, "value": 2 },
-          { "name": "3", "count": 2, "value": 3 }
+        'type': 'xs:int',
+        'facetValues': [
+          { 'name': '2', 'count': 1, 'value': 2 },
+          { 'name': '3', 'count': 2, 'value': 3 }
         ]
       };
 
@@ -919,6 +995,14 @@ describe('MLSearchContext', function () {
       expect(search.selectFacet('name', 'value2')).toBe(search);
       expect(search.getParams().f.length).toEqual(2);
       expect(search.getParams().f[1]).toEqual('name:value2');
+
+      search.clearFacet('name','value');
+      expect(search.getParams().f.length).toEqual(1);
+      expect(search.selectFacet('name', 'value', undefined, true)).toBe(search);
+      expect(search.getParams().f.length).toEqual(1);
+      expect(search.getParams().n.length).toEqual(1);
+      expect(search.getParams().n[0]).toEqual('name:value');
+      expect(search.getParams().f[0]).toEqual('name:value2');
     });
 
     it('should respect null URL params config', function() {
@@ -958,7 +1042,8 @@ describe('MLSearchContext', function () {
         q: 'blah',
         s: 'backwards',
         p: '3',
-        f : [ 'my-facet2*_*facetvalue' ]
+        f : [ 'my-facet2*_*facetvalue' ],
+        n : [ 'my-facet2*_*facetvalue2']
       });
 
       search.fromParams();
@@ -967,7 +1052,10 @@ describe('MLSearchContext', function () {
       expect(search.getText()).toEqual('blah');
       expect(search.getSort()).toEqual('backwards');
       expect(search.getPage()).toEqual(3);
-      expect(search.getActiveFacets()['my-facet2'].values[0]).toEqual('facetvalue');
+      expect(search.getActiveFacets()['my-facet2'].values[0].value).toEqual('facetvalue');
+      expect(search.getActiveFacets()['my-facet2'].values[0].negated).toEqual(false);
+      expect(search.getActiveFacets()['my-facet2'].values[1].value).toEqual('facetvalue2');
+      expect(search.getActiveFacets()['my-facet2'].values[1].negated).toEqual(true);
 
       var sort = _.chain(search.getQuery().query.queries)
         .filter(function(obj) {
@@ -999,7 +1087,7 @@ describe('MLSearchContext', function () {
       expect(search.getText()).toEqual('blah2');
       expect(search.getSort()).toEqual('backwards');
       expect(search.getPage()).toEqual(4);
-      expect(search.getActiveFacets()['my-facet'].values[0]).toEqual('facetvalue');
+      expect(search.getActiveFacets()['my-facet'].values[0].value).toEqual('facetvalue');
       expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
 
       search.clearAllFacets();
@@ -1020,8 +1108,8 @@ describe('MLSearchContext', function () {
       expect(search.getText()).toEqual('blah2');
       expect(search.getSort()).toEqual('backwards');
       expect(search.getPage()).toEqual(4);
-      expect(search.getActiveFacets()['my-facet'].values[0]).toEqual('facetvalue');
-      expect(search.getActiveFacets()['my-facet'].values[1]).toEqual('facetvalue2');
+      expect(search.getActiveFacets()['my-facet'].values[0].value).toEqual('facetvalue');
+      expect(search.getActiveFacets()['my-facet'].values[1].value).toEqual('facetvalue2');
       expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
     });
 
@@ -1040,7 +1128,7 @@ describe('MLSearchContext', function () {
       mlSearch.fromFacetParam('my-facet:value', mockOptionsConstraint);
       expect( mlSearch.isFacetActive('my-facet', 'value') ).toEqual(true);
       expect( mlSearch.getActiveFacets()['my-facet'].type ).toEqual('xs:string');
-      expect( mlSearch.getFacetParams()[0] ).toEqual('my-facet:value');
+      expect( mlSearch.getFacetParams().facets[0] ).toEqual('my-facet:value');
       expect( mlSearch.getFacetQuery()['and-query'].queries[0]['range-constraint-query'] ).toBeDefined();
 
       mlSearch.clearAllFacets();
@@ -1048,7 +1136,7 @@ describe('MLSearchContext', function () {
       mlSearch.fromFacetParam('my-custom-facet:value', mockOptionsConstraint);
       expect( mlSearch.isFacetActive('my-custom-facet', 'value') ).toEqual(true);
       expect( mlSearch.getActiveFacets()['my-custom-facet'].type ).toEqual('custom');
-      expect( mlSearch.getFacetParams()[0] ).toEqual('my-custom-facet:value');
+      expect( mlSearch.getFacetParams().facets[0] ).toEqual('my-custom-facet:value');
       expect( mlSearch.getFacetQuery()['and-query'].queries[0]['custom-constraint-query'] ).toBeDefined();
 
       mlSearch.clearAllFacets();
@@ -1056,7 +1144,7 @@ describe('MLSearchContext', function () {
       mlSearch.fromFacetParam('my-collection-facet:uri', mockOptionsConstraint);
       expect( mlSearch.isFacetActive('my-collection-facet', 'uri') ).toEqual(true);
       expect( mlSearch.getActiveFacets()['my-collection-facet'].type ).toEqual('collection');
-      expect( mlSearch.getFacetParams()[0] ).toEqual('my-collection-facet:uri');
+      expect( mlSearch.getFacetParams().facets[0] ).toEqual('my-collection-facet:uri');
       expect( mlSearch.getFacetQuery()['and-query'].queries[0]['collection-constraint-query'] ).toBeDefined();
     });
 
@@ -1109,15 +1197,19 @@ describe('MLSearchContext', function () {
       search
       .setText('hi')
       .setPage(3)
-      .selectFacet('color', 'blue');
+      .selectFacet('color', 'blue')
+      .selectFacet('color', 'orange', undefined, true);
 
       expect(search.getText()).toEqual('hi');
       expect(search.getPage()).toEqual(3);
-      expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+      expect(search.getActiveFacets().color.values[0].value).toEqual('blue');
+      expect(search.getActiveFacets().color.values[1].value).toEqual('orange');
+      expect(search.getActiveFacets().color.values[1].negated).toEqual(true);
 
       expect(search.getParams()['test:q']).toEqual('hi');
       expect(search.getParams()['test:p']).toEqual(3);
       expect(search.getParams()['test:f'][0]).toEqual('color:blue');
+      expect(search.getParams()['test:n'][0]).toEqual('color:orange');
     });
 
     it('should allow prefix\'d URL params with custom prefixSeparator', function() {
@@ -1131,30 +1223,37 @@ describe('MLSearchContext', function () {
       search
       .setText('hi')
       .setPage(3)
-      .selectFacet('color', 'blue');
+      .selectFacet('color', 'blue')
+      .selectFacet('color','orange', undefined, true);
 
       expect(search.getText()).toEqual('hi');
       expect(search.getPage()).toEqual(3);
-      expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+      expect(search.getActiveFacets().color.values[0].value).toEqual('blue');
+      expect(search.getActiveFacets().color.values[1].value).toEqual('orange');
+      expect(search.getActiveFacets().color.values[1].negated).toEqual(true);
 
       expect(search.getParams()['test|q']).toEqual('hi');
       expect(search.getParams()['test|p']).toEqual(3);
       expect(search.getParams()['test|f'][0]).toEqual('color:blue');
+      expect(search.getParams()['test|n'][0]).toEqual('color:orange');
     });
 
-    it('should populate from facet URL params', function() {
+    it('should populate from facet URL params without results', function() {
       $httpBackend
         .expectGET('/v1/config/query/all?format=json')
         .respond(mockOptionsColor);
 
       var search = factory.newContext();
 
-      $location.search({ q: 'hi', f: 'color:blue' });
+      $location.search({ q: 'hi', f: 'color:blue', n: 'color:orange' });
       search.fromParams();
       $httpBackend.flush();
 
       expect(search.getText()).toEqual('hi');
-      expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+      expect(search.getActiveFacets().color.values[0].value).toEqual('blue');
+      expect(search.getActiveFacets().color.values[0].negated).toEqual(false);
+      expect(search.getActiveFacets().color.values[1].value).toEqual('orange');
+      expect(search.getActiveFacets().color.values[1].negated).toEqual(true);
 
       $location.search({ q: 'hi' });
       search.fromParams();
@@ -1162,6 +1261,31 @@ describe('MLSearchContext', function () {
 
       expect(search.getText()).toEqual('hi');
       expect(search.getActiveFacets().color).toBeUndefined();
+    });
+
+    it('should populate from facet URL params with results', function() {
+      var search = factory.newContext();
+
+      search.results = {facets: {cartoon: {type: 'string', facetValues: [
+        { value: 'bugs bunny', name: 'bugs bunny', count: 1 }
+      ]}}};
+
+      $location.search({ q: 'hi', f: 'cartoon:"bugs bunny"', n: 'cartoon:"donald duck"' });
+      search.fromParams();
+      $rootScope.$apply();
+
+      expect(search.getText()).toEqual('hi');
+      expect(search.getActiveFacets().cartoon.values[0].value).toEqual('bugs bunny');
+      expect(search.getActiveFacets().cartoon.values[0].negated).toEqual(false);
+      expect(search.getActiveFacets().cartoon.values[1].value).toEqual('donald duck');
+      expect(search.getActiveFacets().cartoon.values[1].negated).toEqual(true);
+
+      $location.search({ q: 'hi' });
+      search.fromParams();
+      $rootScope.$apply();
+
+      expect(search.getText()).toEqual('hi');
+      expect(search.getActiveFacets().cartoon).toBeUndefined();
     });
 
     it('should ignore prefix-mismatch facet URL params', function() {
@@ -1178,7 +1302,7 @@ describe('MLSearchContext', function () {
       $httpBackend.flush();
 
       expect(search.getText()).toEqual('hi');
-      expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+      expect(search.getActiveFacets().color.values[0].value).toEqual('blue');
 
       // prefixed w/ custom separator use case
       $httpBackend
@@ -1197,7 +1321,7 @@ describe('MLSearchContext', function () {
       $httpBackend.flush();
 
       expect(search.getText()).toEqual('hi');
-      expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+      expect(search.getActiveFacets().color.values[0].value).toEqual('blue');
 
       // prefix / unprefix'd
       $httpBackend
@@ -1216,7 +1340,7 @@ describe('MLSearchContext', function () {
       $httpBackend.flush();
 
       expect(search.getText()).toBeNull();
-      expect(search.getActiveFacets().color.values[0]).toEqual('blue');
+      expect(search.getActiveFacets().color.values[0].value).toEqual('blue');
 
       // prefixed mis-match
       search = factory.newContext({
@@ -1269,9 +1393,9 @@ describe('MLSearchContext', function () {
 
       $httpBackend.flush();
 
-      expect(first.getActiveFacets().color.values[0]).toEqual('red');
-      expect(second.getActiveFacets().color.values[0]).toEqual('blue');
-      expect(third.getActiveFacets().color.values[0]).toEqual('green');
+      expect(first.getActiveFacets().color.values[0].value).toEqual('red');
+      expect(second.getActiveFacets().color.values[0].value).toEqual('blue');
+      expect(third.getActiveFacets().color.values[0].value).toEqual('green');
 
       first.clearAllFacets();
       second.clearAllFacets();
@@ -1308,12 +1432,15 @@ describe('MLSearchContext', function () {
         .expectGET('/v1/config/query/all?format=json')
         .respond(mockOptionsColor);
 
-      $location.search({ 'q': 'hi', 'f': 'color:blue' });
+      $location.search({ 'q': 'hi', 'f': 'color:blue', 'n':'color:orange' });
       mlSearch.locationChange('/', '/');
       $httpBackend.flush();
 
       expect( mlSearch.getText() ).toEqual('hi');
       expect( mlSearch.isFacetActive('color', 'blue') ).toEqual(true);
+      expect( mlSearch.getActiveFacets().color.values[0].negated ).toEqual(false);
+      expect( mlSearch.isFacetActive('color', 'orange') ).toEqual(true);
+      expect( mlSearch.getActiveFacets().color.values[1].negated ).toEqual(true);
 
       var success;
       mlSearch.locationChange('/', '/')
@@ -1332,13 +1459,16 @@ describe('MLSearchContext', function () {
         .respond(mockOptionsColor);
 
       var mlSearch = factory.newContext();
-      var params = { 'q': 'hi', 'f': 'color:blue' };
+      var params = { 'q': 'hi', 'f': 'color:blue', 'n':'color:orange' };
 
       mlSearch.locationChange('/', '/', params);
       $httpBackend.flush();
 
       expect( mlSearch.getText() ).toEqual('hi');
       expect( mlSearch.isFacetActive('color', 'blue') ).toEqual(true);
+      expect( mlSearch.getActiveFacets().color.values[0].negated ).toEqual(false);
+      expect( mlSearch.isFacetActive('color', 'orange') ).toEqual(true);
+      expect( mlSearch.getActiveFacets().color.values[1].negated ).toEqual(true);
 
       var success;
       mlSearch.locationChange('/', '/', params)

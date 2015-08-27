@@ -245,6 +245,19 @@ function MLSearchController($scope, $location, mlSearch) {
   };
 
   /**
+   * toggle the selection state of the specified NEGATED facet value
+   *
+   * @memberof MLSearchController
+   * @param {String} facetName - the name of the NEGATED facet to toggle
+   * @param {String} value - the value of the NEGATED facet to toggle
+   * @return {Promise} the promise from {@link MLSearchController#_search}
+   */
+  MLSearchController.prototype.toggleNegatedFacet = function toggleNegatedFacet(facetName, value) {
+    this.mlSearch.toggleFacet( facetName, value, true );
+    return this._search();
+  };
+
+  /**
    * Appends additional facet values to the provided facet object.
    *
    * @memberof MLSearchController

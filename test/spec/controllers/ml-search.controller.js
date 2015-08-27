@@ -41,6 +41,7 @@ describe('MLSearchController', function () {
       setText: jasmine.createSpy('setText').and.callFake(function() { return this; }),
       setPage: jasmine.createSpy('setPage').and.callFake(function() { return this; }),
       toggleFacet: jasmine.createSpy('toggleFacet').and.callFake(function() { return this; }),
+      toggleNegatedFacet: jasmine.createSpy('toggleNegatedFacet').and.callFake(function() { return this; }),
       clearAllFacets: jasmine.createSpy('clearAllFacets').and.callFake(function() { return this; }),
       clearAdditionalQueries: jasmine.createSpy('clearAdditionalQueries').and.callFake(function() { return this; }),
       clearBoostQueries: jasmine.createSpy('clearBoostQueries').and.callFake(function() { return this; })
@@ -76,6 +77,7 @@ describe('MLSearchController', function () {
       expect(ctrl.init).toBeDefined;
       expect(ctrl.search).toBeDefined;
       expect(ctrl.toggleFacet).toBeDefined;
+      expect(ctrl.toggleNegatedFacet).toBeDefined;
       expect(ctrl.showMoreFacets).toBeDefined;
       expect(ctrl.clearFacets).toBeDefined;
       expect(ctrl.reset).toBeDefined;
@@ -191,6 +193,13 @@ describe('MLSearchController', function () {
 
     it('should select facet and search', function() {
       ctrl.toggleFacet('color', 'red');
+      $rootScope.$apply();
+
+      expect(mockSearchContext.search).toHaveBeenCalled();
+    });
+
+    it('should select negated facet and search', function() {
+      ctrl.toggleNegatedFacet('color', 'red');
       $rootScope.$apply();
 
       expect(mockSearchContext.search).toHaveBeenCalled();
