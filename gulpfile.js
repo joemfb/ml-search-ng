@@ -62,9 +62,9 @@ gulp.task('styles', function() {
 gulp.task('templates', function() {
   return gulp.src([ './src/**/*.html' ])
     .pipe(minifyHtml({
-        empty: true,
-        spare: true,
-        quotes: true
+      empty: true,
+      spare: true,
+      quotes: true
     }))
     // TODO: ? prefix: '/ml-search'
     .pipe(html2Js({

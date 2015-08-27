@@ -120,7 +120,7 @@ function MLSearchController($scope, $location, mlSearch) {
    * @param {String} oldUrl
    * @return {Promise} the promise from {@link MLSearchContext#locationChange}
    */
-  MLSearchController.prototype.locationChange = function locationChange(e, newUrl, oldUrl){
+  MLSearchController.prototype.locationChange = function locationChange(e, newUrl, oldUrl) {
     var self = this,
         shouldUpdate = false;
 
@@ -289,8 +289,8 @@ function MLSearchController($scope, $location, mlSearch) {
    * @param {String} qtext - the partial-phrase to match
    * @return {Promise} the promise from {@link MLSearchContext#suggest}
    */
-  MLSearchController.prototype.suggest = function suggest(val) {
-    return this.mlSearch.suggest(val).then(function(res) {
+  MLSearchController.prototype.suggest = function suggest(qtext) {
+    return this.mlSearch.suggest(qtext).then(function(res) {
       return res.suggestions || [];
     });
   };

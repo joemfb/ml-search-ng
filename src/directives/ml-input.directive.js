@@ -1,4 +1,4 @@
-(function () {
+(function() {
 
   'use strict';
 
@@ -44,8 +44,7 @@
       } else {
         url = attrs.template;
       }
-    }
-    else {
+    } else {
       url = '/templates/ml-input.html';
     }
 

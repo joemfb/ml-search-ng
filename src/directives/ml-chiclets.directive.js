@@ -1,4 +1,4 @@
-(function () {
+(function() {
 
   'use strict';
 
@@ -39,8 +39,7 @@
 
     if (attrs.template) {
       url = attrs.template;
-    }
-    else {
+    } else {
       url = '/templates/ml-chiclets.html';
     }
 

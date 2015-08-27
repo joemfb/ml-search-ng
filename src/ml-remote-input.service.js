@@ -1,4 +1,4 @@
-(function () {
+(function() {
 
   'use strict';
 
@@ -14,8 +14,8 @@
    * @param {Object} $injector - angular dependency resolution service
    */
   function MLRemoteInputService($injector) {
-    var service = this;
-    var $route = null;
+    var service = this,
+        $route = null;
 
     this.routeAvailable = true;
 
@@ -39,8 +39,8 @@
      *
      * @param {string} input
      */
-    service.setInput = function setInput(val) {
-      service.input = val;
+    service.setInput = function setInput(input) {
+      service.input = input;
       // TODO: Object.observe service.input?
       _.each(service.callbacks, function(callback) {
         callback(service.input);
@@ -96,7 +96,7 @@
      * @param {object} $scope - search controller scope
      * @param {object} model - search controller model
      * @param {MLSearchContext} mlSearch - controller mlSearch instance
-     * @param {function} search callback
+     * @param {function} searchCallback - search callback function
      */
     service.initCtrl = function initCtrl($scope, model, mlSearch, searchCallback) {
       var unsubscribe = service.subscribe(function(input) {
@@ -123,7 +123,7 @@
      * @method MLRemoteInputService#getPath
      *
      * @param {string} searchCtrl - search controller name
-     * @return {string} search controller path
+     * @return {?string} search controller path
      */
     service.getPath = function getPath(searchCtrl) {
       var route = { originalPath: '/' },
@@ -138,8 +138,7 @@
       if ( matches.length === 0 ) {
         // TODO: get route from attr, or throw Error('can\t find Search controller') ?
         console.error('can\'t find Search controller: ' + searchCtrl);
-      }
-      else {
+      } else {
         route = matches[0];
 
         if ( matches.length > 1 ) {

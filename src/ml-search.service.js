@@ -1,4 +1,4 @@
-(function () {
+(function() {
   'use strict';
 
   // capture injected services for access throughout this module
@@ -21,6 +21,7 @@
    * @param {MLRest} MLRest - low-level ML REST API wrapper (from {@link https://github.com/joemfb/ml-common-ng})
    * @param {MLQueryBuilder} MLQueryBuilder - structured query builder (from {@link https://github.com/joemfb/ml-common-ng})
    */
+  // jscs:disable checkParamNames
   function MLSearchFactory($injectQ, $injectLocation, $injectMlRest, $injectQb) {
     $q = $injectQ;
     $location = $injectLocation;
@@ -188,7 +189,7 @@
      * Sets namespace prefix->URI mappings
      * @method MLSearchContext#setNamespaces
      *
-     * @param {Object[]} namespace - objects with `uri` and `prefix` properties
+     * @param {Object[]} namespaces - objects with `uri` and `prefix` properties
      * @return {MLSearchContext} `this`
      */
     setNamespaces: function setNamespaces(namespaces) {
@@ -234,7 +235,7 @@
      * Adds a boost query to `this.boostQueries`
      * @method MLSearchContext#addBoostQuery
      *
-     * @param {Object} boost query
+     * @param {Object} query - boost query
      * @return {MLSearchContext} `this`
      */
     addBoostQuery: function addBoostQuery(query) {
@@ -350,7 +351,7 @@
      * Sets the search results page
      * @method MLSearchContext#setPage
      *
-     * @param {Number} search - the desired search results page
+     * @param {Number} page - the desired search results page
      * @return {MLSearchContext} `this`
      */
     setPage: function setPage(page) {
@@ -542,7 +543,7 @@
      * Constructs a structured query from the current state
      * @method MLSearchContext#getQuery
      *
-     * @return a structured query object
+     * @return {Object} a structured query object
      */
     getQuery: function getQuery() {
       var query = qb.and();
@@ -589,7 +590,7 @@
      * constructs a structured query from the current active facets
      * @method MLSearchContext#getFacetQuery
      *
-     * @return a structured query object
+     * @return {Object} a structured query object
      */
     getFacetQuery: function getFacetQuery() {
       var self = this,
@@ -601,7 +602,7 @@
         if ( facet.values.length ) {
           constraintFn = function(facetValueObject) {
             var constraintQuery = qb.constraint( facet.type )( facetName, facetValueObject.value );
-            if (facetValueObject.negated === true){
+            if (facetValueObject.negated === true) {
               constraintQuery = qb.not(constraintQuery);
             }
             return constraintQuery;
@@ -659,9 +660,8 @@
      * @return {Boolean} isSelected
      */
     isFacetActive: function isFacetActive(name, value) {
-      var active = this.activeFacets[name],
-          valueFilter = {value:value};
-      return !!active && !!_.find(active.values, valueFilter);
+      var active = this.activeFacets[name];
+      return !!active && !!_.find(active.values, { value: value });
     },
 
     /**
@@ -673,15 +673,14 @@
      * @return {Boolean} isNegated
      */
     isFacetNegated: function isFacetNegated(name, value) {
-      var active = this.activeFacets[name],
-          valueFilter = {value:value};
+      var active = this.activeFacets[name];
 
-      if (!active){
+      if (!active) {
         return false;
       }
-      var facet = _.find(active.values, valueFilter);
+      var facet = _.find(active.values, { value: value });
 
-      if (!!facet){
+      if (!!facet) {
         return facet.negated;
       } else {
         return false;
@@ -704,7 +703,7 @@
       }
       var active = this.activeFacets[name],
           negated = isNegated || false,
-          valueObject = {value:value, negated: negated};
+          valueObject = { value: value, negated: negated };
 
       if (active && !this.isFacetActive(name, value) ) {
         active.values.push(valueObject);
@@ -806,7 +805,9 @@
         return self.values(facetName, { start: start, limit: limit }, newOptions);
       })
       .then(function(resp) {
-        var newFacets = resp && resp.data && resp.data['values-response'] && resp.data['values-response']['distinct-value'];
+        var newFacets = resp && resp.data && resp.data['values-response'] &&
+                        resp.data['values-response']['distinct-value'];
+
         if (!newFacets || newFacets.length < (limit - start)) {
           facet.displayingAll = true;
         }
@@ -874,7 +875,7 @@
       var self = this,
           facetQuery = self.getFacetQuery(),
           queries = [],
-          facets = {facets:[],negatedFacets:[]};
+          facets = { facets: [], negatedFacets: [] };
 
       queries = ( facetQuery['or-query'] || facetQuery['and-query'] ).queries;
       _.each(queries, function(query) {
@@ -883,13 +884,10 @@
             name,
             arrayToPushTo;
 
-
-        if (queryType === 'not-query'){
+        if (queryType === 'not-query') {
           constraint = query[queryType][_.keys(query[queryType])[0]];
           arrayToPushTo = facets.negatedFacets;
-        }
-        else
-        {
+        } else {
           constraint = query[ queryType ];
           arrayToPushTo = facets.facets;
         }
@@ -971,7 +969,7 @@
             self.fromFacetParam(val);
 
             self.fromParam( paramsConf.negatedFacets, params,
-              function(val){
+              function(val) {
                 self.fromFacetParam(val, undefined, true);
                 d.resolve();
               },
@@ -981,7 +979,7 @@
             self.getStoredOptions().then(function(options) {
               self.fromFacetParam(val, options);
               self.fromParam( paramsConf.negatedFacets, params,
-                function(val){
+                function(val) {
                   self.fromFacetParam(val, options, true);
                   d.resolve();
                 },
@@ -992,8 +990,6 @@
         },
         d.resolve
       );
-
-
 
       return d.promise;
     },
@@ -1364,7 +1360,16 @@
 
             // TODO: move the scalar-type -> aggregate mappings to MLRest (see https://gist.github.com/joemfb/b682504c7c19cd6fae11)
 
-            var numberTypes = ['xs:int', 'xs:unsignedInt', 'xs:long', 'xs:unsignedLong', 'xs:float', 'xs:double', 'xs:decimal'];
+            var numberTypes = [
+              'xs:int',
+              'xs:unsignedInt',
+              'xs:long',
+              'xs:unsignedLong',
+              'xs:float',
+              'xs:double',
+              'xs:decimal'
+            ];
+
             if ( _.contains(numberTypes, facetType) ) {
 
               newOptions.values.aggregate = newOptions.values.aggregate.concat([
@@ -1383,7 +1388,8 @@
             promises.push(
               self.values(facetName, { start: 1, limit: 0 }, newOptions)
               .then(function(resp) {
-                var aggregates = resp.data && resp.data['values-response'] && resp.data['values-response']['aggregate-result'];
+                var aggregates = resp && resp.data && resp.data['values-response'] &&
+                                 resp.data['values-response']['aggregate-result'];
                 _.each( aggregates, function(aggregate) {
                   facet[aggregate.name] = aggregate._value;
                 });
@@ -1427,7 +1433,6 @@
 
         ns = key.replace(/^\{([^}]+)\}.*$/, '$1');
         prefix = self.getNamespacePrefix(ns);
-
 
         if ( prefix ) {
           shortKey = key.replace(/\{[^}]+\}/, prefix + ':');

@@ -1,4 +1,4 @@
-(function () {
+(function() {
 
   'use strict';
 
@@ -40,8 +40,7 @@
 
     if (attrs.template) {
       url = attrs.template;
-    }
-    else {
+    } else {
       url = '/templates/ml-results.html';
     }
 
@@ -57,7 +56,7 @@
       };
     }
 
-    scope.$watch('results', function (newVal, oldVal) {
+    scope.$watch('results', function(newVal, oldVal) {
       _.each(newVal, function(result) {
         result.link = scope.link({ result: result });
       });
