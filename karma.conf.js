@@ -39,7 +39,9 @@ module.exports = function(config) {
       'src/ml-search.service.js',
       'src/ml-remote-input.service.js',
       'src/controllers/ml-search.controller.js',
+      'src/controllers/ml-remote-search.controller.js',
       'src/directives/*.js',
+      'sample/sample.js',
       'sample/*.js',
 
       // Mocks

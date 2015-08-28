@@ -25,6 +25,7 @@ depends on [https://github.com/joemfb/ml-common-ng](https://github.com/joemfb/ml
 #### controllers
 
 - `MLSearchController`: prototypically inherit to setup default search behavior
+- `MLRemoteSearchController`: prototypically inherit to use with `ml-remote-input` (inherits from `MLSearchController`)
 
 See [https://joemfb.github.io/ml-search-ng/](https://joemfb.github.io/ml-search-ng/) for API docs and directive examples.
 

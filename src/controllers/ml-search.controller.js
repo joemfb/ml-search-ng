@@ -20,7 +20,7 @@
  *       var ctrl = this;
  *       var mlSearch = searchFactory.newContext();
  *
- *       superCtrl.constructor.call(ctrl, $scope, $location, mlSearch);
+ *       MLSearchController.call(ctrl, $scope, $location, mlSearch);
  *
  *       // override a superCtrl method
  *       ctrl.updateSearchResults = function updateSearchResults(data) {
