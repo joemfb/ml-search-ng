@@ -12,7 +12,7 @@
     <h3>{{ facet.__key }}</h3>
     <div ng-repeat="value in facet.facetValues | filter:{selected: '!'+true}:false">
       <i class="fa fa-plus-circle facet-add-pos" ng-click="toggle({facet: facet.__key, value: value.name})" title="{{ value.name }}"></i>
-      <span ng-if="value.name">{{ value.name | truncate:truncateLength }}</span>
+      <span ng-if="!!value.name">{{ value.name | truncate:truncateLength }}</span>
       <em ng-if="!value.name">blank</em>
       <span>({{ value.count }})</span>
       <i class="fa fa-ban facet-add-neg" ng-if="shouldNegate" ng-click="negate({facet: facet.__key, value: value.name})" title="{{ value.name }}"></i>
