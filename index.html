@@ -37,6 +37,7 @@
             </ul>
             <h4>directives</h4>
             <ul>
+              <li><code>ml-chiclets</code>: display facet selection 'chiclets'</li>
               <li><code>ml-duration</code>: parse ISO duration strings</li>
               <li><code>ml-facets</code>: display facets</li>
               <li><code>ml-input</code>: search input with auto-suggest</li>
@@ -47,35 +48,12 @@
             <h4>controllers</h4>
             <ul>
               <li><code>MLSearchController</code>: prototypically inherit to setup default search behavior</li>
+              <li><code>MLRemoteSearchController</code>: prototypically inherit to use with <code>ml-remote-input</code> (inherits from <code>MLSearchController</code>)</li>
             </ul>
             <p>See <a href="https://joemfb.github.io/ml-search-ng/">https://joemfb.github.io/ml-search-ng/</a> for API docs and directive examples.</p>
             <p>See <a href="https://github.com/marklogic/slush-marklogic-node">https://github.com/marklogic/slush-marklogic-node</a> for a quick way to get started with an angular search application on top of the MarkLogic REST API.</p>
           </article>
           <div class="symbol-index">
-            <section>
-              <div class="symbol-index-content">
-                <h2 id="* MLSearchContext">* MLSearchContext</h2>
-                <div class="symbol-index-section">
-                  <div class="symbol-index-column">
-                    <dl class="symbol-index-list">
-                      <dt class="symbol-index-name">
-                <a href="-_%2520MLSearchContext.html#showMoreFacets" class="!symbol-index-name">* MLSearchContext#<wbr>showMoreFacets(facet, facetName[, step])</a>
-            </dt>
-                      <dd>
-                      </dd>
-                    </dl>
-                  </div>
-                  <div class="symbol-index-column">
-                    <dl class="symbol-index-list">
-                    </dl>
-                  </div>
-                  <div class="symbol-index-column">
-                    <dl class="symbol-index-list">
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </section>
             <section>
               <div class="symbol-index-content">
                 <h2 id="MLRemoteInputService">MLRemoteInputService</h2>
@@ -97,7 +75,7 @@
                   <div class="symbol-index-column">
                     <dl class="symbol-index-list">
                       <dt class="symbol-index-name">
-                <a href="MLRemoteInputService.html#initCtrl" class="!symbol-index-name">MLRemoteInputService#<wbr>initCtrl($scope, model, mlSearch, search)</a>
+                <a href="MLRemoteInputService.html#initCtrl" class="!symbol-index-name">MLRemoteInputService#<wbr>initCtrl($scope, model, mlSearch, searchCallback)</a>
             </dt>
                       <dd>
                       </dd>
@@ -117,6 +95,100 @@
                       </dd>
                       <dt class="symbol-index-name">
                 <a href="MLRemoteInputService.html#subscribe" class="!symbol-index-name">MLRemoteInputService#<wbr>subscribe(callback)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section>
+              <div class="symbol-index-content">
+                <h2 id="MLRemoteSearchController">MLRemoteSearchController</h2>
+                <div class="symbol-index-section">
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html" class="!symbol-index-name">MLRemoteSearchController($scope, $location, mlSearch, remoteInput)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#_search" class="!symbol-index-name">MLRemoteSearchController#<wbr>_search()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#clearFacets" class="!symbol-index-name">MLRemoteSearchController#<wbr>clearFacets()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#init" class="!symbol-index-name">MLRemoteSearchController#<wbr>init()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#locationChange" class="!symbol-index-name">MLRemoteSearchController#<wbr>locationChange(e, newUrl, oldUrl)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#parseExtraURLParams" class="!symbol-index-name">MLRemoteSearchController#<wbr>parseExtraURLParams()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#reset" class="!symbol-index-name">MLRemoteSearchController#<wbr>reset()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#search" class="!symbol-index-name">MLRemoteSearchController#<wbr>search([qtext])</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#showMoreFacets" class="!symbol-index-name">MLRemoteSearchController#<wbr>showMoreFacets(facet, facetName[, step])</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#suggest" class="!symbol-index-name">MLRemoteSearchController#<wbr>suggest(qtext)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#toggleFacet" class="!symbol-index-name">MLRemoteSearchController#<wbr>toggleFacet(facetName, value)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#toggleNegatedFacet" class="!symbol-index-name">MLRemoteSearchController#<wbr>toggleNegatedFacet(facetName, value)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#updateExtraURLParams" class="!symbol-index-name">MLRemoteSearchController#<wbr>updateExtraURLParams()</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#updateSearchResults" class="!symbol-index-name">MLRemoteSearchController#<wbr>updateSearchResults(data)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLRemoteSearchController.html#updateURLParams" class="!symbol-index-name">MLRemoteSearchController#<wbr>updateURLParams()</a>
             </dt>
                       <dd>
                       </dd>
@@ -147,7 +219,7 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#addBoostQuery" class="!symbol-index-name">MLSearchContext#<wbr>addBoostQuery(boost)</a>
+                <a href="MLSearchContext.html#addBoostQuery" class="!symbol-index-name">MLSearchContext#<wbr>addBoostQuery(query)</a>
             </dt>
                       <dd>
                       </dd>
@@ -157,7 +229,7 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#annotateActiveFacets" class="!symbol-index-name">MLSearchContext#<wbr>annotateActiveFacets([facets])</a>
+                <a href="MLSearchContext.html#annotateActiveFacets" class="!symbol-index-name">MLSearchContext#<wbr>annotateActiveFacets(facets)</a>
             </dt>
                       <dd>
                       </dd>
@@ -212,6 +284,11 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
+                <a href="MLSearchContext.html#getAggregates" class="!symbol-index-name">MLSearchContext#<wbr>getAggregates(facets)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
                 <a href="MLSearchContext.html#getAllStoredOptions" class="!symbol-index-name">MLSearchContext#<wbr>getAllStoredOptions(names)</a>
             </dt>
                       <dd>
@@ -226,15 +303,15 @@
             </dt>
                       <dd>
                       </dd>
-                    </dl>
-                  </div>
-                  <div class="symbol-index-column">
-                    <dl class="symbol-index-list">
                       <dt class="symbol-index-name">
                 <a href="MLSearchContext.html#getCurrentParams" class="!symbol-index-name">MLSearchContext#<wbr>getCurrentParams([params])</a>
             </dt>
                       <dd>
                       </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
                       <dt class="symbol-index-name">
                 <a href="MLSearchContext.html#getFacetMode" class="!symbol-index-name">MLSearchContext#<wbr>getFacetMode()</a>
             </dt>
@@ -325,10 +402,6 @@
             </dt>
                       <dd>
                       </dd>
-                    </dl>
-                  </div>
-                  <div class="symbol-index-column">
-                    <dl class="symbol-index-list">
                       <dt class="symbol-index-name">
                 <a href="MLSearchContext.html#getText" class="!symbol-index-name">MLSearchContext#<wbr>getText()</a>
             </dt>
@@ -344,18 +417,27 @@
             </dt>
                       <dd>
                       </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="MLSearchContext.html#isFacetNegated" class="!symbol-index-name">MLSearchContext#<wbr>isFacetNegated(name, value)</a>
+            </dt>
+                      <dd>
+                      </dd>
                       <dt class="symbol-index-name">
                 <a href="MLSearchContext.html#locationChange" class="!symbol-index-name">MLSearchContext#<wbr>locationChange(newUrl, oldUrl, params)</a>
             </dt>
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#search" class="!symbol-index-name">MLSearchContext#<wbr>search()</a>
+                <a href="MLSearchContext.html#search" class="!symbol-index-name">MLSearchContext#<wbr>search([adhoc])</a>
             </dt>
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#selectFacet" class="!symbol-index-name">MLSearchContext#<wbr>selectFacet(name, value, type)</a>
+                <a href="MLSearchContext.html#selectFacet" class="!symbol-index-name">MLSearchContext#<wbr>selectFacet(name, value, type, isNegated)</a>
             </dt>
                       <dd>
                       </dd>
@@ -370,12 +452,12 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#setNamespaces" class="!symbol-index-name">MLSearchContext#<wbr>setNamespaces(namespace)</a>
+                <a href="MLSearchContext.html#setNamespaces" class="!symbol-index-name">MLSearchContext#<wbr>setNamespaces(namespaces)</a>
             </dt>
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#setPage" class="!symbol-index-name">MLSearchContext#<wbr>setPage(search)</a>
+                <a href="MLSearchContext.html#setPage" class="!symbol-index-name">MLSearchContext#<wbr>setPage(page)</a>
             </dt>
                       <dd>
                       </dd>
@@ -405,17 +487,32 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
+                <a href="MLSearchContext.html#showMoreFacets" class="!symbol-index-name">MLSearchContext#<wbr>showMoreFacets(facet, facetName[, step])</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
                 <a href="MLSearchContext.html#suggest" class="!symbol-index-name">MLSearchContext#<wbr>suggest(qtext)</a>
             </dt>
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#toggleFacet" class="!symbol-index-name">MLSearchContext#<wbr>toggleFacet(name, value)</a>
+                <a href="MLSearchContext.html#toggleFacet" class="!symbol-index-name">MLSearchContext#<wbr>toggleFacet(name, value, isNegated)</a>
             </dt>
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
-                <a href="MLSearchContext.html#transformMetadata" class="!symbol-index-name">MLSearchContext#<wbr>transformMetadata([result])</a>
+                <a href="MLSearchContext.html#transformMetadata" class="!symbol-index-name">MLSearchContext#<wbr>transformMetadata(result)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchContext.html#values" class="!symbol-index-name">MLSearchContext#<wbr>values(name[, params][, options])</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
+                <a href="MLSearchContext.html#valuesFromConstraint" class="!symbol-index-name">MLSearchContext#<wbr>valuesFromConstraint(name[, params])</a>
             </dt>
                       <dd>
                       </dd>
@@ -494,6 +591,11 @@
                       <dd>
                       </dd>
                       <dt class="symbol-index-name">
+                <a href="MLSearchController.html#toggleNegatedFacet" class="!symbol-index-name">MLSearchController#<wbr>toggleNegatedFacet(facetName, value)</a>
+            </dt>
+                      <dd>
+                      </dd>
+                      <dt class="symbol-index-name">
                 <a href="MLSearchController.html#updateExtraURLParams" class="!symbol-index-name">MLSearchController#<wbr>updateExtraURLParams()</a>
             </dt>
                       <dd>
@@ -533,6 +635,54 @@
             </dt>
                       <dd>
                       </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section>
+              <div class="symbol-index-content">
+                <h2 id="duration">duration</h2>
+                <div class="symbol-index-section">
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="duration.html" class="!symbol-index-name">duration</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section>
+              <div class="symbol-index-content">
+                <h2 id="ml-chiclets">ml-chiclets</h2>
+                <div class="symbol-index-section">
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
+                      <dt class="symbol-index-name">
+                <a href="ml-chiclets.html" class="!symbol-index-name">ml-chiclets</a>
+            </dt>
+                      <dd>
+                      </dd>
+                    </dl>
+                  </div>
+                  <div class="symbol-index-column">
+                    <dl class="symbol-index-list">
                     </dl>
                   </div>
                   <div class="symbol-index-column">
@@ -695,7 +845,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.1 on June 19, 2015.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.1 on August 28, 2015.
       </p>
     </div>
   </footer>

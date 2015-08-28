@@ -4,7 +4,7 @@
 <head>
   <meta name="generator" content="JSDoc 3.3.1">
   <meta charset="utf-8">
-  <title>Class: MLSearchController</title>
+  <title>Class: MLRemoteSearchController</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
@@ -24,10 +24,11 @@
       <div id="jsdoc-content-container">
         <div id="jsdoc-main" role="main">
           <header class="page-header">
-            <h1><div class="symbol-detail-labels"><span class="label label-kind">class</span></div><small></small><span class="symbol-name">MLSearchController</span></h1>
-            <p class="source-link">Source: <a href="controllers_ml-search.controller.js.html">controllers/<wbr>ml-search.<wbr>controller.<wbr>js</a></p>
+            <h1><div class="symbol-detail-labels"><span class="label label-kind">class</span></div><small></small><span class="symbol-name">MLRemoteSearchController</span></h1>
+            <p class="source-link">Source: <a href="controllers_ml-remote-search.controller.js.html#source-line-3">controllers/<wbr>ml-remote-search.<wbr>controller.<wbr>js:3</a></p>
             <div class="symbol-classdesc">
-              <p>base search controller class; the prototype for an angular search controller</p>
+              <p><strong>extends <a href="MLSearchController.html">MLSearchController</a></strong></p>
+              <p>base search controller class; the prototype for an angular search controller. implements <a href="MLRemoteInputService.html">MLRemoteInputService</a>, for use with <a href="ml-remote-input.html">ml-remote-input</a></p>
               <p>Note: this style requires you to use the <code>controllerAs</code> syntax.</p>
               <pre class="prettyprint">
   (function() {
@@ -35,17 +36,17 @@
 
     angular.module('app').controller('SearchCtrl', SearchCtrl);
 
-    SearchCtrl.$inject = ['$scope', '$location', 'MLSearchFactory'];
+    SearchCtrl.$inject = ['$scope', '$location', 'MLSearchFactory', 'MLRemoteInputService'];
 
-    // inherit from MLSearchController
-    var superCtrl = MLSearchController.prototype;
+    // inherit from MLRemoteSearchController
+    var superCtrl = MLRemoteSearchController.prototype;
     SearchCtrl.prototype = Object.create(superCtrl);
 
-    function SearchCtrl($scope, $location, searchFactory) {
+    function SearchCtrl($scope, $location, searchFactory, remoteInput) {
       var ctrl = this;
       var mlSearch = searchFactory.newContext();
 
-      MLSearchController.call(ctrl, $scope, $location, mlSearch);
+      MLRemoteSearchController.call(ctrl, $scope, $location, mlSearch, remoteInput);
 
       // override a superCtrl method
       ctrl.updateSearchResults = function updateSearchResults(data) {
@@ -67,54 +68,54 @@
               <div class="summary-content">
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="MLSearchController.html#_search">_search()</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#_search">_search()</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchController.html#clearFacets">clearFacets()</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#clearFacets">clearFacets()</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchController.html#init">init()</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#init">init()</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchController.html#locationChange">locationChange(e, newUrl, oldUrl)</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#locationChange">locationChange(e, newUrl, oldUrl)</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchController.html#parseExtraURLParams">parseExtraURLParams()</a></dt>
-                    <dd>
-                    </dd>
-                  </dl>
-                </div>
-                <div class="summary-column">
-                  <dl class="dl-summary-callout">
-                    <dt><a href="MLSearchController.html#reset">reset()</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="MLSearchController.html#search">search([qtext])</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="MLSearchController.html#showMoreFacets">showMoreFacets(facet, facetName[, step])</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="MLSearchController.html#suggest">suggest(qtext)</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="MLSearchController.html#toggleFacet">toggleFacet(facetName, value)</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#parseExtraURLParams">parseExtraURLParams()</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="MLSearchController.html#toggleNegatedFacet">toggleNegatedFacet(facetName, value)</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#reset">reset()</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchController.html#updateExtraURLParams">updateExtraURLParams()</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#search">search([qtext])</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchController.html#updateSearchResults">updateSearchResults(data)</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#showMoreFacets">showMoreFacets(facet, facetName[, step])</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="MLSearchController.html#updateURLParams">updateURLParams()</a></dt>
+                    <dt><a href="MLRemoteSearchController.html#suggest">suggest(qtext)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="MLRemoteSearchController.html#toggleFacet">toggleFacet(facetName, value)</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="MLRemoteSearchController.html#toggleNegatedFacet">toggleNegatedFacet(facetName, value)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="MLRemoteSearchController.html#updateExtraURLParams">updateExtraURLParams()</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="MLRemoteSearchController.html#updateSearchResults">updateSearchResults(data)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="MLRemoteSearchController.html#updateURLParams">updateURLParams()</a></dt>
                     <dd>
                     </dd>
                   </dl>
@@ -123,7 +124,7 @@
             </div>
           </section>
           <section>
-            <h2 id="MLSearchController">new&nbsp;<span class="symbol-name">MLSearchController</span><span class="signature"><span class="signature-params">($scope, $location, mlSearch)</span></span></h2>
+            <h2 id="MLRemoteSearchController">new&nbsp;<span class="symbol-name">MLRemoteSearchController</span><span class="signature"><span class="signature-params">($scope, $location, mlSearch, remoteInput)</span></span></h2>
             <section>
               <h3>Parameters</h3>
               <table class="jsdoc-details-table">
@@ -178,11 +179,25 @@
                       <p>child controller's searchContext</p>
                     </td>
                   </tr>
+                  <tr>
+                    <td>
+                      <p>remoteInput</p>
+                    </td>
+                    <td>
+                      <p><a href="MLRemoteInputService.html">MLRemoteInputService</a></p>
+                    </td>
+                    <td>
+                      <p>&nbsp;</p>
+                    </td>
+                    <td>
+                      <p>child controller's remoteInput instance</p>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </section>
             <section>
-              <h3>Properties</h3>
+              <h3>Property</h3>
               <table class="jsdoc-details-table">
                 <thead>
                   <tr>
@@ -195,106 +210,24 @@
                 <tbody>
                   <tr>
                     <td>
-                      <p>$scope</p>
+                      <p>remoteInput</p>
                     </td>
                     <td>
-                      <p>Object</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>child controller's scope</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>$location</p>
-                    </td>
-                    <td>
-                      <p>Object</p>
+                      <p><a href="MLRemoteInputService.html">MLRemoteInputService</a></p>
                     </td>
                     <td>
                       <p>&nbsp;</p>
                     </td>
                     <td>
-                      <p>angular's $location service</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>mlSearch</p>
-                    </td>
-                    <td>
-                      <p><a href="MLSearchContext.html">MLSearchContext</a></p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>child controller's searchContext</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>searchPending</p>
-                    </td>
-                    <td>
-                      <p>Boolean</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>signifies whether a search is in progress</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>page</p>
-                    </td>
-                    <td>
-                      <p>Number</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>the current results page</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>qtext</p>
-                    </td>
-                    <td>
-                      <p>String</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>the current query text</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>response</p>
-                    </td>
-                    <td>
-                      <p>Object</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>the search response object</p>
+                      <p>child controller's remoteInput instance</p>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </section>
             <dl class="dl-compact">
+              <dt>Extends</dt>
+              <dd><a href="MLSearchController.html">MLSearchController</a></dd>
             </dl>
           </section>
           <section>
@@ -305,21 +238,26 @@
               <p>sets MLSearchController#searchPending to <code>true</code>, invokes <a href="MLSearchContext.html#search">MLSearchContext#search</a> with <a href="MLSearchController.html#updateSearchResults">MLSearchController#updateSearchResults</a> as
                 the callback, and invokes <a href="MLSearchController.html#updateURLParams">MLSearchController#updateURLParams</a></p>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#_search">MLSearchController#_search</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchContext.html#search">MLSearchContext#search</a></p>
+                  <p>the promise from <a href="MLSearchContext.html#search">MLSearchContext#search</a></p>
                 </dd>
               </dl>
               <h3 id="clearFacets"><span class="symbol-name">clearFacets</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
               <p>clear all facet selections, and run a search</p>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#clearFacets">MLSearchController#clearFacets</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
+                  <p>the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
                 </dd>
               </dl>
               <h3 id="init"><span class="symbol-name">init</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>initialize the controller, setting the search state form URL params, and creating a handler for the <code>$locationChangeSuccess</code> event</p>
+              <p>initialize the controller, wiring up the remote input service and invoking
+                <a href="MLSearchController.html#init">MLSearchController#init</a></p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -346,7 +284,7 @@
                         <p>e</p>
                       </td>
                       <td>
-                        <p>Object</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -360,7 +298,7 @@
                         <p>newUrl</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -373,7 +311,7 @@
                         <p>oldUrl</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -385,9 +323,11 @@
                 </table>
               </section>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#locationChange">MLSearchController#locationChange</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchContext.html#locationChange">MLSearchContext#locationChange</a></p>
+                  <p>the promise from <a href="MLSearchContext.html#locationChange">MLSearchContext#locationChange</a></p>
                 </dd>
               </dl>
               <h3 id="parseExtraURLParams"><span class="symbol-name">parseExtraURLParams</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
@@ -395,17 +335,21 @@
               <p>implement to support extra URL params that can trigger a search;</p>
               <p>should read extra URL params, and update the controller state</p>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#parseExtraURLParams">MLSearchController#parseExtraURLParams</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Boolean</code>&nbsp;should a search be triggered</p>
+                  <p>should a search be triggered</p>
                 </dd>
               </dl>
               <h3 id="reset"><span class="symbol-name">reset</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
               <p>clear qtext, facet selections, boost queries, and additional queries. Then, run a search.</p>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#reset">MLSearchController#reset</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
+                  <p>the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
                 </dd>
               </dl>
               <h3 id="search"><span class="symbol-name">search</span><span class="signature"><span class="signature-params">([qtext])</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
@@ -427,7 +371,7 @@
                         <p>qtext</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>Yes</p>
@@ -440,9 +384,11 @@
                 </table>
               </section>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#search">MLSearchController#search</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
+                  <p>the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
                 </dd>
               </dl>
               <h3 id="showMoreFacets"><span class="symbol-name">showMoreFacets</span><span class="signature"><span class="signature-params">(facet, facetName[, step])</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
@@ -464,7 +410,7 @@
                         <p>facet</p>
                       </td>
                       <td>
-                        <p>Object</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -478,7 +424,7 @@
                         <p>facetName</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -492,7 +438,7 @@
                         <p>step</p>
                       </td>
                       <td>
-                        <p>Number</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>Yes</p>
@@ -505,9 +451,11 @@
                 </table>
               </section>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#showMoreFacets">MLSearchController#showMoreFacets</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchContext.html#showMoreFacets">MLSearchContext#showMoreFacets</a></p>
+                  <p>the promise from <a href="MLSearchContext.html#showMoreFacets">MLSearchContext#showMoreFacets</a></p>
                 </dd>
               </dl>
               <h3 id="suggest"><span class="symbol-name">suggest</span><span class="signature"><span class="signature-params">(qtext)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
@@ -529,7 +477,7 @@
                         <p>qtext</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -542,9 +490,11 @@
                 </table>
               </section>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#suggest">MLSearchController#suggest</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchContext.html#suggest">MLSearchContext#suggest</a></p>
+                  <p>the promise from <a href="MLSearchContext.html#suggest">MLSearchContext#suggest</a></p>
                 </dd>
               </dl>
               <h3 id="toggleFacet"><span class="symbol-name">toggleFacet</span><span class="signature"><span class="signature-params">(facetName, value)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
@@ -566,7 +516,7 @@
                         <p>facetName</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -580,7 +530,7 @@
                         <p>value</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -593,9 +543,11 @@
                 </table>
               </section>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#toggleFacet">MLSearchController#toggleFacet</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
+                  <p>the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
                 </dd>
               </dl>
               <h3 id="toggleNegatedFacet"><span class="symbol-name">toggleNegatedFacet</span><span class="signature"><span class="signature-params">(facetName, value)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
@@ -617,7 +569,7 @@
                         <p>facetName</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -631,7 +583,7 @@
                         <p>value</p>
                       </td>
                       <td>
-                        <p>String</p>
+                        <p>&nbsp;</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
@@ -644,9 +596,11 @@
                 </table>
               </section>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#toggleNegatedFacet">MLSearchController#toggleNegatedFacet</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code>&nbsp;the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
+                  <p>the promise from <a href="MLSearchController.html#_search">MLSearchController#_search</a></p>
                 </dd>
               </dl>
               <h3 id="updateExtraURLParams"><span class="symbol-name">updateExtraURLParams</span><span class="signature"><span class="signature-params">()</span></span></h3>
@@ -654,10 +608,11 @@
               <p>implement to support additional URL params that can trigger a search;</p>
               <p>should update extra URL params from the controller state</p>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#updateExtraURLParams">MLSearchController#updateExtraURLParams</a></dd>
               </dl>
               <h3 id="updateSearchResults"><span class="symbol-name">updateSearchResults</span><span class="signature"><span class="signature-params">(data)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchController.html">MLSearchController</a></span></span></h3>
-              <p>updates controller state with search results</p>
-              <p>sets MLSearchController#searchPending to <code>true</code>, sets MLSearchController#response, MLSearchController#qtext, and MLSearchController#page to values from the response</p>
+              <p>update controller state by invoking <a href="MLSearchController.html#updateSearchResults">MLSearchController#updateSearchResults</a>, then pass the latest <code>qtext</code> to the remote input service</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -696,9 +651,11 @@
               <h3 id="updateURLParams"><span class="symbol-name">updateURLParams</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> <a href="MLSearchController.html">MLSearchController</a></span></span></h3>
               <p>updates URL params based on the current <a href="MLSearchContext.html">MLSearchContext</a> state, preserving any additional params. invokes the child controller's <code>updateExtraURLParams()</code> method, if available</p>
               <dl class="dl-compact">
+                <dt>Inherited from</dt>
+                <dd><a href="MLSearchController.html#updateURLParams">MLSearchController#updateURLParams</a></dd>
                 <dt>Returns</dt>
                 <dd>
-                  <p><code><a href="MLSearchController.html">MLSearchController</a></code>&nbsp;<code>this</code></p>
+                  <p><code>this</code></p>
                 </dd>
               </dl>
             </section>

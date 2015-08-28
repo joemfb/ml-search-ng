@@ -4,7 +4,7 @@
 <head>
   <meta name="generator" content="JSDoc 3.3.1">
   <meta charset="utf-8">
-  <title>Namespace: ml-input</title>
+  <title>Namespace: duration</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
@@ -24,19 +24,29 @@
       <div id="jsdoc-content-container">
         <div id="jsdoc-main" role="main">
           <header class="page-header">
-            <h1><div class="symbol-detail-labels"><span class="label label-kind">namespace</span></div><small></small><span class="symbol-name">ml-input</span></h1>
-            <p class="source-link">Source: <a href="directives_ml-input.directive.js.html#source-line-5">directives/<wbr>ml-input.<wbr>directive.<wbr>js:5</a></p>
+            <h1><div class="symbol-detail-labels"><span class="label label-kind">namespace</span></div><small></small><span class="symbol-name">duration</span></h1>
+            <p class="source-link">Source: <a href="directives_ml-duration.directive.js.html#source-line-21">directives/<wbr>ml-duration.<wbr>directive.<wbr>js:21</a></p>
             <div class="symbol-description">
-              <p>angular element directive; a search-input form.</p>
-              <p>attributes:</p>
-              <ul>
-                <li><code>qtext</code>: a reference to the model property containing the search phrase</li>
-                <li><code>search</code>: A function to trigger a search. Should invoke <code>mlSearch.search()</code>. (<a href="MLSearchController.html#search">MLSearchController#search</a>)</li>
-                <li><code>suggest</code>: A function to get search phrase suggestions. Should invoke <code>mlSearch.suggest(qtext)</code>. (<a href="MLSearchController.html#suggest">MLSearchController#suggest</a>)</li>
-                <li><code>template</code>: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used. If <code>&quot;fa&quot;</code>, a bootstrap/font-awesome template will be used. <strong>Note: the <code>&quot;fa&quot;</code> template <em>requires</em> bootstrap 3.2.0 or greater.</strong></li>
-              </ul>
-              <p>Example:</p>
-              <pre class="prettyprint source"><code>&lt;ml-input qtext=&quot;ctrl.qtext&quot; search=&quot;ctrl.search(qtext)&quot; suggest=&quot;ctrl.suggest(val)&quot;>&lt;/ml-input></code></pre>
+              <p>angular filter; parses ISO duration (<code>xs:duration</code>) strings and creates a string description.</p>
+              <p>Usage: <code>myduration | duration[:options]</code></p>
+              <p>For example, <code>&quot;P3Y4M75DT23H31M14.54S&quot; | duration</code> will produce: &quot;3 years, 4 months, 75 days, 23 hours, 31 minutes, and 14.54 seconds&quot;</p>
+              <p>Duration properties that aren't present will be suppressed. You can provide translations through the options:</p>
+              <pre class="prettyprint source"><code>options = {
+  year: 'year',
+  years: 'years',
+  month: 'month',
+  months: 'months',
+  week: 'week',
+  weeks: 'weeks',
+  day: 'day',
+  days: 'days',
+  hour: 'hour',
+  hours: 'hours',
+  minute: 'minute',
+  minutes: 'minutes',
+  second: 'second',
+  seconds: 'seconds',
+}</code></pre>
             </div>
             <dl class="dl-compact">
             </dl>

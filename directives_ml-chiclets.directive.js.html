@@ -4,7 +4,7 @@
 <head>
   <meta name="generator" content="JSDoc 3.3.1">
   <meta charset="utf-8">
-  <title>Source: directives/ml-results.directive.js</title>
+  <title>Source: directives/ml-chiclets.directive.js</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
@@ -26,7 +26,7 @@
         </div>
         <div id="jsdoc-main" role="main">
           <header class="page-header">
-            <h1>Source: directives/ml-results.directive.js</h1>
+            <h1>Source: directives/ml-chiclets.directive.js</h1>
           </header>
           <article>
             <pre class="prettyprint linenums"><code>(function() {
@@ -34,32 +34,31 @@
   &#x27;use strict&#x27;;
 
   /**
-   * angular element directive; displays search results.
-   *
-   * Binds a &#x60;link&#x60; property to each result object, based on the result of the function passed to the &#x60;link&#x60; attribute. If no function is passed a default function is provided. The resulting &#x60;link&#x60; property will have the form &#x60;/detail?uri={{ result.uri }}&#x60;
+   * angular element directive; displays chiclets.
    *
    * attributes:
    *
-   * - &#x60;search&#x60;: a reference to the search results object from {@link MLSearchContext#search}
-   * - &#x60;link&#x60;: optional. a function that accepts a &#x60;result&#x60; object, and returns a URL to be used as the link target in the search results display
+   * - &#x60;activeFacets&#x60;: a reference to the &#x60;activeFacets&#x60; property of {@link MLSearchContext}
+   * - &#x60;toggle&#x60;: a reference to a function that will select or clear facets based on their state. Invoked with &#x60;facet&#x60; (name) and &#x60;value&#x60; parameters. This function should invoke &#x60;mlSearch.toggleFacet(facetName, value).search()&#x60;
    * - &#x60;template&#x60;: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used.
+   * - &#x60;truncate&#x60;: optional. The length at which to truncate the facet display. Defaults to &#x60;20&#x60;.
    *
    * Example:
    *
    * &#x60;&#x60;&#x60;
-   * &amp;lt;ml-results results=&quot;ctrl.response.results&quot; link=&quot;ctrl.linkTarget(result)&quot;&gt;&amp;lt;/ml-results&gt;&#x60;&#x60;&#x60;
+   * &amp;lt;ml-chiclets active-facets=&quot;ctrl.mlSearch.activeFacets&quot; toggle=&quot;ctrl.toggleFacet(facet, value)&quot;&gt;&amp;lt;/ml-chiclets&gt;&#x60;&#x60;&#x60;
    *
-   * @namespace ml-results
+   * @namespace ml-chiclets
    */
   angular.module(&#x27;ml.search&#x27;)
-    .directive(&#x27;mlResults&#x27;, mlResults);
+    .directive(&#x27;mlChiclets&#x27;, mlChiclets);
 
-  function mlResults() {
+  function mlChiclets() {
     return {
       restrict: &#x27;E&#x27;,
       scope: {
-        results: &#x27;=&#x27;,
-        link: &#x27;&amp;amp;&#x27;
+        activeFacets: &#x27;=&#x27;,
+        toggle: &#x27;&amp;amp;&#x27;
       },
       templateUrl: template,
       link: link
@@ -72,26 +71,14 @@
     if (attrs.template) {
       url = attrs.template;
     } else {
-      url = &#x27;/templates/ml-results.html&#x27;;
+      url = &#x27;/templates/ml-chiclets.html&#x27;;
     }
 
     return url;
   }
 
-  function link(scope, element, attrs) {
-    //default link fn
-    if (!attrs.link) {
-      scope.link = function(result) {
-        //weird object hierarchy because directive methods requiring objects (?)
-        return &#x27;/detail?uri=&#x27; + encodeURIComponent( result.result.uri );
-      };
-    }
-
-    scope.$watch(&#x27;results&#x27;, function(newVal, oldVal) {
-      _.each(newVal, function(result) {
-        result.link = scope.link({ result: result });
-      });
-    });
+  function link($scope, element, attrs) {
+    $scope.truncateLength = parseInt(attrs.truncate) || 20;
   }
 
 }());
