@@ -788,36 +788,21 @@
       step = step || 5;
 
       var start = facet.facetValues.length + 1,
-          limit = start + step - 1,
-          self = this;
+          limit = start + step - 1;
 
-      return this.getStoredOptions()
-      .then(function(storedOptions) {
-        var constraint = _.where(storedOptions.options.constraint, { name: facetName })[0];
-
-        if ( !constraint ) {
-          return $q.reject(new Error('No constraint exists matching ' + facetName));
-        }
-
-        var newOptions = { constraint: constraint, values: _.cloneDeep(constraint) };
-        newOptions.values['values-option'] = constraint.range && constraint.range['facet-option'];
-
-        return self.values(facetName, { start: start, limit: limit }, newOptions);
-      })
+      return this.valuesFromConstraint(facetName, { start: start, limit: limit })
       .then(function(resp) {
         var newFacets = resp && resp.data && resp.data['values-response'] &&
                         resp.data['values-response']['distinct-value'];
 
-        if (!newFacets || newFacets.length < (limit - start)) {
-          facet.displayingAll = true;
-        }
+        facet.displayingAll = (!newFacets || newFacets.length < (limit - start));
 
         _.each(newFacets, function(newFacetValue) {
-          var newFacet = {};
-          newFacet.name = newFacetValue._value;
-          newFacet.value = newFacetValue._value;
-          newFacet.count = newFacetValue.frequency;
-          facet.facetValues.push(newFacet);
+          facet.facetValues.push({
+            name: newFacetValue._value,
+            value: newFacetValue._value,
+            count: newFacetValue.frequency
+          });
         });
 
         return facet;
@@ -1190,6 +1175,31 @@
     },
 
     /**
+     * Retrieves values from a lexicon (based on a constraint definition)
+     * @method MLSearchContext#valuesFromConstraint
+     *
+     * @param {String} name - the name of a search `constraint` definition
+     * @param {Object} [params] - URL params
+     * @return {Promise} a promise resolved with values
+     */
+    valuesFromConstraint: function values(name, params) {
+      var self = this;
+
+      return this.getStoredOptions()
+      .then(function(storedOptions) {
+        var constraint = getConstraint(storedOptions, name);
+
+        if ( !constraint ) {
+          return $q.reject(new Error('No constraint exists matching ' + name));
+        }
+
+        var newOptions = valueOptionsFromConstraint(constraint);
+
+        return self.values(name, params, newOptions);
+      });
+    },
+
+    /**
      * Retrieves values or tuples from 1-or-more lexicons
      * @method MLSearchContext#values
      *
@@ -1201,8 +1211,7 @@
     values: function values(name, params, options) {
       var self = this;
 
-      // TODO: what other conditions
-      if ( !options && params && params.options) {
+      if ( !options && params && params.options && !(params.start || params.limit) ) {
         options = params;
         params = null;
       }
@@ -1338,17 +1347,15 @@
         try {
           _.forIn( facets, function(facet, facetName) {
             var facetType = facet.type,
-                constraint = _.where(storedOptions.options.constraint, { name: facetName })[0];
+                constraint = getConstraint(storedOptions, facetName);
 
             if ( !constraint ) {
               throw new Error('No constraint exists matching ' + facetName);
             }
 
+            var newOptions = valueOptionsFromConstraint(constraint);
+
             // TODO: update facetType from constraint ?
-
-            var newOptions = { constraint: constraint, values: _.cloneDeep(constraint) };
-            newOptions.values['values-option'] = constraint.range && constraint.range['facet-option'];
-
             // TODO: make the choice of aggregates configurable
 
             // these work for all index types
@@ -1485,6 +1492,17 @@
     }
 
     return pathName(newUrl) === pathName(oldUrl);
+  }
+
+  function getConstraint(storedOptions, name) {
+    return storedOptions && storedOptions.options && storedOptions.options.constraint &&
+           _.where(asArray(storedOptions.options.constraint), { name: name })[0];
+  }
+
+  function valueOptionsFromConstraint(constraint) {
+    var options = { constraint: asArray(constraint), values: asArray(_.cloneDeep(constraint)) };
+    options.values['values-option'] = constraint.range && constraint.range['facet-option'];
+    return options;
   }
 
   //TODO: move to util module
