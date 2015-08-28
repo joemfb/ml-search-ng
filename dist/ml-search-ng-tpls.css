@@ -1,0 +1,30 @@
+.ml-input .input-group {
+  width: 100%;
+}
+.ml-input .search-submit {
+  width: 40px !important;
+}
+.ml-input .search-input-icon {
+  z-index: 3;
+  top: 0px;
+}
+.ml-input .search-input-clear {
+  right: 35px;
+  cursor: pointer;
+  cursor: hand;
+}
+.ml-input .search-loading {
+  right: -35px;
+}
+.facet-list .facet-add-pos,
+.facet-list .facet-add-neg {
+  visibility: hidden;
+}
+.facet-list div:hover > .facet-add-pos,
+.facet-list div:hover > .facet-add-neg {
+  visibility: visible !important;
+}
+.ml-metrics {
+  padding-bottom: 10px;
+  font-style: italic;
+}

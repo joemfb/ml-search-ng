@@ -1,34 +1,121 @@
-(function () {
-
+(function() {
   'use strict';
 
-  angular.module('ml.search', ['ml.common'])
-    .filter('object2Array', object2Array)
-    .filter('truncate', truncate);
-
-  function object2Array() {
-    return function(input) {
-      var out = [];
-      for (var name in input) {
-        input[name].__key = name;
-        out.push(input[name]);
-      }
-      return out;
-    };
-  }
-
-  function truncate() {
-    return function (text, length, end) {
-      length = length || 10;
-      end = end || '...';
-
-      return (text.length > length) ?
-             String(text).substring(0, length - end.length) + end :
-             text;
-    };
-  }
+  angular.module('ml.search', ['ml.common']);
 
 }());
+
+/* global MLSearchController */
+
+/**
+ * @class MLRemoteSearchController
+ * @augments MLSearchController
+ * @classdesc <strong>extends {@link MLSearchController}</strong>
+ *
+ * base search controller class; the prototype for an angular search controller.
+ * implements {@link MLRemoteInputService}, for use with {@link ml-remote-input}
+ *
+ * Note: this style requires you to use the `controllerAs` syntax.
+ *
+ * <pre class="prettyprint">
+ *   (function() {
+ *     'use strict';
+ *
+ *     angular.module('app').controller('SearchCtrl', SearchCtrl);
+ *
+ *     SearchCtrl.$inject = ['$scope', '$location', 'MLSearchFactory', 'MLRemoteInputService'];
+ *
+ *     // inherit from MLRemoteSearchController
+ *     var superCtrl = MLRemoteSearchController.prototype;
+ *     SearchCtrl.prototype = Object.create(superCtrl);
+ *
+ *     function SearchCtrl($scope, $location, searchFactory, remoteInput) {
+ *       var ctrl = this;
+ *       var mlSearch = searchFactory.newContext();
+ *
+ *       MLRemoteSearchController.call(ctrl, $scope, $location, mlSearch, remoteInput);
+ *
+ *       // override a superCtrl method
+ *       ctrl.updateSearchResults = function updateSearchResults(data) {
+ *         superCtrl.updateSearchResults.apply(ctrl, arguments);
+ *         console.log('updated search results');
+ *       }
+ *
+ *       ctrl.init();
+ *     }
+ *   })();
+ * </pre>
+ *
+ * @param {Object} $scope - child controller's scope
+ * @param {Object} $location - angular's $location service
+ * @param {MLSearchContext} mlSearch - child controller's searchContext
+ * @param {MLRemoteInputService} remoteInput - child controller's remoteInput instance
+ *
+ * @prop {MLRemoteInputService} remoteInput - child controller's remoteInput instance
+ */
+
+// inherit from MLSearchController
+var superCtrl = MLSearchController.prototype;
+MLRemoteSearchController.prototype = Object.create(superCtrl);
+
+function MLRemoteSearchController($scope, $location, mlSearch, remoteInput) {
+  'use strict';
+  if ( !(this instanceof MLRemoteSearchController) ) {
+    return new MLRemoteSearchController($scope, $location, mlSearch, remoteInput);
+  }
+
+  MLSearchController.call(this, $scope, $location, mlSearch);
+
+  // TODO: error if not passed?
+  this.remoteInput = remoteInput;
+}
+
+(function() {
+  'use strict';
+
+  /**
+   * initialize the controller, wiring up the remote input service and invoking
+   * {@link MLSearchController#init}
+   *
+   * @memberof MLRemoteSearchController
+   * @return {Promise} the promise from {@link MLSearchContext#fromParams}
+   */
+  MLRemoteSearchController.prototype.init = function init() {
+    // wire up remote input subscription
+    var self = this;
+
+    var unsubscribe = this.remoteInput.subscribe(function(input) {
+      if (self.qtext !== input) {
+        self.qtext = input;
+
+        self.search.call(self);
+      }
+    });
+
+    this.remoteInput.mlSearch = this.mlSearch;
+    this.qtext = this.remoteInput.input;
+
+    this.$scope.$on('$destroy', unsubscribe);
+
+    return superCtrl.init.apply(this, arguments);
+  };
+
+  /**
+   * update controller state by invoking {@link MLSearchController#updateSearchResults},
+   * then pass the latest `qtext` to the remote input service
+   *
+   * @memberof MLRemoteSearchController
+   * @param {Object} data - the response from {@link MLSearchContext#search}
+   * @return {MLSearchController} `this`
+   */
+  MLRemoteSearchController.prototype.updateSearchResults = function updateSearchResults(data) {
+    superCtrl.updateSearchResults.apply(this, arguments);
+    // TODO: should this be on updateURLParams instead?
+    this.remoteInput.setInput( this.qtext );
+    return this;
+  };
+
+})();
 
 /**
  * @class MLSearchController
@@ -52,7 +139,7 @@
  *       var ctrl = this;
  *       var mlSearch = searchFactory.newContext();
  *
- *       superCtrl.constructor.call(ctrl, $scope, $location, mlSearch);
+ *       MLSearchController.call(ctrl, $scope, $location, mlSearch);
  *
  *       // override a superCtrl method
  *       ctrl.updateSearchResults = function updateSearchResults(data) {
@@ -152,7 +239,7 @@ function MLSearchController($scope, $location, mlSearch) {
    * @param {String} oldUrl
    * @return {Promise} the promise from {@link MLSearchContext#locationChange}
    */
-  MLSearchController.prototype.locationChange = function locationChange(e, newUrl, oldUrl){
+  MLSearchController.prototype.locationChange = function locationChange(e, newUrl, oldUrl) {
     var self = this,
         shouldUpdate = false;
 
@@ -277,6 +364,19 @@ function MLSearchController($scope, $location, mlSearch) {
   };
 
   /**
+   * toggle the selection state of the specified NEGATED facet value
+   *
+   * @memberof MLSearchController
+   * @param {String} facetName - the name of the NEGATED facet to toggle
+   * @param {String} value - the value of the NEGATED facet to toggle
+   * @return {Promise} the promise from {@link MLSearchController#_search}
+   */
+  MLSearchController.prototype.toggleNegatedFacet = function toggleNegatedFacet(facetName, value) {
+    this.mlSearch.toggleFacet( facetName, value, true );
+    return this._search();
+  };
+
+  /**
    * Appends additional facet values to the provided facet object.
    *
    * @memberof MLSearchController
@@ -308,15 +408,69 @@ function MLSearchController($scope, $location, mlSearch) {
    * @param {String} qtext - the partial-phrase to match
    * @return {Promise} the promise from {@link MLSearchContext#suggest}
    */
-  MLSearchController.prototype.suggest = function suggest(val) {
-    return this.mlSearch.suggest(val).then(function(res) {
+  MLSearchController.prototype.suggest = function suggest(qtext) {
+    return this.mlSearch.suggest(qtext).then(function(res) {
       return res.suggestions || [];
     });
   };
 
 })();
 
-(function () {
+(function() {
+
+  'use strict';
+
+  /**
+   * angular element directive; displays chiclets.
+   *
+   * attributes:
+   *
+   * - `activeFacets`: a reference to the `activeFacets` property of {@link MLSearchContext}
+   * - `toggle`: a reference to a function that will select or clear facets based on their state. Invoked with `facet` (name) and `value` parameters. This function should invoke `mlSearch.toggleFacet(facetName, value).search()`
+   * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used.
+   * - `truncate`: optional. The length at which to truncate the facet display. Defaults to `20`.
+   *
+   * Example:
+   *
+   * ```
+   * <ml-chiclets active-facets="ctrl.mlSearch.activeFacets" toggle="ctrl.toggleFacet(facet, value)"></ml-chiclets>```
+   *
+   * @namespace ml-chiclets
+   */
+  angular.module('ml.search')
+    .directive('mlChiclets', mlChiclets);
+
+  function mlChiclets() {
+    return {
+      restrict: 'E',
+      scope: {
+        activeFacets: '=',
+        toggle: '&'
+      },
+      templateUrl: template,
+      link: link
+    };
+  }
+
+  function template(element, attrs) {
+    var url;
+
+    if (attrs.template) {
+      url = attrs.template;
+    } else {
+      url = '/templates/ml-chiclets.html';
+    }
+
+    return url;
+  }
+
+  function link($scope, element, attrs) {
+    $scope.truncateLength = parseInt(attrs.truncate) || 20;
+  }
+
+}());
+
+(function() {
 
   'use strict';
 
@@ -333,7 +487,84 @@ function MLSearchController($scope, $location, mlSearch) {
    * @namespace ml-duration
    */
   angular.module('ml.search')
+    .filter('duration', durationFilter)
     .directive('mlDuration', mlDuration);
+
+  /**
+   * angular filter; parses ISO duration (`xs:duration`) strings and creates a string description.
+   *
+   * Usage: `myduration | duration[:options]`
+   *
+   * For example, `"P3Y4M75DT23H31M14.54S" | duration` will produce:
+   *   "3 years, 4 months, 75 days, 23 hours, 31 minutes, and 14.54 seconds"
+   *
+   * Duration properties that aren't present will be suppressed. You can provide translations through the options:
+   *
+   * ```
+   * options = {
+   *   year: 'year',
+   *   years: 'years',
+   *   month: 'month',
+   *   months: 'months',
+   *   week: 'week',
+   *   weeks: 'weeks',
+   *   day: 'day',
+   *   days: 'days',
+   *   hour: 'hour',
+   *   hours: 'hours',
+   *   minute: 'minute',
+   *   minutes: 'minutes',
+   *   second: 'second',
+   *   seconds: 'seconds',
+   * }
+   * ```
+   * @namespace duration
+   */
+  function durationFilter() {
+    return function(duration, options) {
+      duration = _.isObject( duration ) ? duration : parseDuration(duration);
+      var result = [];
+      var _options = {
+        year: 'year',
+        years: 'years',
+        month: 'month',
+        months: 'months',
+        week: 'week',
+        weeks: 'weeks',
+        day: 'day',
+        days: 'days',
+        hour: 'hour',
+        hours: 'hours',
+        minute: 'minute',
+        minutes: 'minutes',
+        second: 'second',
+        seconds: 'seconds',
+      };
+
+      angular.extend(_options, options);
+
+      _.each(['year', 'month', 'week', 'day', 'hour', 'minute', 'second'], function(category) {
+        var plural = category + 's';
+
+        if ( duration[ plural ] ) {
+          result.push(
+            duration[ plural ] + ' ' +
+            (duration[ plural ] > 1 ? _options[ plural ] : _options[ category ])
+          );
+        }
+      });
+
+      if (result.length > 1) {
+
+        var last = result.splice(result.length - 1, 1);
+        result = result.join(', ') + ', and ' + last[0];
+        return result;
+
+      } else {
+        return result[0] || '0 seconds';
+      }
+    };
+  }
 
   function mlDuration() {
     return {
@@ -392,7 +623,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
 }());
 
-(function () {
+(function() {
 
   'use strict';
 
@@ -401,28 +632,33 @@ function MLSearchController($scope, $location, mlSearch) {
    *
    * attributes:
    *
-   * - `facets`: a reference to the `facets` property of the search results object from {@link MLSearchContext#search}
-   * - `toggle`: a reference to a function that will select or clear facets based on their state. Invoked with `facet` (name) and `value` parameters. This function should invoke `mlSearch.toggleFacet(facetName, value).search()`
-   * - `showMore`: a reference to a function that will pull down the next five facets. This is invoked with the `facet` itself and the `facetName`. This function should by default invoke `mlSearch.showMoreFacets(facet, facetName)`
+   * - `facets`: the `facets` property of a search results object from {@link MLSearchContext#search}. (`ctrl.response.facets` on {@link MLSearchController})
+   * - `toggle`: A function to select/clear facets. Should invoke `mlSearch.toggleFacet(facetName, value).search()`. ({@link MLSearchController#toggleFacet})
+   * - `negate`: optional. A function to negate/clear facets. Should invoke `mlSearch.toggleNegatedFacet(facetName, value).search()`. ({@link MLSearchController#toggleNegatedFacet})
+   * - `showMore`: optional. A function get the next `n` (default `5`) facets values. Should invoke `mlSearch.showMoreFacets(facet, facetName)`. ({@link MLSearchController#showMoreFacets})
    * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used (chiclet-style facets). If `"inline"`, a bootstrap/font-awesome template will be used (inline facet selections)
    * - `truncate`: optional. The length at which to truncate the facet display. Defaults to `20`.
    *
    * Example:
    *
    * ```
-   * <ml-facets facets="model.search.facets" toggle="toggleFacet(facet, value)" show-more="showMoreFacets(facet, facetName)"></ml-facets>```
+   * <ml-facets facets="ctrl.response.facets" toggle="ctrl.toggleFacet(facet, value)" show-more="ctrl.showMoreFacets(facet, facetName)"></ml-facets>```
    *
    * @namespace ml-facets
    */
   angular.module('ml.search')
-    .directive('mlFacets', mlFacets);
+    .directive('mlFacets', mlFacets)
+    .controller('mlFacetsController', ['$scope', '$filter', mlFacetsController]);
 
   function mlFacets() {
     return {
       restrict: 'E',
+      controller: 'mlFacetsController',
       scope: {
+        activeFacets: '=',
         facets: '=',
         toggle: '&',
+        negate: '&',
         showMore: '&'
       },
       templateUrl: template,
@@ -439,8 +675,7 @@ function MLSearchController($scope, $location, mlSearch) {
       } else {
         url = attrs.template;
       }
-    }
-    else {
+    } else {
       url = '/templates/ml-facets.html';
     }
 
@@ -450,11 +685,16 @@ function MLSearchController($scope, $location, mlSearch) {
   function link($scope, element, attrs) {
     $scope.truncateLength = parseInt(attrs.truncate) || 20;
     $scope.shouldShowMore = !!attrs.showMore;
+    $scope.shouldNegate = !!attrs.negate && !!attrs.activeFacets;
+  }
+
+  function mlFacetsController($scope, $filter) {
+    $scope.filter = $filter('filter');
   }
 
 }());
 
-(function () {
+(function() {
 
   'use strict';
 
@@ -464,14 +704,14 @@ function MLSearchController($scope, $location, mlSearch) {
    * attributes:
    *
    * - `qtext`: a reference to the model property containing the search phrase
-   * - `search`: a function reference. The function will be called with a parameter named `qtext`
-   * - `suggest`: a function reference. The function will be called with a parameter named `val`
+   * - `search`: A function to trigger a search. Should invoke `mlSearch.search()`. ({@link MLSearchController#search})
+   * - `suggest`: A function to get search phrase suggestions. Should invoke `mlSearch.suggest(qtext)`. ({@link MLSearchController#suggest})
    * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used. If `"fa"`, a bootstrap/font-awesome template will be used. **Note: the `"fa"` template _requires_ bootstrap 3.2.0 or greater.**
    *
    * Example:
    *
    * ```
-   * <ml-input qtext="model.qtext" search="search(qtext)" suggest="suggest(val)"></ml-input>```
+   * <ml-input qtext="ctrl.qtext" search="ctrl.search(qtext)" suggest="ctrl.suggest(val)"></ml-input>```
    *
    * @namespace ml-input
    */
@@ -500,8 +740,7 @@ function MLSearchController($scope, $location, mlSearch) {
       } else {
         url = attrs.template;
       }
-    }
-    else {
+    } else {
       url = '/templates/ml-input.html';
     }
 
@@ -516,7 +755,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
 }());
 
-(function () {
+(function() {
 
   'use strict';
 
@@ -539,12 +778,12 @@ function MLSearchController($scope, $location, mlSearch) {
    * Example:
    *
    * ```
-   * <ml-metrics search="model.search"></ml-metrics>```
+   * <ml-metrics search="ctrl.response"></ml-metrics>```
    *
    * Transclusion Example:
    *
    * ```
-   * <ml-metrics search="model.search">
+   * <ml-metrics search="ctrl.response">
    *   Showing {{ pageLength }} results in
    *   <span ml-duration="metrics['total-time']">{{ duration.seconds | number:2 }}</span>
    *   seconds.
@@ -603,7 +842,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
 }());
 
-(function () {
+(function() {
 
   'use strict';
 
@@ -622,14 +861,7 @@ function MLSearchController($scope, $location, mlSearch) {
    * ```
    * <ml-remote-input search-ctrl="MySearchCtrl" template="fa"></ml-remote-input>```
    *
-   * In the controller:
-   *
-   * ```javascript
-   * remoteInput.initCtrl($scope, model, mlSearch, search);```
-   *
-   * Note: this function assumes `mlSearch` is an instance of {@link MLSearchContext}, `search` is a function, and `model` has a `qtext` property. If these assumptions don't hold, a more verbose approach is required:
-   *
-   * `// TODO: complex example`
+   * In the search controller, inherit from {@link MLRemoteSearchController}, as documented at that link
    *
    * @namespace ml-remote-input
    */
@@ -719,7 +951,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
 }());
 
-(function () {
+(function() {
 
   'use strict';
 
@@ -737,7 +969,7 @@ function MLSearchController($scope, $location, mlSearch) {
    * Example:
    *
    * ```
-   * <ml-results results="model.search.results" link="linkTarget(result)"></ml-results>```
+   * <ml-results results="ctrl.response.results" link="ctrl.linkTarget(result)"></ml-results>```
    *
    * @namespace ml-results
    */
@@ -761,8 +993,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
     if (attrs.template) {
       url = attrs.template;
-    }
-    else {
+    } else {
       url = '/templates/ml-results.html';
     }
 
@@ -778,7 +1009,7 @@ function MLSearchController($scope, $location, mlSearch) {
       };
     }
 
-    scope.$watch('results', function (newVal, oldVal) {
+    scope.$watch('results', function(newVal, oldVal) {
       _.each(newVal, function(result) {
         result.link = scope.link({ result: result });
       });
@@ -787,7 +1018,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
 }());
 
-(function () {
+(function() {
 
   'use strict';
 
@@ -803,8 +1034,8 @@ function MLSearchController($scope, $location, mlSearch) {
    * @param {Object} $injector - angular dependency resolution service
    */
   function MLRemoteInputService($injector) {
-    var service = this;
-    var $route = null;
+    var service = this,
+        $route = null;
 
     this.routeAvailable = true;
 
@@ -828,8 +1059,8 @@ function MLSearchController($scope, $location, mlSearch) {
      *
      * @param {string} input
      */
-    service.setInput = function setInput(val) {
-      service.input = val;
+    service.setInput = function setInput(input) {
+      service.input = input;
       // TODO: Object.observe service.input?
       _.each(service.callbacks, function(callback) {
         callback(service.input);
@@ -880,12 +1111,14 @@ function MLSearchController($scope, $location, mlSearch) {
      * - sets the mlSearch instance property
      * - initializes the qtext property of the model parameter
      *   (unless it's already set and the instance input property is not)
+     *
      * @method MLRemoteInputService#initCtrl
+     * @deprecated
      *
      * @param {object} $scope - search controller scope
      * @param {object} model - search controller model
      * @param {MLSearchContext} mlSearch - controller mlSearch instance
-     * @param {function} search callback
+     * @param {function} searchCallback - search callback function
      */
     service.initCtrl = function initCtrl($scope, model, mlSearch, searchCallback) {
       var unsubscribe = service.subscribe(function(input) {
@@ -912,7 +1145,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * @method MLRemoteInputService#getPath
      *
      * @param {string} searchCtrl - search controller name
-     * @return {string} search controller path
+     * @return {?string} search controller path
      */
     service.getPath = function getPath(searchCtrl) {
       var route = { originalPath: '/' },
@@ -927,8 +1160,7 @@ function MLSearchController($scope, $location, mlSearch) {
       if ( matches.length === 0 ) {
         // TODO: get route from attr, or throw Error('can\t find Search controller') ?
         console.error('can\'t find Search controller: ' + searchCtrl);
-      }
-      else {
+      } else {
         route = matches[0];
 
         if ( matches.length > 1 ) {
@@ -944,7 +1176,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
 }());
 
-(function () {
+(function() {
   'use strict';
 
   // capture injected services for access throughout this module
@@ -967,6 +1199,7 @@ function MLSearchController($scope, $location, mlSearch) {
    * @param {MLRest} MLRest - low-level ML REST API wrapper (from {@link https://github.com/joemfb/ml-common-ng})
    * @param {MLQueryBuilder} MLQueryBuilder - structured query builder (from {@link https://github.com/joemfb/ml-common-ng})
    */
+  // jscs:disable checkParamNames
   function MLSearchFactory($injectQ, $injectLocation, $injectMlRest, $injectQb) {
     $q = $injectQ;
     $location = $injectLocation;
@@ -1041,6 +1274,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * @prop {String} defaults.sort - sort operator state-name (`null`)
      * @prop {String} defaults.facetMode - determines if facets are combined in an `and-query` or an `or-query` (`and`)
      * @prop {Boolean} defaults.includeProperties - include document properties in queries (`false`)
+     * @prop {Boolean} defaults.includeAggregates - automatically get aggregates for facets (`false`)
      * @prop {Object} defaults.params - URL params settings
      * @prop {String} defaults.params.separator - constraint-name and value separator (`':'`)
      * @prop {String} defaults.params.qtext - qtext parameter name (`'qtext'`)
@@ -1057,10 +1291,12 @@ function MLSearchController($scope, $location, mlSearch) {
       sort: null,
       facetMode: 'and',
       includeProperties: false,
+      includeAggregates: false,
       params: {
         separator: ':',
         qtext: 'q',
         facets: 'f',
+        negatedFacets: 'n',
         sort: 's',
         page: 'p',
         prefix: null,
@@ -1131,7 +1367,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * Sets namespace prefix->URI mappings
      * @method MLSearchContext#setNamespaces
      *
-     * @param {Object[]} namespace - objects with `uri` and `prefix` properties
+     * @param {Object[]} namespaces - objects with `uri` and `prefix` properties
      * @return {MLSearchContext} `this`
      */
     setNamespaces: function setNamespaces(namespaces) {
@@ -1177,7 +1413,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * Adds a boost query to `this.boostQueries`
      * @method MLSearchContext#addBoostQuery
      *
-     * @param {Object} boost query
+     * @param {Object} query - boost query
      * @return {MLSearchContext} `this`
      */
     addBoostQuery: function addBoostQuery(query) {
@@ -1293,7 +1529,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * Sets the search results page
      * @method MLSearchContext#setPage
      *
-     * @param {Number} search - the desired search results page
+     * @param {Number} page - the desired search results page
      * @return {MLSearchContext} `this`
      */
     setPage: function setPage(page) {
@@ -1485,7 +1721,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * Constructs a structured query from the current state
      * @method MLSearchContext#getQuery
      *
-     * @return a structured query object
+     * @return {Object} a structured query object
      */
     getQuery: function getQuery() {
       var query = qb.and();
@@ -1532,7 +1768,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * constructs a structured query from the current active facets
      * @method MLSearchContext#getFacetQuery
      *
-     * @return a structured query object
+     * @return {Object} a structured query object
      */
     getFacetQuery: function getFacetQuery() {
       var self = this,
@@ -1542,15 +1778,15 @@ function MLSearchController($scope, $location, mlSearch) {
 
       _.forIn( self.activeFacets, function(facet, facetName) {
         if ( facet.values.length ) {
-          constraintFn = function(values) {
-            return qb.constraint( facet.type )( facetName, values );
+          constraintFn = function(facetValueObject) {
+            var constraintQuery = qb.constraint( facet.type )( facetName, facetValueObject.value );
+            if (facetValueObject.negated === true) {
+              constraintQuery = qb.not(constraintQuery);
+            }
+            return constraintQuery;
           };
 
-          if ( self.options.facetMode === 'or' ) {
-            queries.push( constraintFn( facet.values ) );
-          } else {
-            queries = queries.concat( _.map(facet.values, constraintFn) );
-          }
+          queries = queries.concat( _.map(facet.values, constraintFn) );
         }
       });
 
@@ -1582,7 +1818,7 @@ function MLSearchController($scope, $location, mlSearch) {
         return d.promise;
       }
 
-      return this.getStoredOptions(this.options.queryConfig)
+      return this.getStoredOptions()
       .then(function(data) {
         combined.search.options = data.options;
         return combined;
@@ -1603,7 +1839,30 @@ function MLSearchController($scope, $location, mlSearch) {
      */
     isFacetActive: function isFacetActive(name, value) {
       var active = this.activeFacets[name];
-      return !!active && _.contains(active.values, value);
+      return !!active && !!_.find(active.values, { value: value });
+    },
+
+    /**
+     * Check if the facet/value combination selected & negated
+     * @method MLSearchContext#isFacetNegated
+     *
+     * @param {String} name - facet name
+     * @param {String} value - facet value
+     * @return {Boolean} isNegated
+     */
+    isFacetNegated: function isFacetNegated(name, value) {
+      var active = this.activeFacets[name];
+
+      if (!active) {
+        return false;
+      }
+      var facet = _.find(active.values, { value: value });
+
+      if (!!facet) {
+        return facet.negated;
+      } else {
+        return false;
+      }
     },
 
     /**
@@ -1613,18 +1872,21 @@ function MLSearchController($scope, $location, mlSearch) {
      * @param {String} name - facet name
      * @param {String} value - facet value
      * @param {String} type - facet type
+     * @param {Boolean} isNegated - facet negated (default to false)
      * @return {MLSearchContext} `this`
      */
-    selectFacet: function selectFacet(name, value, type) {
+    selectFacet: function selectFacet(name, value, type, isNegated) {
       if (/^"(.*)"$/.test(value)) {
         value = value.replace(/^"(.*)"$/, '$1');
       }
-      var active = this.activeFacets[name];
+      var active = this.activeFacets[name],
+          negated = isNegated || false,
+          valueObject = { value: value, negated: negated };
 
-      if ( active && !_.contains(active.values, value) ) {
-        active.values.push(value);
+      if (active && !this.isFacetActive(name, value) ) {
+        active.values.push(valueObject);
       } else {
-        this.activeFacets[name] = { type: type, values: [value] };
+        this.activeFacets[name] = { type: type, values: [valueObject] };
       }
 
       return this;
@@ -1641,8 +1903,8 @@ function MLSearchController($scope, $location, mlSearch) {
     clearFacet: function clearFacet(name, value) {
       var active = this.activeFacets[name];
 
-      active.values = _.filter( active.values, function(facetValue) {
-        return facetValue !== value;
+      active.values = _.filter( active.values, function(facetValueObject) {
+        return facetValueObject.value !== value;
       });
 
       if ( !active.values.length ) {
@@ -1659,16 +1921,18 @@ function MLSearchController($scope, $location, mlSearch) {
      *
      * @param {String} name - facet name
      * @param {String} value - facet value
+     * @param {Boolean} isNegated - facet negated
      * @return {MLSearchContext} `this`
      */
-    toggleFacet: function toggleFacet(name, value) {
+    toggleFacet: function toggleFacet(name, value, isNegated) {
       var config;
 
       if ( this.isFacetActive(name, value) ) {
         this.clearFacet(name, value);
       } else {
         config = this.getFacetConfig(name);
-        this.selectFacet(name, value, config.type);
+
+        this.selectFacet(name, value, config.type, isNegated);
       }
 
       return this;
@@ -1686,60 +1950,41 @@ function MLSearchController($scope, $location, mlSearch) {
     },
 
     /**
+     * Retrieve additional values for the provided `facet` object,
+     * appending them to the facet's `facetValues` array. Sets `facet.displayingAll = true`
+     * once no more values are available.
      *
-     * POST to /v1/values to return the next 5 facets. This function first
-     * calls `mlRest.queryConfig` to get the current constraints. Once the
-     * POST returns less than 5 facets, `facet.displayingAll` is set to true.
-     *
-     * @method * MLSearchContext#showMoreFacets
+     * @method MLSearchContext#showMoreFacets
      *
      * @param {Object} facet - a facet object returned from {@link MLSearchContext#search}
      * @param {String} facetName - facet name
      * @param {Number} [step] - the number of additional facet values to retrieve (defaults to `5`)
      *
-     * @return {MLSearchContext} `this`
+     * @return {Promise} a promise resolved once additional facets have been retrieved
      */
     showMoreFacets: function showMoreFacets(facet, facetName, step) {
-      var _this = this;
       step = step || 5;
 
-      mlRest.queryConfig(this.getQueryOptions(), 'constraint').then(function(resp) {
-        var options = resp.data.options.constraint;
+      var start = facet.facetValues.length + 1,
+          limit = start + step - 1;
 
-        var myOption = options.filter(function (option) {
-          return option.name === facetName;
-        })[0];
-        if (!myOption) {throw 'No constraint exists matching ' + facetName;}
+      return this.valuesFromConstraint(facetName, { start: start, limit: limit })
+      .then(function(resp) {
+        var newFacets = resp && resp.data && resp.data['values-response'] &&
+                        resp.data['values-response']['distinct-value'];
 
-        var searchOptions = _this.getQuery();
-        searchOptions.options = {};
-        searchOptions.options.constraint = _.cloneDeep(options);
-        if (myOption.range && myOption.range['facet-option']) {
-          myOption['values-option'] = myOption.range['facet-option'];
-        }
-        searchOptions.options.values = myOption;
+        facet.displayingAll = (!newFacets || newFacets.length < (limit - start));
 
-        var searchConfig = { search: searchOptions };
-
-        var start = facet.facetValues.length + 1;
-        var limit = start + step;
-
-        mlRest.values(facetName, {start: start, limit: limit}, searchConfig).then(function(resp) {
-          var newFacets = resp.data['values-response']['distinct-value'];
-          if (!newFacets || newFacets.length < (limit - start)) {
-            facet.displayingAll = true;
-          }
-
-          _.each(newFacets, function(newFacetValue) {
-            var newFacet = {};
-            newFacet.name = newFacetValue._value;
-            newFacet.value = newFacetValue._value;
-            newFacet.count = newFacetValue.frequency;
-            facet.facetValues.push(newFacet);
+        _.each(newFacets, function(newFacetValue) {
+          facet.facetValues.push({
+            name: newFacetValue._value,
+            value: newFacetValue._value,
+            count: newFacetValue.frequency
           });
         });
+
+        return facet;
       });
-      return this;
     },
 
     /************************************************************/
@@ -1754,12 +1999,18 @@ function MLSearchController($scope, $location, mlSearch) {
      */
     getParams: function getParams() {
       var page = this.getPage(),
-          facets = this.getFacetParams(),
+          facetParams = this.getFacetParams(),
+          facets = facetParams.facets,
+          negated = facetParams.negatedFacets,
           params = {},
           prefix = this.getParamsPrefix();
 
       if ( facets.length && this.options.params.facets !== null ) {
         params[ prefix + this.options.params.facets ] = facets;
+      }
+
+      if ( negated.length && this.options.params.negatedFacets !== null ) {
+        params[ prefix + this.options.params.negatedFacets ] = negated;
       }
 
       if ( page > 1 && this.options.params.page !== null ) {
@@ -1787,20 +2038,31 @@ function MLSearchController($scope, $location, mlSearch) {
       var self = this,
           facetQuery = self.getFacetQuery(),
           queries = [],
-          facets = [];
+          facets = { facets: [], negatedFacets: [] };
 
       queries = ( facetQuery['or-query'] || facetQuery['and-query'] ).queries;
-
       _.each(queries, function(query) {
-        var constraint = query[ _.keys(query)[0] ],
-            name = constraint['constraint-name'];
+        var queryType = _.keys(query)[0],
+            constraint,
+            name,
+            arrayToPushTo;
+
+        if (queryType === 'not-query') {
+          constraint = query[queryType][_.keys(query[queryType])[0]];
+          arrayToPushTo = facets.negatedFacets;
+        } else {
+          constraint = query[ queryType ];
+          arrayToPushTo = facets.facets;
+        }
+
+        name = constraint['constraint-name'];
 
         _.each( constraint.value || constraint.uri, function(value) {
           // quote values with spaces
           if (/\s+/.test(value) && !/^"(.*)"$/.test(value)) {
             value = '"' + value + '"';
           }
-          facets.push( name + self.options.params.separator + value );
+          arrayToPushTo.push( name + self.options.params.separator + value );
         });
       });
 
@@ -1822,6 +2084,10 @@ function MLSearchController($scope, $location, mlSearch) {
 
       if ( params.f ) {
         params.f = asArray(params.f);
+      }
+
+      if ( params.n ) {
+        params.n = asArray(params.n);
       }
 
       return params;
@@ -1855,25 +2121,37 @@ function MLSearchController($scope, $location, mlSearch) {
         this.setSort.bind(this)
       );
 
+      self.clearAllFacets();
+
+      //this parses the facets then the negated ones since they both depend on the same MarkLogic facet data
       this.fromParam( paramsConf.facets, params,
         function(val) {
-          self.clearAllFacets();
 
           // ensure that facet type information is available
           if ( self.results.facets ) {
             self.fromFacetParam(val);
-            d.resolve();
+
+            self.fromParam( paramsConf.negatedFacets, params,
+              function(val) {
+                self.fromFacetParam(val, undefined, true);
+                d.resolve();
+              },
+              d.resolve
+            );
           } else {
             self.getStoredOptions().then(function(options) {
               self.fromFacetParam(val, options);
-              d.resolve();
+              self.fromParam( paramsConf.negatedFacets, params,
+                function(val) {
+                  self.fromFacetParam(val, options, true);
+                  d.resolve();
+                },
+                d.resolve
+              );
             });
           }
         },
-        function() {
-          self.clearAllFacets();
-          d.resolve();
-        }
+        d.resolve
       );
 
       return d.promise;
@@ -1918,10 +2196,12 @@ function MLSearchController($scope, $location, mlSearch) {
      *
      * @param {Array|String} param - facet URL query params
      * @param {Object} [storedOptions] - a searchOptions object
+     * @param {Boolean} isNegated - whether the facet should be negated (defaults to false)
      */
-    fromFacetParam: function fromFacetParam(param, storedOptions) {
+    fromFacetParam: function fromFacetParam(param, storedOptions, isNegated) {
       var self = this,
-          values = _.map( asArray(param), decodeParam );
+          values = _.map( asArray(param), decodeParam ),
+          negated = isNegated || false;
 
       _.each(values, function(value) {
         var tokens = value.split( self.options.params.separator ),
@@ -1934,7 +2214,7 @@ function MLSearchController($scope, $location, mlSearch) {
                         '\', falling back to un-typed range queries');
         }
 
-        self.selectFacet( facetName, facetValue, facetInfo.type );
+        self.selectFacet( facetName, facetValue, facetInfo.type, negated );
       });
     },
 
@@ -2006,14 +2286,14 @@ function MLSearchController($scope, $location, mlSearch) {
      * Retrieves stored search options, caching the result in `this.storedOptions`
      * @method MLSearchContext#getStoredOptions
      *
-     * @param {String} [name] - the name of the options to retrieve (defaults to `this.options.queryOptions`)
+     * @param {String} [name] - the name of the options to retrieve (defaults to `this.getQueryOptions()`)
      * @return {Promise} a promise resolved with the stored options
      */
     getStoredOptions: function getStoredOptions(name) {
       var self = this,
           d = $q.defer();
 
-      name = name || self.options.queryOptions;
+      name = name || self.getQueryOptions();
 
       if ( self.storedOptions[name] ) {
         d.resolve( self.storedOptions[name] );
@@ -2060,7 +2340,7 @@ function MLSearchController($scope, $location, mlSearch) {
       var params = {
         'partial-q': qtext,
         format: 'json',
-        options: this.options.queryOptions
+        options: this.getQueryOptions()
       };
 
       return this.getCombinedQuery(false)
@@ -2073,26 +2353,132 @@ function MLSearchController($scope, $location, mlSearch) {
     },
 
     /**
-     * Retrieves search results based on the current state
-     * @method MLSearchContext#search
+     * Retrieves values from a lexicon (based on a constraint definition)
+     * @method MLSearchContext#valuesFromConstraint
      *
-     * @return {Promise} a promise resolved with search results
+     * @param {String} name - the name of a search `constraint` definition
+     * @param {Object} [params] - URL params
+     * @return {Promise} a promise resolved with values
      */
-    search: function search() {
+    valuesFromConstraint: function values(name, params) {
       var self = this;
 
-      return mlRest.search({
-        options: self.options.queryOptions,
-        structuredQuery: self.getQuery(),
-        start: self.start,
-        pageLength: self.options.pageLength,
-        transform: self.searchTransform
-      })
+      return this.getStoredOptions()
+      .then(function(storedOptions) {
+        var constraint = getConstraint(storedOptions, name);
+
+        if ( !constraint ) {
+          return $q.reject(new Error('No constraint exists matching ' + name));
+        }
+
+        var newOptions = valueOptionsFromConstraint(constraint);
+
+        return self.values(name, params, newOptions);
+      });
+    },
+
+    /**
+     * Retrieves values or tuples from 1-or-more lexicons
+     * @method MLSearchContext#values
+     *
+     * @param {String} name - the name of a `value-option` definition
+     * @param {Object} [params] - URL params
+     * @param {Object} [options] - search options, used in a combined query
+     * @return {Promise} a promise resolved with values
+     */
+    values: function values(name, params, options) {
+      var self = this;
+
+      if ( !options && params && params.options && !(params.start || params.limit) ) {
+        options = params;
+        params = null;
+      }
+
+      params = params || {};
+      params.start = params.start !== undefined ? params.start : 1;
+      params.limit = params.limit !== undefined ? params.limit : 20;
+
+      if ( !options ) {
+        params.options = self.getQueryOptions();
+      }
+
+      return self.getCombinedQuery(false)
+      .then(function(combined) {
+        combined.search.options = options;
+        return mlRest.values(name, params, combined);
+      });
+    },
+
+    /**
+     * Retrieves search results based on the current state
+     *
+     * If an object is passed as the `adhoc` parameter, the search will be run as a `POST`
+     * with a combined query, and the results will not be saved to `MLSearchContext.results`.
+     * If `adhoc` is a combined query, or a search options object, the `options` URL parameter
+     * will not be included (ignoring stored search options).
+     *
+     * @method MLSearchContext#search
+     *
+     * @param {Object} [adhoc] - structured query || combined query || partial search options object
+     * @return {Promise} a promise resolved with search results
+     */
+    search: function search(adhoc) {
+      var self = this,
+          query = this.getQuery(),
+          combined = null,
+          includeOptionsParam = true,
+          params = {
+            start: this.start,
+            pageLength: this.options.pageLength,
+            transform: this.searchTransform
+          };
+
+      if ( adhoc ) {
+        combined = {};
+
+        if ( adhoc.search ) {
+          includeOptionsParam = false;
+          combined.search = adhoc.search;
+        } else {
+          combined = { search: {} };
+
+          if ( adhoc.options ) {
+            includeOptionsParam = false;
+            combined.search.options = adhoc.options;
+            combined.search.query = query.query;
+          } else if ( adhoc.query ) {
+            combined.search.query = adhoc.query;
+          } else {
+            combined.search.options = adhoc;
+            combined.search.query = query.query;
+          }
+        }
+      } else {
+        params.structuredQuery = query;
+      }
+
+      if ( includeOptionsParam ) {
+        params.options = this.getQueryOptions();
+      }
+
+      return mlRest.search(params, combined)
       .then(function(response) {
-        self.results = response.data;
-        self.transformMetadata();
-        self.annotateActiveFacets();
-        return self.results;
+        var results = response.data;
+
+        // the results of adhoc queries aren't preserved
+        if ( !combined ) {
+          self.results = results;
+        }
+
+        self.transformMetadata(results.results);
+        self.annotateActiveFacets(results.facets);
+
+        if (self.options.includeAggregates) {
+          // TODO: find some way to conditionally chain this, so that errors are propagated
+          self.getAggregates(results.facets);
+        }
+
+        return results;
       });
     },
 
@@ -2100,12 +2486,10 @@ function MLSearchController($scope, $location, mlSearch) {
      * Annotates facets (from a search response object) with the selections from `this.activeFacets`
      * @method MLSearchContext#annotateActiveFacets
      *
-     * @param {Object} [facets] - the search facets object (defaults to `this.results.facets`)
+     * @param {Object} facets - facets object from a search response
      */
     annotateActiveFacets: function annotateActiveFacets(facets) {
       var self = this;
-
-      facets = facets || self.results.facets;
 
       _.forIn( facets, function(facet, name) {
         var selected = self.activeFacets[name];
@@ -2113,10 +2497,11 @@ function MLSearchController($scope, $location, mlSearch) {
         if ( selected ) {
           _.chain(facet.facetValues)
             .filter(function(value) {
-              return _.contains( selected.values, value.name );
+              return self.isFacetActive(name, value.name);
             })
             .each(function(value) {
               facet.selected = value.selected = true;
+              value.negated = self.isFacetNegated(name, value.name);
             })
             .value(); // thwart lazy evaluation
         }
@@ -2124,16 +2509,96 @@ function MLSearchController($scope, $location, mlSearch) {
     },
 
     /**
+     * Gets aggregates for facets (from a search response object) based on facet type
+     * @method MLSearchContext#getAggregates
+     *
+     * @param {Object} facets - facets object from a search response
+     * @return {Promise} a promise resolved once facet aggregates have been retrieved
+     */
+    getAggregates: function getAggregates(facets) {
+      var self = this;
+
+      return self.getStoredOptions()
+      .then(function(storedOptions) {
+        var promises = [];
+
+        try {
+          _.forIn( facets, function(facet, facetName) {
+            var facetType = facet.type,
+                constraint = getConstraint(storedOptions, facetName);
+
+            if ( !constraint ) {
+              throw new Error('No constraint exists matching ' + facetName);
+            }
+
+            var newOptions = valueOptionsFromConstraint(constraint);
+
+            // TODO: update facetType from constraint ?
+            // TODO: make the choice of aggregates configurable
+
+            // these work for all index types
+            newOptions.values.aggregate = [
+              { apply: 'count' },
+              { apply: 'min' },
+              { apply: 'max' }
+            ];
+
+            // TODO: move the scalar-type -> aggregate mappings to MLRest (see https://gist.github.com/joemfb/b682504c7c19cd6fae11)
+
+            var numberTypes = [
+              'xs:int',
+              'xs:unsignedInt',
+              'xs:long',
+              'xs:unsignedLong',
+              'xs:float',
+              'xs:double',
+              'xs:decimal'
+            ];
+
+            if ( _.contains(numberTypes, facetType) ) {
+
+              newOptions.values.aggregate = newOptions.values.aggregate.concat([
+                { apply: 'sum' },
+                { apply: 'avg' },
+                // TODO: allow enabling these from config?
+                // { apply: 'median' },
+                // { apply: 'stddev' },
+                // { apply: 'stddev-population' },
+                // { apply: 'variance' },
+                // { apply: 'variance-population' }
+              ]);
+
+            }
+
+            promises.push(
+              self.values(facetName, { start: 1, limit: 0 }, newOptions)
+              .then(function(resp) {
+                var aggregates = resp && resp.data && resp.data['values-response'] &&
+                                 resp.data['values-response']['aggregate-result'];
+                _.each( aggregates, function(aggregate) {
+                  facet[aggregate.name] = aggregate._value;
+                });
+              })
+            );
+          });
+        }
+        catch (err) {
+          return $q.reject(err);
+        }
+
+        return $q.all(promises);
+      });
+    },
+
+    /**
      * Transforms the metadata array in each search response result object to an object, key'd by `metadata-type`
      * @method MLSearchContext#transformMetadata
      *
-     * @param {Object} [result] - the search results object (defaults to `this.results.results`)
+     * @param {Object} result - results array from a search response (or one result object from the array)
      */
     transformMetadata: function transformMetadata(result) {
       var self = this,
           metadata;
-
-      result = result || this.results.results;
 
       if ( _.isArray(result) ) {
         _.each(result, this.transformMetadata, self);
@@ -2153,7 +2618,6 @@ function MLSearchController($scope, $location, mlSearch) {
 
         ns = key.replace(/^\{([^}]+)\}.*$/, '$1');
         prefix = self.getNamespacePrefix(ns);
-
 
         if ( prefix ) {
           shortKey = key.replace(/\{[^}]+\}/, prefix + ':');
@@ -2206,6 +2670,17 @@ function MLSearchController($scope, $location, mlSearch) {
     }
 
     return pathName(newUrl) === pathName(oldUrl);
+  }
+
+  function getConstraint(storedOptions, name) {
+    return storedOptions && storedOptions.options && storedOptions.options.constraint &&
+           _.where(asArray(storedOptions.options.constraint), { name: name })[0];
+  }
+
+  function valueOptionsFromConstraint(constraint) {
+    var options = { constraint: asArray(constraint), values: asArray(_.cloneDeep(constraint)) };
+    options.values['values-option'] = constraint.range && constraint.range['facet-option'];
+    return options;
   }
 
   //TODO: move to util module
