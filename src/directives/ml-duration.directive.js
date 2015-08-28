@@ -50,7 +50,7 @@
    */
   function durationFilter() {
     return function(duration, options) {
-      duration = duration.years ? duration : parseDuration(duration);
+      duration = _.isObject( duration ) ? duration : parseDuration(duration);
       var result = [];
       var _options = {
         year: 'year',
@@ -71,27 +71,16 @@
 
       angular.extend(_options, options);
 
-      if (duration.years) {
-        result.push(duration.years + ' ' + (duration.years > 1 ? _options.years : _options.year));
-      }
-      if (duration.months) {
-        result.push(duration.months + ' ' + (duration.months > 1 ? _options.months : _options.month));
-      }
-      if (duration.weeks) {
-        result.push(duration.weeks + ' ' + (duration.weeks > 1 ? _options.weeks : _options.week));
-      }
-      if (duration.days) {
-        result.push(duration.days + ' ' + (duration.days > 1 ? _options.days : _options.day));
-      }
-      if (duration.hours) {
-        result.push(duration.hours + ' ' + (duration.hours > 1 ? _options.hours : _options.hour));
-      }
-      if (duration.minutes) {
-        result.push(duration.minutes + ' ' + (duration.minutes > 1 ? _options.minutes : _options.minute));
-      }
-      if (duration.seconds) {
-        result.push(duration.seconds + ' ' + (duration.seconds > 1 ? _options.seconds : _options.second));
-      }
+      _.each(['year', 'month', 'week', 'day', 'hour', 'minute', 'second'], function(category) {
+        var plural = category + 's';
+
+        if ( duration[ plural ] ) {
+          result.push(
+            duration[ plural ] + ' ' +
+            (duration[ plural ] > 1 ? _options[ plural ] : _options[ category ])
+          );
+        }
+      });
 
       if (result.length > 1) {
 
