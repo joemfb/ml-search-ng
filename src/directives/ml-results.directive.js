@@ -16,7 +16,7 @@
    * Example:
    *
    * ```
-   * <ml-results results="model.search.results" link="linkTarget(result)"></ml-results>```
+   * <ml-results results="ctrl.response.results" link="ctrl.linkTarget(result)"></ml-results>```
    *
    * @namespace ml-results
    */

@@ -7,17 +7,17 @@
    *
    * attributes:
    *
-   * - `facets`: a reference to the `facets` property of the search results object from {@link MLSearchContext#search}
-   * - `toggle`: a reference to a function that will select or clear facets based on their state. Invoked with `facet` (name) and `value` parameters. This function should invoke `mlSearch.toggleFacet(facetName, value).search()`
-   * - `negate`: a reference to a function that will negate a facet. Invoked with `facet` (name) and `value` parameters. This function should invoke ....
-   * - `showMore`: a reference to a function that will pull down the next five facets. This is invoked with the `facet` itself and the `facetName`. This function should by default invoke `mlSearch.showMoreFacets(facet, facetName)`
+   * - `facets`: the `facets` property of a search results object from {@link MLSearchContext#search}. (`ctrl.response.facets` on {@link MLSearchController})
+   * - `toggle`: A function to select/clear facets. Should invoke `mlSearch.toggleFacet(facetName, value).search()`. ({@link MLSearchController#toggleFacet})
+   * - `negate`: optional. A function to negate/clear facets. Should invoke `mlSearch.toggleNegatedFacet(facetName, value).search()`. ({@link MLSearchController#toggleNegatedFacet})
+   * - `showMore`: optional. A function get the next `n` (default `5`) facets values. Should invoke `mlSearch.showMoreFacets(facet, facetName)`. ({@link MLSearchController#showMoreFacets})
    * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used (chiclet-style facets). If `"inline"`, a bootstrap/font-awesome template will be used (inline facet selections)
    * - `truncate`: optional. The length at which to truncate the facet display. Defaults to `20`.
    *
    * Example:
    *
    * ```
-   * <ml-facets facets="model.search.facets" toggle="toggleFacet(facet, value)" show-more="showMoreFacets(facet, facetName)"></ml-facets>```
+   * <ml-facets facets="ctrl.response.facets" toggle="ctrl.toggleFacet(facet, value)" show-more="ctrl.showMoreFacets(facet, facetName)"></ml-facets>```
    *
    * @namespace ml-facets
    */

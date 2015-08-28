@@ -21,12 +21,12 @@
    * Example:
    *
    * ```
-   * <ml-metrics search="model.search"></ml-metrics>```
+   * <ml-metrics search="ctrl.response"></ml-metrics>```
    *
    * Transclusion Example:
    *
    * ```
-   * <ml-metrics search="model.search">
+   * <ml-metrics search="ctrl.response">
    *   Showing {{ pageLength }} results in
    *   <span ml-duration="metrics['total-time']">{{ duration.seconds | number:2 }}</span>
    *   seconds.

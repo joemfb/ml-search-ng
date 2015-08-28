@@ -15,6 +15,7 @@ depends on [https://github.com/joemfb/ml-common-ng](https://github.com/joemfb/ml
 
 #### directives
 
+- `ml-chiclets`: display facet selection 'chiclets'
 - `ml-duration`: parse ISO duration strings
 - `ml-facets`: display facets
 - `ml-input`: search input with auto-suggest
