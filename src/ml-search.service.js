@@ -909,18 +909,24 @@
      * @return {Object} search-related URL params
      */
     getCurrentParams: function getCurrentParams(params) {
+      var prefix = this.getParamsPrefix();
+
       params = _.pick(
         params || $location.search(),
         this.getParamsKeys()
       );
 
-      if ( params.f ) {
-        params.f = asArray(params.f);
-      }
+      _.chain(this.options.params)
+      .pick(['facets', 'negatedFacets'])
+      .values()
+      .each(function(key) {
+        var name = prefix + key;
 
-      if ( params.n ) {
-        params.n = asArray(params.n);
-      }
+        if ( params[ name ] ) {
+          params[ name ] = asArray(params[ name ]);
+        }
+      })
+      .value();
 
       return params;
     },

@@ -1029,6 +1029,50 @@ describe('MLSearchContext', function () {
       expect(search.getParams().p).toEqual(4);
     });
 
+    it('gets current URL params', function() {
+      var mlSearch = factory.newContext();
+
+      $location.search({ q: 'hi', f: 'color:blue', n: 'color:orange' });
+
+      var params = mlSearch.getCurrentParams();
+
+      expect( params.f ).toEqual( jasmine.any(Array) );
+      expect( params.n ).toEqual( jasmine.any(Array) );
+    });
+
+    it('gets current URL params, regardless of name', function() {
+      var mlSearch = factory.newContext({
+        params: {
+          facets: 'fac',
+          negatedFacets: 'nfac'
+        }
+      });
+
+      $location.search({ q: 'hi', fac: 'color:blue', nfac: 'color:orange' });
+
+      var params = mlSearch.getCurrentParams();
+
+      expect( params.fac ).toEqual( jasmine.any(Array) );
+      expect( params.nfac ).toEqual( jasmine.any(Array) );
+    });
+
+    it('gets current URL params, regardless of name or prefix', function() {
+      var mlSearch = factory.newContext({
+        params: {
+          prefix: 'blah',
+          facets: 'fac',
+          negatedFacets: 'nfac'
+        }
+      });
+
+      $location.search({ 'blah:q': 'hi', 'blah:fac': 'color:blue', 'blah:nfac': 'color:orange' });
+
+      var params = mlSearch.getCurrentParams();
+
+      expect( params['blah:fac'] ).toEqual( jasmine.any(Array) );
+      expect( params['blah:nfac'] ).toEqual( jasmine.any(Array) );
+    });
+
     it('should populate from search parameters', function() {
       $httpBackend
         .expectGET('/v1/config/query/all?format=json')
