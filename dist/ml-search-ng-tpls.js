@@ -6,7 +6,7 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/templates/ml-chiclets.html',
-    '<div class="chiclets"><div ng-repeat="(index, facet) in activeFacets | object2Array"><div class="btn btn-primary" ng-repeat="value in facet.values | filter:{negated:false}"><span title="{{ value.value }}">{{ facet.__key }}: {{ value.value | truncate:truncateLength }}</span> <span class="glyphicon glyphicon-remove-circle icon-white" ng-click="toggle({facet: facet.__key, value: value.value})"></span></div><div class="btn btn-warning" ng-repeat="value in facet.values | filter:{negated:true}"><span title="{{ value.value }}">{{ facet.__key }}: {{ value.value | truncate:truncateLength }}</span> <span class="glyphicon glyphicon-remove-circle icon-white" ng-click="toggle({facet: facet.__key, value: value.value})"></span></div></div></div>');
+    '<div class="chiclets"><div ng-repeat="(index, facet) in activeFacets | object2Array"><div class="btn btn-primary chiclet" ng-repeat="value in facet.values | filter:{negated:false}"><span title="{{ value.value }}">{{ facet.__key }}: {{ value.value | truncate:truncateLength }}</span> <span class="glyphicon glyphicon-remove-circle icon-white" ng-click="toggle({facet: facet.__key, value: value.value})"></span></div><div class="btn btn-warning chiclet negated" ng-repeat="value in facet.values | filter:{negated:true}"><span title="{{ value.value }}">{{ facet.__key }}: {{ value.value | truncate:truncateLength }}</span> <span class="glyphicon glyphicon-remove-circle icon-white" ng-click="toggle({facet: facet.__key, value: value.value})"></span></div></div></div>');
 }]);
 })();
 
