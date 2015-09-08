@@ -1620,8 +1620,17 @@ describe('MLSearchContext#mock-service', function () {
     }
   };
 
+  var constraintConfig = {
+      options: {
+        constraint: [{
+          name: 'my-facet',
+          range: { 'facet-option': 'limit=10' }
+        }]
+      }
+    };
+
   // fixture
-  beforeEach(module('search-results.json'));
+  beforeEach(module('search-results-with-facets.json'));
 
   beforeEach(module('ml.search'));
 
@@ -1636,6 +1645,11 @@ describe('MLSearchContext#mock-service', function () {
         var d = $q.defer();
         d.resolve({ data: mockValues });
         return d.promise;
+      }),
+      queryConfig: jasmine.createSpy('queryConfig').and.callFake(function() {
+        var d = $q.defer();
+        d.resolve({ data: constraintConfig });
+        return d.promise;
       })
     };
   });
@@ -1645,7 +1659,8 @@ describe('MLSearchContext#mock-service', function () {
   }));
 
   beforeEach(inject(function ($injector) {
-    mockResults = $injector.get('searchResults');
+    mockResults = $injector.get('searchResultsWithFacets');
+
     $q = $injector.get('$q');
     $rootScope = $injector.get('$rootScope');
     factory = $injector.get('MLSearchFactory');
@@ -1801,6 +1816,24 @@ describe('MLSearchContext#mock-service', function () {
     expect(args[1].start).toEqual(1);
     expect(args[1].limit).toEqual(20);
     expect(args[1].options).toBe(undefined);
+  });
+
+  it('should construct value options from constraint definition', function() {
+    var mlSearch = factory.newContext({
+      includeAggregates: true
+    });
+
+    mlSearch.search();
+    $rootScope.$apply();
+
+    var args = mockMLRest.values.calls.mostRecent().args;
+    expect(args[0]).toEqual('my-facet');
+    expect(args[1].start).toEqual(1);
+    expect(args[1].limit).toEqual(0);
+
+    expect( args[2].search.options.values[0]['values-option'] ).toEqual(
+      constraintConfig.options.constraint[0].range['facet-option']
+    );
   });
 
 });

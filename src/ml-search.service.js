@@ -1202,7 +1202,7 @@
      * @param {Object} [params] - URL params
      * @return {Promise} a promise resolved with values
      */
-    valuesFromConstraint: function values(name, params) {
+    valuesFromConstraint: function valuesFromConstraint(name, params) {
       var self = this;
 
       return this.getStoredOptions()
@@ -1521,7 +1521,7 @@
 
   function valueOptionsFromConstraint(constraint) {
     var options = { constraint: asArray(constraint), values: asArray(_.cloneDeep(constraint)) };
-    options.values['values-option'] = constraint.range && constraint.range['facet-option'];
+    options.values[0]['values-option'] = constraint.range && constraint.range['facet-option'];
     return options;
   }
 
