@@ -1790,13 +1790,13 @@ describe('MLSearchContext#mock-service', function () {
     var mlSearch = factory.newContext();
 
     var actual;
-    mlSearch.values('blah').then(function(response) { actual = response.data; });
+    mlSearch.values('MyOtherFacetName').then(function(response) { actual = response; });
     $rootScope.$apply();
 
     expect(actual['values-response'].name).toEqual('MyOtherFacetName');
 
     var args = mockMLRest.values.calls.mostRecent().args;
-    expect(args[0]).toEqual('blah');
+    expect(args[0]).toEqual('MyOtherFacetName');
     expect(args[1].start).toEqual(1);
     expect(args[1].limit).toEqual(20);
     expect(args[1].options).toEqual( mlSearch.getQueryOptions() );
@@ -1806,13 +1806,15 @@ describe('MLSearchContext#mock-service', function () {
     var mlSearch = factory.newContext();
 
     var actual;
-    mlSearch.values('blah', {
-      options: { values: { name:'blah', 'values-option':'limit=10' }}
-    }).then(function(response) { actual = response.data; });
+    mlSearch.values('MyOtherFacetName', {
+      options: { values: { name:'MyOtherFacetName', 'values-option':'limit=10' }}
+    }).then(function(response) { actual = response; });
     $rootScope.$apply();
 
+    expect(actual['values-response'].name).toEqual('MyOtherFacetName');
+
     var args = mockMLRest.values.calls.mostRecent().args;
-    expect(args[0]).toEqual('blah');
+    expect(args[0]).toEqual('MyOtherFacetName');
     expect(args[1].start).toEqual(1);
     expect(args[1].limit).toEqual(20);
     expect(args[1].options).toBe(undefined);

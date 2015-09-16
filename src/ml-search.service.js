@@ -802,8 +802,7 @@
 
       return this.valuesFromConstraint(facetName, { start: start, limit: limit })
       .then(function(resp) {
-        var newFacets = resp && resp.data && resp.data['values-response'] &&
-                        resp.data['values-response']['distinct-value'];
+        var newFacets = resp && resp['values-response'] && resp['values-response']['distinct-value'];
 
         facet.displayingAll = (!newFacets || newFacets.length < (limit - start));
 
@@ -1248,6 +1247,9 @@
       .then(function(combined) {
         combined.search.options = options;
         return mlRest.values(name, params, combined);
+      })
+      .then(function(response) {
+        return response.data;
       });
     },
 
@@ -1415,8 +1417,8 @@
             promises.push(
               self.values(facetName, { start: 1, limit: 0 }, newOptions)
               .then(function(resp) {
-                var aggregates = resp && resp.data && resp.data['values-response'] &&
-                                 resp.data['values-response']['aggregate-result'];
+                var aggregates = resp && resp['values-response'] && resp['values-response']['aggregate-result'];
+
                 _.each( aggregates, function(aggregate) {
                   facet[aggregate.name] = aggregate._value;
                 });
