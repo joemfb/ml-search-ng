@@ -562,10 +562,6 @@
         query = this.getFacetQuery();
       }
 
-      if ( this.qtext ) {
-        query = qb.and( query, qb.text( this.qtext ) );
-      }
-
       if ( this.boostQueries.length ) {
         query = qb.boost(query, this.boostQueries);
       }
@@ -575,22 +571,22 @@
       }
 
       if ( this.options.includeProperties ) {
-        query = qb.or(query, qb.properties(query));
+        query = qb.or(query, qb.propertiesFragment(query));
       }
 
-      query = qb.query(query);
+      query = qb.where(query);
 
       if ( this.options.sort ) {
         // TODO: this assumes that the sort operator is called "sort", but
         // that isn't necessarily true. Properly done, we'd get the options
         // from the server and find the operator that contains sort-order
         // elements
-        query.query.queries.push( qb.operator('sort', this.options.sort) );
+        query.query.queries.push( qb.ext.operatorState('sort', this.options.sort) );
       }
 
       if ( this.options.snippet ) {
         // same problem as `sort`
-        query.query.queries.push( qb.operator('results', this.options.snippet) );
+        query.query.queries.push( qb.ext.operatorState('results', this.options.snippet) );
       }
 
       return query;
@@ -611,7 +607,7 @@
       _.forIn( self.activeFacets, function(facet, facetName) {
         if ( facet.values.length ) {
           constraintFn = function(facetValueObject) {
-            var constraintQuery = qb.constraint( facet.type )( facetName, facetValueObject.value );
+            var constraintQuery = qb.ext.constraint( facet.type )( facetName, facetValueObject.value );
             if (facetValueObject.negated === true) {
               constraintQuery = qb.not(constraintQuery);
             }
@@ -632,6 +628,18 @@
     },
 
     /**
+     * Construct a combined query from the current state (excluding stored options)
+     * @method MLSearchContext#getCombinedQuerySync
+     *
+     * @param {Object} [options] - optional search options object
+     *
+     * @return {Object} - combined query
+     */
+    getCombinedQuerySync: function getCombinedQuerySync(options) {
+      return qb.ext.combined( this.getQuery(), this.getText(), options );
+    },
+
+    /**
      * Construct a combined query from the current state
      * @method MLSearchContext#getCombinedQuery
      *
@@ -640,9 +648,7 @@
      * @return {Promise} - a promise resolved with the combined query
      */
     getCombinedQuery: function getCombinedQuery(includeOptions) {
-      var combined = {
-        search: { query: this.getQuery() }
-      };
+      var combined = this.getCombinedQuerySync();
 
       if ( !includeOptions ) {
         return $q.resolve(combined);
@@ -1172,13 +1178,13 @@
         options: (_.isString(options) && options) || this.getSuggestOptions() || this.getQueryOptions()
       };
 
-      return this.getCombinedQuery(false)
-      .then(function(combined) {
-        if ( _.isObject(options) ) {
-          combined.search.options = options;
-        }
-        return mlRest.suggest(params, combined);
-      })
+      var combined = this.getCombinedQuerySync();
+
+      if ( _.isObject(options) ) {
+        combined.search.options = options;
+      }
+
+      return mlRest.suggest(params, combined)
       .then(function(response) {
         return response.data;
       });
@@ -1219,7 +1225,8 @@
      * @return {Promise} a promise resolved with values
      */
     values: function values(name, params, options) {
-      var self = this;
+      var self = this,
+          combined = this.getCombinedQuerySync();
 
       if ( !options && params && params.options && !(params.start || params.limit) ) {
         options = params;
@@ -1234,11 +1241,11 @@
         params.options = self.getQueryOptions();
       }
 
-      return self.getCombinedQuery(false)
-      .then(function(combined) {
+      if ( _.isObject(options) ) {
         combined.search.options = options;
-        return mlRest.values(name, params, combined);
-      })
+      }
+
+      return mlRest.values(name, params, combined)
       .then(function(response) {
         return response.data;
       });
@@ -1259,7 +1266,6 @@
      */
     search: function search(adhoc) {
       var self = this,
-          query = this.getQuery(),
           combined = null,
           includeOptionsParam = true,
           params = {
@@ -1269,27 +1275,22 @@
           };
 
       if ( adhoc ) {
-        combined = {};
+        combined = this.getCombinedQuerySync();
 
         if ( adhoc.search ) {
           includeOptionsParam = false;
           combined.search = adhoc.search;
+        } else if ( adhoc.options ) {
+          includeOptionsParam = false;
+          combined.search.options = adhoc.options;
+        } else if ( adhoc.query ) {
+          combined.search.query = adhoc.query;
         } else {
-          combined = { search: {} };
-
-          if ( adhoc.options ) {
-            includeOptionsParam = false;
-            combined.search.options = adhoc.options;
-            combined.search.query = query.query;
-          } else if ( adhoc.query ) {
-            combined.search.query = adhoc.query;
-          } else {
-            combined.search.options = adhoc;
-            combined.search.query = query.query;
-          }
+          combined.search.options = adhoc;
         }
       } else {
-        params.structuredQuery = query;
+        params.structuredQuery = this.getQuery();
+        params.q = this.getText();
       }
 
       if ( includeOptionsParam ) {
@@ -1475,7 +1476,11 @@
      * @see MLSearchContext#getQuery
      */
     getStructuredQuery: function getStructuredQuery() {
-      return this.getQuery();
+      console.log(
+        'Warning, MLSearchContext.getStructuredQuery is deprecated, and will be removed in the next release!\n' +
+        'Use MLSearchContext.getQuery in it\'s place'
+      );
+      return this.getQuery.apply(this, arguments);
     },
 
     /**
@@ -1485,7 +1490,11 @@
      * @see MLSearchContext#getParams
      */
     serializeStructuredQuery: function serializeStructuredQuery() {
-      return this.getParams();
+      console.log(
+        'Warning, MLSearchContext.serializeStructuredQuery is deprecated, and will be removed in the next release!\n' +
+        'Use MLSearchContext.getParams in it\'s place'
+      );
+      return this.getParams.apply(this, arguments);
     }
 
   });
