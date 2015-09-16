@@ -122,6 +122,30 @@ $ git fetch upstream
 $ git rebase upstream/master
 ```
 
+#### Exclude `dist/`
+
+Our gulp build scripts create distribution artifacts in `dist/` by concatenating and minify'ing the project source. Changes to these distribution files are only committed as part of project releases, so please exclude the `dist/` directory from your changes.
+
+#### Check Test Coverage
+
+We try to maintain complete unit test coverage for ml-search-ng. High-level code coverage statistics are displayed by the test harness.
+
+```sh
+gulp test
+```
+
+A detailed HTML code coverage report is available in `coverage/PhantomJS 1.9.8 {OS OS_VERSION}/index.html`. If the high-level statistics show less than 100% coverage, inspect your changes in the detailed report to confirm that they are covered by your tests.
+
+#### Check Docs
+
+We use JSDoc3 to generate documentation for ml-search-ng. If your changes include documentation changes, regenerate the documentation:
+
+```sh
+gulp docs
+```
+
+and inspect them to make sure they're appropriately formatted (`docs/generated/index.html`)
+
 #### Push your changes
 
 ```sh
@@ -168,6 +192,44 @@ from the main (upstream) repository:
     ```shell
     git pull --ff upstream master
     ```
+
+#### Release Process
+
+For purposes of clarity, here is the process to create new releases of ml-search-ng.
+
+Run the build script (building distribution assets in `dist/`), and confirm test coverage and lint compliance:
+
+```sh
+gulp
+```
+
+Build the docs:
+
+```sh
+gulp docs
+```
+
+Review `docs/generated/index.html`, checking changes, new features, formatting, etc.
+
+Bump the version number in `package.json` and `bower.json`.
+
+Release:
+
+```sh
+git add dist/
+git add package.json
+git add bower.json
+
+git commit -m "v$version"
+git tag "v$version"
+git push origin master --tags
+```
+
+Publish docs to [https://joemfb.github.io/ml-search-ng/](https://joemfb.github.io/ml-search-ng/):
+
+```sh
+gulp publish-docs
+```
 
 [readme]: https://github.com/joemfb/ml-search-ng/blob/master/README.md
 [issue tracker]: https://github.com/joemfb/ml-search-ng/issues
