@@ -628,6 +628,18 @@
     },
 
     /**
+     * Construct a combined query from the current state (excluding stored options)
+     * @method MLSearchContext#getCombinedQuerySync
+     *
+     * @param {Object} [options] - optional search options object
+     *
+     * @return {Object} - combined query
+     */
+    getCombinedQuerySync: function getCombinedQuerySync(options) {
+      return qb.ext.combined( this.getQuery(), this.getText(), options );
+    },
+
+    /**
      * Construct a combined query from the current state
      * @method MLSearchContext#getCombinedQuery
      *
@@ -636,12 +648,7 @@
      * @return {Promise} - a promise resolved with the combined query
      */
     getCombinedQuery: function getCombinedQuery(includeOptions) {
-      var combined = {
-        search: {
-          query: this.getQuery(),
-          qtext: this.getText()
-        }
-      };
+      var combined = this.getCombinedQuerySync();
 
       if ( !includeOptions ) {
         return $q.resolve(combined);
@@ -1171,13 +1178,13 @@
         options: (_.isString(options) && options) || this.getSuggestOptions() || this.getQueryOptions()
       };
 
-      return this.getCombinedQuery(false)
-      .then(function(combined) {
-        if ( _.isObject(options) ) {
-          combined.search.options = options;
-        }
-        return mlRest.suggest(params, combined);
-      })
+      var combined = this.getCombinedQuerySync();
+
+      if ( _.isObject(options) ) {
+        combined.search.options = options;
+      }
+
+      return mlRest.suggest(params, combined)
       .then(function(response) {
         return response.data;
       });
@@ -1218,7 +1225,8 @@
      * @return {Promise} a promise resolved with values
      */
     values: function values(name, params, options) {
-      var self = this;
+      var self = this,
+          combined = this.getCombinedQuerySync();
 
       if ( !options && params && params.options && !(params.start || params.limit) ) {
         options = params;
@@ -1233,11 +1241,11 @@
         params.options = self.getQueryOptions();
       }
 
-      return self.getCombinedQuery(false)
-      .then(function(combined) {
+      if ( _.isObject(options) ) {
         combined.search.options = options;
-        return mlRest.values(name, params, combined);
-      })
+      }
+
+      return mlRest.values(name, params, combined)
       .then(function(response) {
         return response.data;
       });
@@ -1258,7 +1266,6 @@
      */
     search: function search(adhoc) {
       var self = this,
-          query = this.getQuery(),
           combined = null,
           includeOptionsParam = true,
           params = {
@@ -1268,7 +1275,7 @@
           };
 
       if ( adhoc ) {
-        combined = { search: { qtext: this.getText() } };
+        combined = this.getCombinedQuerySync();
 
         if ( adhoc.search ) {
           includeOptionsParam = false;
@@ -1276,15 +1283,13 @@
         } else if ( adhoc.options ) {
           includeOptionsParam = false;
           combined.search.options = adhoc.options;
-          combined.search.query = query.query;
         } else if ( adhoc.query ) {
           combined.search.query = adhoc.query;
         } else {
           combined.search.options = adhoc;
-          combined.search.query = query.query;
         }
       } else {
-        params.structuredQuery = query;
+        params.structuredQuery = this.getQuery();
         params.q = this.getText();
       }
 

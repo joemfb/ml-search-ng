@@ -164,15 +164,12 @@ describe('MLSearchContext', function () {
       expect(mlSearch.setText('test').getText()).toEqual('test');
       expect(mlSearch.setText('').getText()).toBeNull();
 
-      var combined = null;
-      mlSearch.getCombinedQuery().then(function(c) { combined = c; });
-      $rootScope.$digest();
+      var combined = mlSearch.getCombinedQuerySync();
 
       expect(combined.search.qtext).toBe(null);
       expect(mlSearch.setText('test')).toBe(mlSearch);
 
-      mlSearch.getCombinedQuery().then(function(c) { combined = c; });
-      $rootScope.$digest();
+      combined = mlSearch.getCombinedQuerySync();
 
       expect(combined.search.qtext).toEqual('test');
     });
@@ -961,8 +958,14 @@ describe('MLSearchContext', function () {
       search.getCombinedQuery(true).then(function(response) { actual = response; });
       $httpBackend.flush();
 
-      expect( actual.search.query ).toEqual( search.getQuery() );
+      expect( actual.search.query ).toEqual( search.getQuery().query );
       expect( actual.search.options ).toEqual( mockOptionsGrammer.options );
+
+      search.getCombinedQuery(false).then(function(response) { actual = response; });
+      $rootScope.$digest();
+
+      expect( actual.search.query ).toEqual( search.getQuery().query );
+      expect( actual.search.options ).toBe(undefined);
 
       search.storedOptions = {};
       $httpBackend
