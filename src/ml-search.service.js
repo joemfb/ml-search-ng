@@ -562,10 +562,6 @@
         query = this.getFacetQuery();
       }
 
-      if ( this.qtext ) {
-        query = qb.and( query, qb.text( this.qtext ) );
-      }
-
       if ( this.boostQueries.length ) {
         query = qb.boost(query, this.boostQueries);
       }
@@ -575,22 +571,22 @@
       }
 
       if ( this.options.includeProperties ) {
-        query = qb.or(query, qb.properties(query));
+        query = qb.or(query, qb.propertiesFragment(query));
       }
 
-      query = qb.query(query);
+      query = qb.where(query);
 
       if ( this.options.sort ) {
         // TODO: this assumes that the sort operator is called "sort", but
         // that isn't necessarily true. Properly done, we'd get the options
         // from the server and find the operator that contains sort-order
         // elements
-        query.query.queries.push( qb.operator('sort', this.options.sort) );
+        query.query.queries.push( qb.ext.operatorState('sort', this.options.sort) );
       }
 
       if ( this.options.snippet ) {
         // same problem as `sort`
-        query.query.queries.push( qb.operator('results', this.options.snippet) );
+        query.query.queries.push( qb.ext.operatorState('results', this.options.snippet) );
       }
 
       return query;
@@ -611,7 +607,7 @@
       _.forIn( self.activeFacets, function(facet, facetName) {
         if ( facet.values.length ) {
           constraintFn = function(facetValueObject) {
-            var constraintQuery = qb.constraint( facet.type )( facetName, facetValueObject.value );
+            var constraintQuery = qb.ext.constraint( facet.type )( facetName, facetValueObject.value );
             if (facetValueObject.negated === true) {
               constraintQuery = qb.not(constraintQuery);
             }
@@ -641,7 +637,10 @@
      */
     getCombinedQuery: function getCombinedQuery(includeOptions) {
       var combined = {
-        search: { query: this.getQuery() }
+        search: {
+          query: this.getQuery(),
+          qtext: this.getText()
+        }
       };
 
       if ( !includeOptions ) {
@@ -1269,27 +1268,24 @@
           };
 
       if ( adhoc ) {
-        combined = {};
+        combined = { search: { qtext: this.getText() } };
 
         if ( adhoc.search ) {
           includeOptionsParam = false;
           combined.search = adhoc.search;
+        } else if ( adhoc.options ) {
+          includeOptionsParam = false;
+          combined.search.options = adhoc.options;
+          combined.search.query = query.query;
+        } else if ( adhoc.query ) {
+          combined.search.query = adhoc.query;
         } else {
-          combined = { search: {} };
-
-          if ( adhoc.options ) {
-            includeOptionsParam = false;
-            combined.search.options = adhoc.options;
-            combined.search.query = query.query;
-          } else if ( adhoc.query ) {
-            combined.search.query = adhoc.query;
-          } else {
-            combined.search.options = adhoc;
-            combined.search.query = query.query;
-          }
+          combined.search.options = adhoc;
+          combined.search.query = query.query;
         }
       } else {
         params.structuredQuery = query;
+        params.q = this.getText();
       }
 
       if ( includeOptionsParam ) {
@@ -1475,7 +1471,11 @@
      * @see MLSearchContext#getQuery
      */
     getStructuredQuery: function getStructuredQuery() {
-      return this.getQuery();
+      console.log(
+        'Warning, MLSearchContext.getStructuredQuery is deprecated, and will be removed in the next release!\n' +
+        'Use MLSearchContext.getQuery in it\'s place'
+      );
+      return this.getQuery.apply(this, arguments);
     },
 
     /**
@@ -1485,7 +1485,11 @@
      * @see MLSearchContext#getParams
      */
     serializeStructuredQuery: function serializeStructuredQuery() {
-      return this.getParams();
+      console.log(
+        'Warning, MLSearchContext.serializeStructuredQuery is deprecated, and will be removed in the next release!\n' +
+        'Use MLSearchContext.getParams in it\'s place'
+      );
+      return this.getParams.apply(this, arguments);
     }
 
   });

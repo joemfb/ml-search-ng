@@ -164,10 +164,17 @@ describe('MLSearchContext', function () {
       expect(mlSearch.setText('test').getText()).toEqual('test');
       expect(mlSearch.setText('').getText()).toBeNull();
 
-      expect(mlSearch.getQuery().query.queries[0]['and-query'].queries.length).toEqual(0);
+      var combined = null;
+      mlSearch.getCombinedQuery().then(function(c) { combined = c; });
+      $rootScope.$digest();
+
+      expect(combined.search.qtext).toBe(null);
       expect(mlSearch.setText('test')).toBe(mlSearch);
-      expect(mlSearch.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
-      expect(mlSearch.getQuery().query.queries[0]['and-query'].queries[1].qtext).toEqual('test');
+
+      mlSearch.getCombinedQuery().then(function(c) { combined = c; });
+      $rootScope.$digest();
+
+      expect(combined.search.qtext).toEqual('test');
     });
 
     it('gets the query text', function() {
@@ -257,10 +264,10 @@ describe('MLSearchContext', function () {
 
     it('should include properties query', function() {
       var mlSearch = factory.newContext();
-      expect( JSON.stringify(mlSearch.getQuery()).match(/properties-query/) ).toBeNull();
+      expect( JSON.stringify(mlSearch.getQuery()).match(/properties-fragment-query/) ).toBeNull();
 
       mlSearch = factory.newContext({ includeProperties: true });
-      expect( JSON.stringify(mlSearch.getQuery()).match(/properties-query/) ).not.toBeNull();
+      expect( JSON.stringify(mlSearch.getQuery()).match(/properties-fragment-query/) ).not.toBeNull();
     });
 
     it('gets URL params config', function() {
@@ -1132,7 +1139,7 @@ describe('MLSearchContext', function () {
       expect(search.getSort()).toEqual('backwards');
       expect(search.getPage()).toEqual(4);
       expect(search.getActiveFacets()['my-facet'].values[0].value).toEqual('facetvalue');
-      expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(2);
+      expect(search.getQuery().query.queries[0]['and-query'].queries.length).toEqual(1);
 
       search.clearAllFacets();
       expect(search.getActiveFacets()['my-facet']).toBeUndefined();
