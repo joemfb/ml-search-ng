@@ -640,14 +640,12 @@
      * @return {Promise} - a promise resolved with the combined query
      */
     getCombinedQuery: function getCombinedQuery(includeOptions) {
-      var d = $q.defer(),
-          combined = {
-            search: { query: this.getQuery() }
-          };
+      var combined = {
+        search: { query: this.getQuery() }
+      };
 
       if ( !includeOptions ) {
-        d.resolve(combined);
-        return d.promise;
+        return $q.resolve(combined);
       }
 
       return this.getStoredOptions()
@@ -1099,20 +1097,17 @@
      * @return {Promise} a promise resolved after calling {@link MLSearchContext#fromParams} (if a new search is needed)
      */
     locationChange: function locationChange(newUrl, oldUrl, params) {
-      var d = $q.defer();
-
       params = this.getCurrentParams( params );
 
       // still on the search page, but there's a new query
       var shouldUpdate = pathsEqual(newUrl, oldUrl) &&
                          !_.isEqual( this.getParams(), params );
 
-      if ( shouldUpdate ) {
-        return this.fromParams(params);
+      if ( !shouldUpdate ) {
+        return $q.reject();
       }
 
-      d.reject();
-      return d.promise;
+      return this.fromParams(params);
     },
 
     /************************************************************/
@@ -1127,14 +1122,12 @@
      * @return {Promise} a promise resolved with the stored options
      */
     getStoredOptions: function getStoredOptions(name) {
-      var self = this,
-          d = $q.defer();
+      var self = this;
 
-      name = name || self.getQueryOptions();
+      name = name || this.getQueryOptions();
 
-      if ( self.storedOptions[name] ) {
-        d.resolve( self.storedOptions[name] );
-        return d.promise;
+      if ( this.storedOptions[name] ) {
+        return $q.resolve( this.storedOptions[name] );
       }
 
       return mlRest.queryConfig(name)
