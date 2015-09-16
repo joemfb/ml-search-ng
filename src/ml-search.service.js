@@ -937,7 +937,6 @@
      */
     fromParams: function fromParams(params) {
       var self = this,
-          d = $q.defer(),
           paramsConf = this.options.params;
 
       params = this.getCurrentParams( params );
@@ -958,38 +957,37 @@
 
       self.clearAllFacets();
 
-      //this parses the facets then the negated ones since they both depend on the same MarkLogic facet data
-      this.fromParam( paramsConf.facets, params,
-        function(val) {
+      // first parse the facets, then the negated facets,
+      // since they both depend on facet/options data
+      return $q(function(resolve, reject) {
+        self.fromParam( paramsConf.facets, params,
+          // callback
+          function(val) {
+            var optionPromise;
 
-          // ensure that facet type information is available
-          if ( self.results.facets ) {
-            self.fromFacetParam(val);
+            // if facet type information is available, options can be undefined
+            if ( self.results.facets ) {
+              optionPromise = $q.resolve(undefined);
+            } else {
+              optionPromise = self.getStoredOptions();
+            }
 
-            self.fromParam( paramsConf.negatedFacets, params,
-              function(val) {
-                self.fromFacetParam(val, undefined, true);
-                d.resolve();
-              },
-              d.resolve
-            );
-          } else {
-            self.getStoredOptions().then(function(options) {
+            optionPromise.then(function(options) {
               self.fromFacetParam(val, options);
+
               self.fromParam( paramsConf.negatedFacets, params,
+                // callback
                 function(val) {
                   self.fromFacetParam(val, options, true);
-                  d.resolve();
+                  resolve();
                 },
-                d.resolve
+                resolve // default callback
               );
             });
-          }
-        },
-        d.resolve
-      );
-
-      return d.promise;
+          },
+          resolve // default callback
+        );
+      });
     },
 
     /**
