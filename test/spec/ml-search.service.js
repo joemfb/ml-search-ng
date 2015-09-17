@@ -816,14 +816,17 @@ describe('MLSearchContext', function () {
     // this should be basically impossible, unless you're appending new facets manually
     it('should reject when no matching constraints', function() {
       $httpBackend
+        .expectGET(/\/v1\/search\?format=json&options=all&pageLength=10&start=1.*/)
+        .respond(mockResultsFacets);
+      $httpBackend
         .expectGET('/v1/config/query/all?format=json')
         .respond({ options: { constraint: [] } });
 
-      var searchContext = factory.newContext();
+      var searchContext = factory.newContext({ includeAggregates: true });
       var success = false,
           error = null;
 
-      searchContext.getAggregates( mockResultsFacets.facets )
+      searchContext.search()
         .then(
           function(){ success = true;  },
           function(err){ error = err; }

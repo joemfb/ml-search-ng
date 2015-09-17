@@ -1310,8 +1310,10 @@
         self.annotateActiveFacets(results.facets);
 
         if (self.options.includeAggregates) {
-          // TODO: find some way to conditionally chain this, so that errors are propagated
-          self.getAggregates(results.facets);
+          return self.getAggregates(results.facets)
+          .then(function() {
+            return results;
+          });
         }
 
         return results;
