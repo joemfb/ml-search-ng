@@ -615,6 +615,24 @@ describe('MLSearchContext', function () {
       expect( _.filter(mlSearch.results.facets, 'selected').length ).toEqual(1);
     });
 
+    it('should annotate bucketed facets', function() {
+      var mlSearch = factory.newContext();
+      mlSearch.results = {facets: {
+        cartoon: {type: 'string', facetValues: [
+          { value: 'bugs bunny', name: 'bugs bunny', count: 1 },
+          { value: 'mickey', name: 'mickey', count: 1 }
+        ]},
+        updated: {type: 'bucketed', facetValues: [
+          { name: 'week ago', count: 2, value: 'week ago' },
+          { name: 'month ago', count: 4, value: 'month ago' }
+        ]}
+      }};
+
+      mlSearch.annotateActiveFacets(mlSearch.results.facets);
+      expect( _.filter(mlSearch.results.facets, 'displayingAll').length ).toEqual(1);
+      expect( mlSearch.results.facets.updated.displayingAll ).toBeTruthy();
+    });
+
     it('should get facet query', function() {
       var mlSearch = factory.newContext();
       var facetQuery;
@@ -770,6 +788,40 @@ describe('MLSearchContext', function () {
       $httpBackend.flush();
 
       expect( error ).toEqual(new Error('No constraint exists matching MyFacetName'));
+    });
+
+    it('should not get more facets for a bucketed constraint', function() {
+      constraintConfig = {
+        options: {
+          constraint: [{
+            name: 'MyFacetName',
+            range: {
+              'facet-option': 'limit=10',
+              bucket: [{ ge: 1, le: 10, name: 'blah'}]
+            }
+          }, {
+            name: 'MyOtherFacetName',
+            range: {}
+          }]
+        }
+      };
+
+      $httpBackend
+        .whenGET('/v1/config/query/all?format=json')
+        .respond(constraintConfig);
+
+      var success = false,
+          error = null;
+
+      searchContext.showMoreFacets(myFacet, 'MyFacetName')
+        .then(
+          function(){ success = true;  },
+          function(err){ error = err; }
+        );
+
+      $httpBackend.flush();
+
+      expect( error ).toEqual(new Error('Can\'t get values for bucketed constraint MyFacetName'));
     });
   });
 
