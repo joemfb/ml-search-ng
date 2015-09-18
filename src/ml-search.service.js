@@ -1209,6 +1209,10 @@
           return $q.reject(new Error('No constraint exists matching ' + name));
         }
 
+        if ( constraint.range && constraint.range.bucket ) {
+          return $q.reject(new Error('Can\'t get values for bucketed constraint ' + name));
+        }
+
         var newOptions = valueOptionsFromConstraint(constraint);
 
         return self.values(name, params, newOptions);
@@ -1342,6 +1346,10 @@
               value.negated = self.isFacetNegated(name, value.name);
             })
             .value(); // thwart lazy evaluation
+        }
+
+        if ( facet.type === 'bucketed' ) {
+          facet.displayingAll = true;
         }
       });
     },
