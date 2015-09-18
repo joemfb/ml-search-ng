@@ -1257,6 +1257,27 @@ describe('MLSearchContext', function () {
       expect( mlSearch.getFacetQuery()['and-query'].queries[0]['collection-constraint-query'] ).toBeDefined();
     });
 
+    it('should populate from negated facet param without regular facet param', function() {
+      $httpBackend
+        .expectGET('/v1/config/query/all?format=json')
+        .respond(mockOptionsConstraint);
+
+      var search = factory.newContext();
+
+      $location.search({
+        q: 'blah2',
+        p: '4',
+        n : 'my-facet:facetvalue2'
+      });
+
+      search.fromParams();
+      // $rootScope.$digest();
+      $httpBackend.flush();
+
+      expect(search.getActiveFacets()['my-facet'].values[0].value).toEqual('facetvalue2');
+      expect(search.getActiveFacets()['my-facet'].values[0].negated).toEqual(true);
+    });
+
     it('should populate from invalid page parameter', function() {
       var search = factory.newContext().setPage(10);
 

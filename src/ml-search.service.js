@@ -943,7 +943,10 @@
      */
     fromParams: function fromParams(params) {
       var self = this,
-          paramsConf = this.options.params;
+          paramsConf = this.options.params,
+          facets = null,
+          negatedFacets = null,
+          optionPromise = null;
 
       params = this.getCurrentParams( params );
 
@@ -963,36 +966,27 @@
 
       self.clearAllFacets();
 
-      // first parse the facets, then the negated facets,
-      // since they both depend on facet/options data
-      return $q(function(resolve, reject) {
-        self.fromParam( paramsConf.facets, params,
-          // callback
-          function(val) {
-            var optionPromise;
+      // _.identity returns it's argument, fromParam returns the callback result
+      facets = this.fromParam( paramsConf.facets, params, _.identity );
+      negatedFacets = this.fromParam( paramsConf.negatedFacets, params, _.identity );
 
-            // if facet type information is available, options can be undefined
-            if ( self.results.facets ) {
-              optionPromise = $q.resolve(undefined);
-            } else {
-              optionPromise = self.getStoredOptions();
-            }
+      if ( !(facets || negatedFacets) ) {
+        return $q.resolve();
+      }
 
-            optionPromise.then(function(options) {
-              self.fromFacetParam(val, options);
+      // if facet type information is available, options can be undefined
+      optionPromise = !!self.results.facets ?
+                      $q.resolve(undefined) :
+                      self.getStoredOptions();
 
-              self.fromParam( paramsConf.negatedFacets, params,
-                // callback
-                function(val) {
-                  self.fromFacetParam(val, options, true);
-                  resolve();
-                },
-                resolve // default callback
-              );
-            });
-          },
-          resolve // default callback
-        );
+      return optionPromise.then(function(options) {
+        if ( facets ) {
+          self.fromFacetParam(facets, options);
+        }
+
+        if ( negatedFacets ) {
+          self.fromFacetParam(negatedFacets, options, true);
+        }
       });
     },
 
@@ -1025,7 +1019,7 @@
         value = decodeParam(value);
       }
 
-      callback.call( this, value );
+      return callback.call( this, value );
     },
 
     /**
