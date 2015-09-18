@@ -45,6 +45,18 @@ describe('ml-results', function () {
         expect( result.link ).toEqual( '/detail?uri=' + encodeURIComponent( result.uri ) );
       });
     });
+
+    it('should create a default label property', function() {
+      _.each(results, function(result) {
+        expect( result.label ).toBeDefined;
+        expect( result.label ).toEqual( result.uri.split('/')[2] );
+      });
+    });
+
+    it('should use label as title', function() {
+      expect(elem.find('h4 a')[0].innerHTML).toEqual('doc1.xml');
+    });
+
   });
 
   describe('#link-function', function () {
@@ -60,6 +72,26 @@ describe('ml-results', function () {
     it('should call custom link function', function() {
       expect( $scope.linkTarget ).toHaveBeenCalled();
       expect( $scope.linkTarget.calls.count() ).toEqual( results.length );
+    });
+  });
+
+  describe('#label-function', function () {
+
+    beforeEach(function() {
+      $scope.label = jasmine.createSpy('label');
+
+      elem = angular.element('<ml-results results="results" label="label(result)"></ml-results>');
+      $compile(elem)($scope);
+      $scope.$digest();
+    });
+
+    it('should call custom label function', function() {
+      expect( $scope.label ).toHaveBeenCalled();
+      expect( $scope.label.calls.count() ).toEqual( results.length );
+    });
+
+    it('should use URI as title if label is falsy', function() {
+      expect(elem.find('h4 a')[0].innerHTML).toEqual('/docs/doc1.xml');
     });
   });
 

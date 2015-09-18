@@ -28,7 +28,8 @@
       restrict: 'E',
       scope: {
         results: '=',
-        link: '&'
+        link: '&',
+        label: '&'
       },
       templateUrl: template,
       link: link
@@ -49,16 +50,25 @@
 
   function link(scope, element, attrs) {
     //default link fn
-    if (!attrs.link) {
+    if ( !attrs.link ) {
       scope.link = function(result) {
-        //weird object hierarchy because directive methods requiring objects (?)
+        // directive methods require objects
         return '/detail?uri=' + encodeURIComponent( result.result.uri );
+      };
+    }
+
+    //default label fn
+    if ( !attrs.label ) {
+      scope.label = function(result) {
+        // directive methods require objects
+        return _.last( result.result.uri.split('/') );
       };
     }
 
     scope.$watch('results', function(newVal, oldVal) {
       _.each(newVal, function(result) {
         result.link = scope.link({ result: result });
+        result.label = scope.label({ result: result });
       });
     });
   }
