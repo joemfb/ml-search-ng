@@ -1,6 +1,7 @@
 ### ml-search-ng
 
 [![Build Status](https://travis-ci.org/joemfb/ml-search-ng.svg?branch=master)](https://travis-ci.org/joemfb/ml-search-ng)
+[![Coverage Status](https://coveralls.io/repos/joemfb/ml-search-ng/badge.svg?branch=master&service=github)](https://coveralls.io/github/joemfb/ml-search-ng?branch=master)
 
 An angular module of services and directives for common use cases in MarkLogic search applications. Based on components from ealier versions of [https://github.com/marklogic/slush-marklogic-node](https://github.com/marklogic/slush-marklogic-node).
 
