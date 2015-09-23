@@ -73,42 +73,42 @@ describe('MLRemoteSearchController', function () {
     it('inherited methods exist', function() {
       var ctrl = new MLRemoteSearchController($scope, $location, mockSearchContext, remoteInput);
 
-      expect(ctrl.search).toBeDefined;
+      expect(ctrl.search).toBeDefined();
       expect(ctrl.search).toBe( MLSearchController.prototype.search );
-      expect(ctrl.toggleFacet).toBeDefined;
+      expect(ctrl.toggleFacet).toBeDefined();
       expect(ctrl.toggleFacet).toBe( MLSearchController.prototype.toggleFacet );
-      expect(ctrl.toggleNegatedFacet).toBeDefined;
+      expect(ctrl.toggleNegatedFacet).toBeDefined();
       expect(ctrl.toggleNegatedFacet).toBe( MLSearchController.prototype.toggleNegatedFacet );
-      expect(ctrl.showMoreFacets).toBeDefined;
+      expect(ctrl.showMoreFacets).toBeDefined();
       expect(ctrl.showMoreFacets).toBe( MLSearchController.prototype.showMoreFacets );
-      expect(ctrl.clearFacets).toBeDefined;
+      expect(ctrl.clearFacets).toBeDefined();
       expect(ctrl.clearFacets).toBe( MLSearchController.prototype.clearFacets );
-      expect(ctrl.reset).toBeDefined;
+      expect(ctrl.reset).toBeDefined();
       expect(ctrl.reset).toBe( MLSearchController.prototype.reset );
-      expect(ctrl.suggest).toBeDefined;
+      expect(ctrl.suggest).toBeDefined();
       expect(ctrl.suggest).toBe( MLSearchController.prototype.suggest );
-      expect(ctrl.locationChange).toBeDefined;
+      expect(ctrl.locationChange).toBeDefined();
       expect(ctrl.locationChange).toBe( MLSearchController.prototype.locationChange );
-      expect(ctrl.updateURLParams).toBeDefined;
+      expect(ctrl.updateURLParams).toBeDefined();
       expect(ctrl.updateURLParams).toBe( MLSearchController.prototype.updateURLParams );
-      expect(ctrl._search).toBeDefined;
+      expect(ctrl._search).toBeDefined();
       expect(ctrl._search).toBe( MLSearchController.prototype._search );
     });
 
     it('overriden methods exist', function() {
       var ctrl = new MLRemoteSearchController($scope, $location, mockSearchContext, remoteInput);
 
-      expect(ctrl.init).toBeDefined;
+      expect(ctrl.init).toBeDefined();
       expect(ctrl.init).not.toBe( MLSearchController.prototype.init );
-      expect(ctrl.updateSearchResults).toBeDefined;
+      expect(ctrl.updateSearchResults).toBeDefined();
       expect(ctrl.updateSearchResults).not.toBe( MLSearchController.prototype.updateSearchResults );
     });
 
     it('extension methods don\'t exist', function() {
       var ctrl = new MLRemoteSearchController($scope, $location, mockSearchContext, remoteInput);
 
-      expect(ctrl.parseExtraURLParams).not.toBeDefined;
-      expect(ctrl.updateExtraURLParams).not.toBeDefined;
+      expect(ctrl.parseExtraURLParams).not.toBeDefined();
+      expect(ctrl.updateExtraURLParams).not.toBeDefined();
     });
   });
 

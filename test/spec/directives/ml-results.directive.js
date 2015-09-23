@@ -41,14 +41,14 @@ describe('ml-results', function () {
 
     it('should create a default link property', function() {
       _.each(results, function(result) {
-        expect( result.link ).toBeDefined;
+        expect( result.link ).toBeDefined();
         expect( result.link ).toEqual( '/detail?uri=' + encodeURIComponent( result.uri ) );
       });
     });
 
     it('should create a default label property', function() {
       _.each(results, function(result) {
-        expect( result.label ).toBeDefined;
+        expect( result.label ).toBeDefined();
         expect( result.label ).toEqual( result.uri.split('/')[2] );
       });
     });

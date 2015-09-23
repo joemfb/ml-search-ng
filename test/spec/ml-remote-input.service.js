@@ -14,7 +14,7 @@ describe('MLRemoteInput', function () {
     }));
 
     it('should be injectable without ngRoute', function() {
-      expect(remoteInput).toBeDefined;
+      expect(remoteInput).toBeDefined();
       expect(remoteInput.routeAvailable).toEqual(false);
     });
 
@@ -59,7 +59,7 @@ describe('MLRemoteInput', function () {
     }));
 
     it('should be injectable with ngRoute', function() {
-      expect(remoteInput).toBeDefined;
+      expect(remoteInput).toBeDefined();
       expect(remoteInput.routeAvailable).toEqual(true);
     });
 
