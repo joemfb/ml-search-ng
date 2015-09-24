@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <meta name="generator" content="JSDoc 3.3.1">
+  <meta name="generator" content="JSDoc 3.3.3">
   <meta charset="utf-8">
   <title>Source: ml-search.service.js</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
@@ -593,10 +593,6 @@
         query = this.getFacetQuery();
       }
 
-      if ( this.qtext ) {
-        query = qb.and( query, qb.text( this.qtext ) );
-      }
-
       if ( this.boostQueries.length ) {
         query = qb.boost(query, this.boostQueries);
       }
@@ -606,22 +602,22 @@
       }
 
       if ( this.options.includeProperties ) {
-        query = qb.or(query, qb.properties(query));
+        query = qb.or(query, qb.propertiesFragment(query));
       }
 
-      query = qb.query(query);
+      query = qb.where(query);
 
       if ( this.options.sort ) {
         // TODO: this assumes that the sort operator is called &quot;sort&quot;, but
         // that isn&#x27;t necessarily true. Properly done, we&#x27;d get the options
         // from the server and find the operator that contains sort-order
         // elements
-        query.query.queries.push( qb.operator(&#x27;sort&#x27;, this.options.sort) );
+        query.query.queries.push( qb.ext.operatorState(&#x27;sort&#x27;, this.options.sort) );
       }
 
       if ( this.options.snippet ) {
         // same problem as &#x60;sort&#x60;
-        query.query.queries.push( qb.operator(&#x27;results&#x27;, this.options.snippet) );
+        query.query.queries.push( qb.ext.operatorState(&#x27;results&#x27;, this.options.snippet) );
       }
 
       return query;
@@ -642,7 +638,7 @@
       _.forIn( self.activeFacets, function(facet, facetName) {
         if ( facet.values.length ) {
           constraintFn = function(facetValueObject) {
-            var constraintQuery = qb.constraint( facet.type )( facetName, facetValueObject.value );
+            var constraintQuery = qb.ext.constraint( facet.type )( facetName, facetValueObject.value );
             if (facetValueObject.negated === true) {
               constraintQuery = qb.not(constraintQuery);
             }
@@ -663,6 +659,18 @@
     },
 
     /**
+     * Construct a combined query from the current state (excluding stored options)
+     * @method MLSearchContext#getCombinedQuerySync
+     *
+     * @param {Object} [options] - optional search options object
+     *
+     * @return {Object} - combined query
+     */
+    getCombinedQuerySync: function getCombinedQuerySync(options) {
+      return qb.ext.combined( this.getQuery(), this.getText(), options );
+    },
+
+    /**
      * Construct a combined query from the current state
      * @method MLSearchContext#getCombinedQuery
      *
@@ -671,14 +679,10 @@
      * @return {Promise} - a promise resolved with the combined query
      */
     getCombinedQuery: function getCombinedQuery(includeOptions) {
-      var d = $q.defer(),
-          combined = {
-            search: { query: this.getQuery() }
-          };
+      var combined = this.getCombinedQuerySync();
 
       if ( !includeOptions ) {
-        d.resolve(combined);
-        return d.promise;
+        return $q.resolve(combined);
       }
 
       return this.getStoredOptions()
@@ -833,8 +837,7 @@
 
       return this.valuesFromConstraint(facetName, { start: start, limit: limit })
       .then(function(resp) {
-        var newFacets = resp &amp;amp;&amp;amp; resp.data &amp;amp;&amp;amp; resp.data[&#x27;values-response&#x27;] &amp;amp;&amp;amp;
-                        resp.data[&#x27;values-response&#x27;][&#x27;distinct-value&#x27;];
+        var newFacets = resp &amp;amp;&amp;amp; resp[&#x27;values-response&#x27;] &amp;amp;&amp;amp; resp[&#x27;values-response&#x27;][&#x27;distinct-value&#x27;];
 
         facet.displayingAll = (!newFacets || newFacets.length &amp;lt; (limit - start));
 
@@ -971,8 +974,10 @@
      */
     fromParams: function fromParams(params) {
       var self = this,
-          d = $q.defer(),
-          paramsConf = this.options.params;
+          paramsConf = this.options.params,
+          facets = null,
+          negatedFacets = null,
+          optionPromise = null;
 
       params = this.getCurrentParams( params );
 
@@ -992,38 +997,28 @@
 
       self.clearAllFacets();
 
-      //this parses the facets then the negated ones since they both depend on the same MarkLogic facet data
-      this.fromParam( paramsConf.facets, params,
-        function(val) {
+      // _.identity returns it&#x27;s argument, fromParam returns the callback result
+      facets = this.fromParam( paramsConf.facets, params, _.identity );
+      negatedFacets = this.fromParam( paramsConf.negatedFacets, params, _.identity );
 
-          // ensure that facet type information is available
-          if ( self.results.facets ) {
-            self.fromFacetParam(val);
+      if ( !(facets || negatedFacets) ) {
+        return $q.resolve();
+      }
 
-            self.fromParam( paramsConf.negatedFacets, params,
-              function(val) {
-                self.fromFacetParam(val, undefined, true);
-                d.resolve();
-              },
-              d.resolve
-            );
-          } else {
-            self.getStoredOptions().then(function(options) {
-              self.fromFacetParam(val, options);
-              self.fromParam( paramsConf.negatedFacets, params,
-                function(val) {
-                  self.fromFacetParam(val, options, true);
-                  d.resolve();
-                },
-                d.resolve
-              );
-            });
-          }
-        },
-        d.resolve
-      );
+      // if facet type information is available, options can be undefined
+      optionPromise = !!self.results.facets ?
+                      $q.resolve(undefined) :
+                      self.getStoredOptions();
 
-      return d.promise;
+      return optionPromise.then(function(options) {
+        if ( facets ) {
+          self.fromFacetParam(facets, options);
+        }
+
+        if ( negatedFacets ) {
+          self.fromFacetParam(negatedFacets, options, true);
+        }
+      });
     },
 
     /**
@@ -1055,7 +1050,7 @@
         value = decodeParam(value);
       }
 
-      callback.call( this, value );
+      return callback.call( this, value );
     },
 
     /**
@@ -1131,20 +1126,17 @@
      * @return {Promise} a promise resolved after calling {@link MLSearchContext#fromParams} (if a new search is needed)
      */
     locationChange: function locationChange(newUrl, oldUrl, params) {
-      var d = $q.defer();
-
       params = this.getCurrentParams( params );
 
       // still on the search page, but there&#x27;s a new query
       var shouldUpdate = pathsEqual(newUrl, oldUrl) &amp;amp;&amp;amp;
                          !_.isEqual( this.getParams(), params );
 
-      if ( shouldUpdate ) {
-        return this.fromParams(params);
+      if ( !shouldUpdate ) {
+        return $q.reject();
       }
 
-      d.reject();
-      return d.promise;
+      return this.fromParams(params);
     },
 
     /************************************************************/
@@ -1159,14 +1151,12 @@
      * @return {Promise} a promise resolved with the stored options
      */
     getStoredOptions: function getStoredOptions(name) {
-      var self = this,
-          d = $q.defer();
+      var self = this;
 
-      name = name || self.getQueryOptions();
+      name = name || this.getQueryOptions();
 
-      if ( self.storedOptions[name] ) {
-        d.resolve( self.storedOptions[name] );
-        return d.promise;
+      if ( this.storedOptions[name] ) {
+        return $q.resolve( this.storedOptions[name] );
       }
 
       return mlRest.queryConfig(name)
@@ -1213,13 +1203,13 @@
         options: (_.isString(options) &amp;amp;&amp;amp; options) || this.getSuggestOptions() || this.getQueryOptions()
       };
 
-      return this.getCombinedQuery(false)
-      .then(function(combined) {
-        if ( _.isObject(options) ) {
-          combined.search.options = options;
-        }
-        return mlRest.suggest(params, combined);
-      })
+      var combined = this.getCombinedQuerySync();
+
+      if ( _.isObject(options) ) {
+        combined.search.options = options;
+      }
+
+      return mlRest.suggest(params, combined)
       .then(function(response) {
         return response.data;
       });
@@ -1233,7 +1223,7 @@
      * @param {Object} [params] - URL params
      * @return {Promise} a promise resolved with values
      */
-    valuesFromConstraint: function values(name, params) {
+    valuesFromConstraint: function valuesFromConstraint(name, params) {
       var self = this;
 
       return this.getStoredOptions()
@@ -1242,6 +1232,10 @@
 
         if ( !constraint ) {
           return $q.reject(new Error(&#x27;No constraint exists matching &#x27; + name));
+        }
+
+        if ( constraint.range &amp;amp;&amp;amp; constraint.range.bucket ) {
+          return $q.reject(new Error(&#x27;Can\&#x27;t get values for bucketed constraint &#x27; + name));
         }
 
         var newOptions = valueOptionsFromConstraint(constraint);
@@ -1260,7 +1254,8 @@
      * @return {Promise} a promise resolved with values
      */
     values: function values(name, params, options) {
-      var self = this;
+      var self = this,
+          combined = this.getCombinedQuerySync();
 
       if ( !options &amp;amp;&amp;amp; params &amp;amp;&amp;amp; params.options &amp;amp;&amp;amp; !(params.start || params.limit) ) {
         options = params;
@@ -1275,10 +1270,13 @@
         params.options = self.getQueryOptions();
       }
 
-      return self.getCombinedQuery(false)
-      .then(function(combined) {
+      if ( _.isObject(options) ) {
         combined.search.options = options;
-        return mlRest.values(name, params, combined);
+      }
+
+      return mlRest.values(name, params, combined)
+      .then(function(response) {
+        return response.data;
       });
     },
 
@@ -1297,7 +1295,6 @@
      */
     search: function search(adhoc) {
       var self = this,
-          query = this.getQuery(),
           combined = null,
           includeOptionsParam = true,
           params = {
@@ -1307,27 +1304,22 @@
           };
 
       if ( adhoc ) {
-        combined = {};
+        combined = this.getCombinedQuerySync();
 
         if ( adhoc.search ) {
           includeOptionsParam = false;
           combined.search = adhoc.search;
+        } else if ( adhoc.options ) {
+          includeOptionsParam = false;
+          combined.search.options = adhoc.options;
+        } else if ( adhoc.query ) {
+          combined.search.query = adhoc.query;
         } else {
-          combined = { search: {} };
-
-          if ( adhoc.options ) {
-            includeOptionsParam = false;
-            combined.search.options = adhoc.options;
-            combined.search.query = query.query;
-          } else if ( adhoc.query ) {
-            combined.search.query = adhoc.query;
-          } else {
-            combined.search.options = adhoc;
-            combined.search.query = query.query;
-          }
+          combined.search.options = adhoc;
         }
       } else {
-        params.structuredQuery = query;
+        params.structuredQuery = this.getQuery();
+        params.q = this.getText();
       }
 
       if ( includeOptionsParam ) {
@@ -1347,8 +1339,10 @@
         self.annotateActiveFacets(results.facets);
 
         if (self.options.includeAggregates) {
-          // TODO: find some way to conditionally chain this, so that errors are propagated
-          self.getAggregates(results.facets);
+          return self.getAggregates(results.facets)
+          .then(function() {
+            return results;
+          });
         }
 
         return results;
@@ -1377,6 +1371,10 @@
               value.negated = self.isFacetNegated(name, value.name);
             })
             .value(); // thwart lazy evaluation
+        }
+
+        if ( facet.type === &#x27;bucketed&#x27; ) {
+          facet.displayingAll = true;
         }
       });
     },
@@ -1446,8 +1444,8 @@
             promises.push(
               self.values(facetName, { start: 1, limit: 0 }, newOptions)
               .then(function(resp) {
-                var aggregates = resp &amp;amp;&amp;amp; resp.data &amp;amp;&amp;amp; resp.data[&#x27;values-response&#x27;] &amp;amp;&amp;amp;
-                                 resp.data[&#x27;values-response&#x27;][&#x27;aggregate-result&#x27;];
+                var aggregates = resp &amp;amp;&amp;amp; resp[&#x27;values-response&#x27;] &amp;amp;&amp;amp; resp[&#x27;values-response&#x27;][&#x27;aggregate-result&#x27;];
+
                 _.each( aggregates, function(aggregate) {
                   facet[aggregate.name] = aggregate._value;
                 });
@@ -1513,7 +1511,11 @@
      * @see MLSearchContext#getQuery
      */
     getStructuredQuery: function getStructuredQuery() {
-      return this.getQuery();
+      console.log(
+        &#x27;Warning, MLSearchContext.getStructuredQuery is deprecated, and will be removed in the next release!\n&#x27; +
+        &#x27;Use MLSearchContext.getQuery in it\&#x27;s place&#x27;
+      );
+      return this.getQuery.apply(this, arguments);
     },
 
     /**
@@ -1523,7 +1525,11 @@
      * @see MLSearchContext#getParams
      */
     serializeStructuredQuery: function serializeStructuredQuery() {
-      return this.getParams();
+      console.log(
+        &#x27;Warning, MLSearchContext.serializeStructuredQuery is deprecated, and will be removed in the next release!\n&#x27; +
+        &#x27;Use MLSearchContext.getParams in it\&#x27;s place&#x27;
+      );
+      return this.getParams.apply(this, arguments);
     }
 
   });
@@ -1552,7 +1558,7 @@
 
   function valueOptionsFromConstraint(constraint) {
     var options = { constraint: asArray(constraint), values: asArray(_.cloneDeep(constraint)) };
-    options.values[&#x27;values-option&#x27;] = constraint.range &amp;amp;&amp;amp; constraint.range[&#x27;facet-option&#x27;];
+    options.values[0][&#x27;values-option&#x27;] = constraint.range &amp;amp;&amp;amp; constraint.range[&#x27;facet-option&#x27;];
     return options;
   }
 
@@ -1585,7 +1591,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.1 on September 3, 2015.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.3 on September 24, 2015.
       </p>
     </div>
   </footer>
