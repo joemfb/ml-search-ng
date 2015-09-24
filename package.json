@@ -37,7 +37,7 @@
   "scripts": {
     "test": "./node_modules/gulp/bin/gulp.js test --fatal warning"
   },
-  "license": "Apache v2",
+  "license": "Apache-2.0",
   "directories": {
     "test": "test"
   },
