@@ -38,6 +38,8 @@ gulp.task('lint-style', function(done) {
       './src/**/*.js'
     ])
     .pipe(jscs())
+    .pipe(jscs.reporter())
+    .pipe(jscs.reporter('fail'))
     .on('error', function(err) {
       handleError('warning', err);
       this.emit('end');
