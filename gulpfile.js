@@ -149,7 +149,7 @@ gulp.task('publish-docs', function() {
   .pipe(ghpages());
 });
 
-gulp.task('travis', function() {
+gulp.task('coveralls', function() {
   return gulp.src('coverage/**/lcov.info')
   .pipe(coveralls());
 });

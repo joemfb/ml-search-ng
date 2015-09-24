@@ -6,4 +6,4 @@ node_js:
 before_script:
   - npm install -g bower
   - bower install
-after_script: ./node_modules/gulp/bin/gulp.js travis
+after_script: ./node_modules/gulp/bin/gulp.js coveralls
