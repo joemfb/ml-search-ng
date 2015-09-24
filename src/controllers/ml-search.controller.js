@@ -133,7 +133,7 @@ function MLSearchController($scope, $location, mlSearch) {
         this._search.bind(this),
         function() {
           if (shouldUpdate) {
-            self._search.call(self);
+            self._search();
           }
         }
       );
@@ -295,5 +295,4 @@ function MLSearchController($scope, $location, mlSearch) {
       return res.suggestions || [];
     });
   };
-
 })();

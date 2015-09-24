@@ -1,5 +1,4 @@
 (function() {
-
   'use strict';
 
   /**
@@ -47,7 +46,6 @@
   }
 
   function link($scope, element, attrs) {
-    $scope.truncateLength = parseInt(attrs.truncate) || 20;
+    $scope.truncateLength = parseInt(attrs.truncate, 10) || 20;
   }
-
 }());

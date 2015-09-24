@@ -1,5 +1,4 @@
 (function() {
-
   'use strict';
 
   /**
@@ -82,5 +81,4 @@
       metrics: search.metrics
     };
   }
-
 }());

@@ -1,5 +1,4 @@
 (function() {
-
   'use strict';
 
   /**
@@ -66,7 +65,7 @@
         minute: 'minute',
         minutes: 'minutes',
         second: 'second',
-        seconds: 'seconds',
+        seconds: 'seconds'
       };
 
       angular.extend(_options, options);
@@ -83,11 +82,9 @@
       });
 
       if (result.length > 1) {
-
         var last = result.splice(result.length - 1, 1);
         result = result.join(', ') + ', and ' + last[0];
         return result;
-
       } else {
         return result[0] || '0 seconds';
       }
@@ -136,10 +133,10 @@
         matches = duration.match(regex);
 
     return {
-      years:   parseFloat(matches[3])  || null,
-      months:  parseFloat(matches[5])  || null,
-      weeks:   parseFloat(matches[7])  || null,
-      days:    parseFloat(matches[9])  || null,
+      years:   parseFloat(matches[3]) || null,
+      months:  parseFloat(matches[5]) || null,
+      weeks:   parseFloat(matches[7]) || null,
+      days:    parseFloat(matches[9]) || null,
       hours:   parseFloat(matches[12]) || null,
       minutes: parseFloat(matches[14]) || null,
       seconds: parseFloat(matches[16]) || null,
@@ -148,5 +145,4 @@
       }
     };
   }
-
 }());

@@ -1,5 +1,4 @@
 (function() {
-
   'use strict';
 
   angular.module('ml.search')
@@ -151,7 +150,5 @@
 
       return route.originalPath;
     };
-
   }
-
 }());

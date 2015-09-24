@@ -1,5 +1,4 @@
 (function() {
-
   'use strict';
 
   /**
@@ -56,5 +55,4 @@
       $scope.search({ qtext: '' });
     };
   }
-
 }());

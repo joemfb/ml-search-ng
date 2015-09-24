@@ -81,7 +81,7 @@ function MLRemoteSearchController($scope, $location, mlSearch, remoteInput) {
       if (self.qtext !== input) {
         self.qtext = input;
 
-        self.search.call(self);
+        self.search();
       }
     });
 
@@ -107,5 +107,4 @@ function MLRemoteSearchController($scope, $location, mlSearch, remoteInput) {
     this.remoteInput.setInput( this.qtext );
     return this;
   };
-
 })();
