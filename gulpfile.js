@@ -8,7 +8,7 @@ var gulp = require('gulp'),
     html2Js = require('gulp-ng-html2js'),
     jshint = require('gulp-jshint'),
     jscs = require('gulp-jscs'),
-    karma = require('karma').server,
+    Server = require('karma').Server,
     minifyHtml = require('gulp-minify-html'),
     less = require('gulp-less'),
     path = require('path'),
@@ -109,18 +109,20 @@ function karmaResult(cb, result) {
 }
 
 gulp.task('test', ['templates', 'lint'], function(done) {
-  karma.start({
+  new Server({
     configFile: path.join(__dirname, './karma.conf.js'),
     singleRun: true,
     autoWatch: false
-  }, karmaResult.bind(null, done));
+  }, karmaResult.bind(null, done))
+  .start();
 });
 
 gulp.task('autotest', function(done) {
-  karma.start({
+  new Server({
     configFile: path.join(__dirname, './karma.conf.js'),
     autoWatch: true
-  }, karmaResult.bind(null, done));
+  }, karmaResult.bind(null, done))
+  .start();
 });
 
 gulp.task('docs', function(done) {
