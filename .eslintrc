@@ -1,0 +1,22 @@
+{
+  "extends": "standard",
+
+  "globals": {
+    "document": false,
+    "window": false,
+    "_": false,
+    "angular": false
+  },
+
+  "rules": {
+    "indent": 0,
+    "key-spacing": [2, { "beforeColon": false, "afterColon": true, "mode": "minimum" }],
+    "no-extra-semi": 2,
+    "one-var": 0,
+    "operator-linebreak": [2, "after"],
+    "semi": [2, "always"],
+    "semi-spacing": [2, { "before": false, "after": true }],
+    "space-before-function-paren": [2, "never"],
+    "space-in-parens": 0
+  }
+}

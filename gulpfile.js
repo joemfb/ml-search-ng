@@ -6,8 +6,7 @@ var gulp = require('gulp'),
     gutil = require('gulp-util'),
     concat = require('gulp-concat'),
     html2Js = require('gulp-ng-html2js'),
-    jshint = require('gulp-jshint'),
-    jscs = require('gulp-jscs'),
+    eslint = require('gulp-eslint'),
     Server = require('karma').Server,
     minifyHtml = require('gulp-minify-html'),
     less = require('gulp-less'),
@@ -32,28 +31,14 @@ function handleError(level, error) {
   }
 }
 
-gulp.task('lint-style', function(done) {
+gulp.task('lint', function() {
   return gulp.src([
       './gulpfile.js',
       './src/**/*.js'
     ])
-    .pipe(jscs())
-    .pipe(jscs.reporter())
-    .pipe(jscs.reporter('fail'))
-    .on('error', function(err) {
-      handleError('warning', err);
-      this.emit('end');
-    });
-});
-
-gulp.task('lint', ['lint-style'], function() {
-  return gulp.src([
-      './gulpfile.js',
-      './src/**/*.js'
-    ])
-    .pipe(jshint())
-    .pipe(jshint.reporter('default'))
-    .pipe(jshint.reporter('fail'))
+    .pipe(eslint())
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError())
     .on('error', function(err) {
       handleError('warning', err);
       this.emit('end');
