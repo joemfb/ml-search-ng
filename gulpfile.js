@@ -3,6 +3,7 @@
 'use strict';
 
 var gulp = require('gulp'),
+    gutil = require('gulp-util'),
     concat = require('gulp-concat'),
     html2Js = require('gulp-ng-html2js'),
     jshint = require('gulp-jshint'),
@@ -18,6 +19,19 @@ var gulp = require('gulp'),
     cp = require('child_process'),
     coveralls = require('gulp-coveralls');
 
+// Command line option:
+//  --fatal=[warning|error|off]
+var fatalLevel = require('yargs').argv.fatal || 'error';
+
+var ERROR_LEVELS = ['error', 'warning'];
+
+function handleError(level, error) {
+  gutil.log(error.message);
+  if ( ERROR_LEVELS.indexOf(level) <= ERROR_LEVELS.indexOf(fatalLevel) ) {
+    process.exit(1);
+  }
+}
+
 gulp.task('lint-style', function(done) {
   return gulp.src([
       './gulpfile.js',
@@ -25,7 +39,7 @@ gulp.task('lint-style', function(done) {
     ])
     .pipe(jscs())
     .on('error', function(err) {
-      console.error(err.message);
+      handleError('warning', err);
       this.emit('end');
     });
 });
@@ -36,7 +50,12 @@ gulp.task('lint', ['lint-style'], function() {
       './src/**/*.js'
     ])
     .pipe(jshint())
-    .pipe(jshint.reporter('default'));
+    .pipe(jshint.reporter('default'))
+    .pipe(jshint.reporter('fail'))
+    .on('error', function(err) {
+      handleError('warning', err);
+      this.emit('end');
+    });
 });
 
 gulp.task('scripts', function() {
@@ -79,23 +98,27 @@ gulp.task('templates', function() {
     .pipe(gulp.dest('dist'));
 });
 
+function karmaResult(cb, result) {
+  var err = null;
+  if (result === 1) {
+    err = new Error('test failed');
+  }
+  cb(err);
+}
+
 gulp.task('test', ['templates', 'lint'], function(done) {
   karma.start({
     configFile: path.join(__dirname, './karma.conf.js'),
     singleRun: true,
     autoWatch: false
-  }, function() {
-    done();
-  });
+  }, karmaResult.bind(null, done));
 });
 
 gulp.task('autotest', function(done) {
   karma.start({
     configFile: path.join(__dirname, './karma.conf.js'),
     autoWatch: true
-  }, function() {
-    done();
-  });
+  }, karmaResult.bind(null, done));
 });
 
 gulp.task('docs', function(done) {
@@ -126,7 +149,7 @@ gulp.task('publish-docs', function() {
   .pipe(ghpages());
 });
 
-gulp.task('travis', ['default'], function() {
+gulp.task('travis', function() {
   return gulp.src('coverage/**/lcov.info')
   .pipe(coveralls());
 });

@@ -17,6 +17,7 @@
     "gulp-rename": "^1.2.0",
     "gulp-rm": "^1.0.0",
     "gulp-uglify": "^1.2.0",
+    "gulp-util": "^3.0.6",
     "jasmine-core": "^2.3.4",
     "jquery": "^2.1.4",
     "jsdoc": "^3.3.1",
@@ -27,13 +28,14 @@
     "karma-ng-json2js-preprocessor": "^1.0.0",
     "karma-phantomjs-launcher": "^0.2.0",
     "phantomjs": "^1.9.17",
-    "phantomjs-polyfill": "0.0.1"
+    "phantomjs-polyfill": "0.0.1",
+    "yargs": "^3.25.0"
   },
   "engines": {
     "node": ">=0.8.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/gulp/bin/gulp.js test --fatal warning"
   },
   "license": "Apache v2",
   "directories": {
