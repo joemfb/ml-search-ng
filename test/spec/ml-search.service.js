@@ -714,7 +714,7 @@ describe('MLSearchContext', function () {
         .expectGET('/v1/config/query/all?format=json')
         .respond(constraintConfig);
       $httpBackend
-        .expectPOST('/v1/values/MyFacetName?limit=5&start=1')
+        .expectPOST('/v1/values/MyFacetName?limit=5&options=all&start=1')
         .respond(extraFacets);
 
       searchContext.showMoreFacets(myFacet, 'MyFacetName');
@@ -723,7 +723,7 @@ describe('MLSearchContext', function () {
         {name: 'First', value: 'First', count: 10});
 
       $httpBackend
-        .expectPOST('/v1/values/MyOtherFacetName?limit=5&start=1')
+        .expectPOST('/v1/values/MyOtherFacetName?limit=5&options=all&start=1')
         .respond(extraExtraFacets);
 
       searchContext.showMoreFacets(myOtherFacet, 'MyOtherFacetName');
@@ -746,7 +746,7 @@ describe('MLSearchContext', function () {
         .expectGET('/v1/config/query/all?format=json')
         .respond(constraintConfig);
       $httpBackend
-        .expectPOST('/v1/values/MyFacetName?limit=5&start=1')
+        .expectPOST('/v1/values/MyFacetName?limit=5&options=all&start=1')
         .respond(extraFacets);
 
       searchContext.showMoreFacets(myFacet, 'MyFacetName');
@@ -756,7 +756,7 @@ describe('MLSearchContext', function () {
       myExtraFacets['values-response']['distinct-value'] = myFacetValues;
 
       $httpBackend
-        .expectPOST('/v1/values/MyFacetName?limit=15&start=6')
+        .expectPOST('/v1/values/MyFacetName?limit=15&options=all&start=6')
         .respond(myExtraFacets);
 
       searchContext.showMoreFacets(myFacet, 'MyFacetName', 10);
@@ -771,7 +771,7 @@ describe('MLSearchContext', function () {
         .respond(constraintConfig);
 
       $httpBackend
-        .whenPOST('/v1/values/MyFacetName?limit=5&start=1')
+        .whenPOST('/v1/values/MyFacetName?limit=5&options=queryOption&start=1')
         .respond(extraFacets);
       searchContext.showMoreFacets(myFacet, 'MyFacetName');
       $httpBackend.flush();
@@ -896,7 +896,7 @@ describe('MLSearchContext', function () {
         .expectGET('/v1/config/query/all?format=json')
         .respond(constraintConfig);
       $httpBackend
-        .expectPOST('/v1/values/my-facet?limit=0&start=1')
+        .expectPOST('/v1/values/my-facet?limit=0&options=all&start=1')
         .respond(aggregateValues);
 
       var searchContext = factory.newContext({ includeAggregates: true });
@@ -942,7 +942,7 @@ describe('MLSearchContext', function () {
         .expectGET('/v1/config/query/all?format=json')
         .respond(constraintConfig);
       $httpBackend
-        .expectPOST('/v1/values/my-facet?limit=0&start=1')
+        .expectPOST('/v1/values/my-facet?limit=0&options=all&start=1')
         .respond(aggregateValues);
 
       var searchContext = factory.newContext({ includeAggregates: true });
@@ -1888,7 +1888,7 @@ describe('MLSearchContext#mock-service', function () {
     expect(args[1].options).toEqual( mlSearch.getQueryOptions() );
   });
 
-  it('should get values with combined query, without params', function() {
+  it('should get values with combined query', function() {
     var mlSearch = factory.newContext();
 
     var actual;
@@ -1903,7 +1903,7 @@ describe('MLSearchContext#mock-service', function () {
     expect(args[0]).toEqual('MyOtherFacetName');
     expect(args[1].start).toEqual(1);
     expect(args[1].limit).toEqual(20);
-    expect(args[1].options).toBe(undefined);
+    expect(args[1].options).toEqual( mlSearch.getQueryOptions() );
   });
 
   it('should construct value options from constraint definition', function() {
