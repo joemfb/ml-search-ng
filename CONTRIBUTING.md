@@ -197,6 +197,12 @@ from the main (upstream) repository:
 
 For purposes of clarity, here is the process to create new releases of ml-search-ng.
 
+Update dependencies:
+
+```sh
+bower update
+```
+
 Run the build script (building distribution assets in `dist/`), and confirm test coverage and lint compliance:
 
 ```sh
