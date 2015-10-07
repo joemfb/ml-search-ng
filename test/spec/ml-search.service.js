@@ -166,7 +166,7 @@ describe('MLSearchContext', function () {
 
       var combined = mlSearch.getCombinedQuerySync();
 
-      expect(combined.search.qtext).toBe(null);
+      expect(combined.search.qtext).toBe('');
       expect(mlSearch.setText('test')).toBe(mlSearch);
 
       combined = mlSearch.getCombinedQuerySync();
