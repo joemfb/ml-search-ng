@@ -2423,10 +2423,7 @@ function MLSearchController($scope, $location, mlSearch) {
       params = params || {};
       params.start = params.start !== undefined ? params.start : 1;
       params.limit = params.limit !== undefined ? params.limit : 20;
-
-      if ( !options ) {
-        params.options = self.getQueryOptions();
-      }
+      params.options = self.getQueryOptions();
 
       if ( _.isObject(options) ) {
         combined.search.options = options;

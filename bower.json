@@ -1,6 +1,6 @@
 {
   "name": "ml-search-ng",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "An angular module for common search-app use cases",
   "main": [
     "dist/ml-search-ng.js",
