@@ -11,7 +11,6 @@
     "gulp-coveralls": "^0.1.4",
     "gulp-eslint": "^1.0.0",
     "gulp-gh-pages": "^0.5.2",
-    "gulp-karma": "^0.0.4",
     "gulp-less": "^3.0.3",
     "gulp-minify-html": "^1.0.3",
     "gulp-ng-html2js": "^0.2.0",
@@ -36,7 +35,7 @@
     "node": ">=0.8.0"
   },
   "scripts": {
-    "test": "./node_modules/gulp/bin/gulp.js test --fatal warning"
+    "test": "gulp test --fatal warning"
   },
   "license": "Apache-2.0",
   "directories": {
