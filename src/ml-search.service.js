@@ -896,7 +896,7 @@
 
         name = constraint['constraint-name'];
 
-        _.each( constraint.value || constraint.uri, function(value) {
+        _.each( constraint.value || constraint.uri || constraint.text, function(value) {
           // quote values with spaces
           if (/\s+/.test(value) && !/^"(.*)"$/.test(value)) {
             value = '"' + value + '"';
