@@ -109,9 +109,9 @@
 
   angular.extend(MLSearchContext.prototype, {
 
-    /************************************************************/
-    /**************** MLSearchContext properties ****************/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ************** MLSearchContext properties ************** */
+    /* ******************************************************** */
 
     /**
      * pass an object to &#x60;new MLSearchContext()&#x60; or {@link MLSearchFactory#newContext}
@@ -156,13 +156,13 @@
         page: &#x27;p&#x27;,
         prefix: null,
         prefixSeparator: null
-        //TODO: queryOptions?
+        // TODO: queryOptions?
       }
     },
 
-    /************************************************************/
-    /******** MLSearchContext instance getters/setters **********/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ****** MLSearchContext instance getters/setters ******** */
+    /* ******************************************************** */
 
     /**
      * Gets the object repesenting active facet selections
@@ -375,7 +375,7 @@
      * @return {Number} search page
      */
     getPage: function getPage() {
-      //TODO: $window.Math
+      // TODO: $window.Math
       var page = Math.floor(this.start / this.options.pageLength) + 1;
       return page;
     },
@@ -388,14 +388,14 @@
      * @return {MLSearchContext} &#x60;this&#x60;
      */
     setPage: function setPage(page) {
-      page = parseInt(page) || 1;
+      page = parseInt(page, 10) || 1;
       this.start = 1 + (page - 1) * this.options.pageLength;
       return this;
     },
 
-    /************************************************************/
-    /********* MLSearchContext options getters/setters **********/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ******* MLSearchContext options getters/setters ******** */
+    /* ******************************************************** */
 
     /**
      * Gets the current queryOptions (name of stored params)
@@ -523,7 +523,7 @@
      * @return {MLSearchContext} &#x60;this&#x60;
      */
     setFacetMode: function setFacetMode(facetMode) {
-      //TODO: validate facetMode
+      // TODO: validate facetMode
       this.options.facetMode = facetMode;
       return this;
     },
@@ -574,11 +574,11 @@
       return prefix;
     },
 
-    //TODO: setParamsConfig ?
+    // TODO: setParamsConfig ?
 
-    /************************************************************/
-    /************** MLSearchContext query builders **************/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ************ MLSearchContext query builders ************ */
+    /* ******************************************************** */
 
     /**
      * Constructs a structured query from the current state
@@ -692,9 +692,9 @@
       });
     },
 
-    /************************************************************/
-    /************** MLSearchContext facet methods ***************/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ************ MLSearchContext facet methods ************* */
+    /* ******************************************************** */
 
     /**
      * Check if the facet/value combination is already selected
@@ -725,7 +725,7 @@
       }
       var facet = _.find(active.values, { value: value });
 
-      if (!!facet) {
+      if (facet) {
         return facet.negated;
       } else {
         return false;
@@ -830,10 +830,14 @@
      * @return {Promise} a promise resolved once additional facets have been retrieved
      */
     showMoreFacets: function showMoreFacets(facet, facetName, step) {
+      if (facet.displayingAll) {
+        return $q.resolve();
+      }
+
       step = step || 5;
 
-      var start = facet.facetValues.length + 1,
-          limit = start + step - 1;
+      var start = facet.facetValues.length + 1;
+      var limit = start + step - 1;
 
       return this.valuesFromConstraint(facetName, { start: start, limit: limit })
       .then(function(resp) {
@@ -853,9 +857,9 @@
       });
     },
 
-    /************************************************************/
-    /************ MLSearchContext URL params methods ************/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ********** MLSearchContext URL params methods ********** */
+    /* ******************************************************** */
 
     /**
      * Construct a URL query params object from the current state
@@ -923,7 +927,7 @@
 
         name = constraint[&#x27;constraint-name&#x27;];
 
-        _.each( constraint.value || constraint.uri, function(value) {
+        _.each( constraint.value || constraint.uri || constraint.text, function(value) {
           // quote values with spaces
           if (/\s+/.test(value) &amp;amp;&amp;amp; !/^&quot;(.*)&quot;$/.test(value)) {
             value = &#x27;&quot;&#x27; + value + &#x27;&quot;&#x27;;
@@ -1006,7 +1010,7 @@
       }
 
       // if facet type information is available, options can be undefined
-      optionPromise = !!self.results.facets ?
+      optionPromise = self.results.facets ?
                       $q.resolve(undefined) :
                       self.getStoredOptions();
 
@@ -1097,7 +1101,7 @@
     getFacetConfig: function getFacetConfig(name, storedOptions) {
       var config = null;
 
-      if ( !!storedOptions ) {
+      if ( storedOptions ) {
         config = _.chain( storedOptions.options.constraint )
           .where({ name: name })
           .first()
@@ -1139,9 +1143,9 @@
       return this.fromParams(params);
     },
 
-    /************************************************************/
-    /********** MLSearchContext data retrieval methods **********/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ******** MLSearchContext data retrieval methods ******** */
+    /* ******************************************************** */
 
     /**
      * Retrieves stored search options, caching the result in &#x60;this.storedOptions&#x60;
@@ -1161,7 +1165,7 @@
 
       return mlRest.queryConfig(name)
       .then(function(response) {
-        //TODO: transform?
+        // TODO: transform?
         self.storedOptions[name] = response.data;
         return self.storedOptions[name];
       });
@@ -1234,8 +1238,12 @@
           return $q.reject(new Error(&#x27;No constraint exists matching &#x27; + name));
         }
 
-        if ( constraint.range &amp;amp;&amp;amp; constraint.range.bucket ) {
+        if (constraint.range &amp;amp;&amp;amp; (constraint.range.bucket || constraint.range[&#x27;computed-bucket&#x27;])) {
           return $q.reject(new Error(&#x27;Can\&#x27;t get values for bucketed constraint &#x27; + name));
+        }
+
+        if (constraint.custom) {
+          return $q.reject(new Error(&#x27;Can\&#x27;t get values for custom constraint &#x27; + name));
         }
 
         var newOptions = valueOptionsFromConstraint(constraint);
@@ -1265,10 +1273,7 @@
       params = params || {};
       params.start = params.start !== undefined ? params.start : 1;
       params.limit = params.limit !== undefined ? params.limit : 20;
-
-      if ( !options ) {
-        params.options = self.getQueryOptions();
-      }
+      params.options = self.getQueryOptions();
 
       if ( _.isObject(options) ) {
         combined.search.options = options;
@@ -1285,8 +1290,6 @@
      *
      * If an object is passed as the &#x60;adhoc&#x60; parameter, the search will be run as a &#x60;POST&#x60;
      * with a combined query, and the results will not be saved to &#x60;MLSearchContext.results&#x60;.
-     * If &#x60;adhoc&#x60; is a combined query, or a search options object, the &#x60;options&#x60; URL parameter
-     * will not be included (ignoring stored search options).
      *
      * @method MLSearchContext#search
      *
@@ -1294,23 +1297,20 @@
      * @return {Promise} a promise resolved with search results
      */
     search: function search(adhoc) {
-      var self = this,
-          combined = null,
-          includeOptionsParam = true,
-          params = {
-            start: this.start,
-            pageLength: this.options.pageLength,
-            transform: this.searchTransform
-          };
+      var self = this;
+      var params = {
+        start: this.start,
+        pageLength: this.getPageLength(),
+        transform: this.getTransform(),
+        options: this.getQueryOptions()
+      };
 
       if ( adhoc ) {
-        combined = this.getCombinedQuerySync();
+        var combined = this.getCombinedQuerySync();
 
         if ( adhoc.search ) {
-          includeOptionsParam = false;
           combined.search = adhoc.search;
         } else if ( adhoc.options ) {
-          includeOptionsParam = false;
           combined.search.options = adhoc.options;
         } else if ( adhoc.query ) {
           combined.search.query = adhoc.query;
@@ -1320,10 +1320,6 @@
       } else {
         params.structuredQuery = this.getQuery();
         params.q = this.getText();
-      }
-
-      if ( includeOptionsParam ) {
-        params.options = this.getQueryOptions();
       }
 
       return mlRest.search(params, combined)
@@ -1373,7 +1369,7 @@
             .value(); // thwart lazy evaluation
         }
 
-        if ( facet.type === &#x27;bucketed&#x27; ) {
+        if ( facet.type === &#x27;bucketed&#x27; || facet.type === &#x27;custom&#x27; ) {
           facet.displayingAll = true;
         }
       });
@@ -1427,10 +1423,9 @@
             ];
 
             if ( _.contains(numberTypes, facetType) ) {
-
               newOptions.values.aggregate = newOptions.values.aggregate.concat([
                 { apply: &#x27;sum&#x27; },
-                { apply: &#x27;avg&#x27; },
+                { apply: &#x27;avg&#x27; }
                 // TODO: allow enabling these from config?
                 // { apply: &#x27;median&#x27; },
                 // { apply: &#x27;stddev&#x27; },
@@ -1438,7 +1433,6 @@
                 // { apply: &#x27;variance&#x27; },
                 // { apply: &#x27;variance-population&#x27; }
               ]);
-
             }
 
             promises.push(
@@ -1452,8 +1446,7 @@
               })
             );
           });
-        }
-        catch (err) {
+        } catch (err) {
           return $q.reject(err);
         }
 
@@ -1558,11 +1551,12 @@
 
   function valueOptionsFromConstraint(constraint) {
     var options = { constraint: asArray(constraint), values: asArray(_.cloneDeep(constraint)) };
+    // TODO: error if constraint.custom || constraint.range.bucket
     options.values[0][&#x27;values-option&#x27;] = constraint.range &amp;amp;&amp;amp; constraint.range[&#x27;facet-option&#x27;];
     return options;
   }
 
-  //TODO: move to util module
+  // TODO: move to util module
   function asArray() {
     var args;
 
@@ -1579,7 +1573,6 @@
 
     return args;
   }
-
 })();
 </code></pre>
           </article>
@@ -1591,7 +1584,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.3 on September 24, 2015.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.3.3 on November 11, 2015.
       </p>
     </div>
   </footer>
