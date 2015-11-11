@@ -709,6 +709,11 @@ describe('MLSearchContext', function () {
       };
     });
 
+    it('skips facets where displayingAll === true', function() {
+      myFacet.displayingAll = true;
+      searchContext.showMoreFacets(myFacet, 'MyFacetName');
+    });
+
     it('returns additional facets correctly', function() {
       $httpBackend
         .expectGET('/v1/config/query/all?format=json')
@@ -822,6 +827,34 @@ describe('MLSearchContext', function () {
       $httpBackend.flush();
 
       expect( error ).toEqual(new Error('Can\'t get values for bucketed constraint MyFacetName'));
+    });
+
+    it('should not get more facets for a custom constraint', function() {
+      constraintConfig = {
+        options: {
+          constraint: [{
+            name: 'MyFacetName',
+            custom: {}
+          }]
+        }
+      };
+
+      $httpBackend
+        .whenGET('/v1/config/query/all?format=json')
+        .respond(constraintConfig);
+
+      var success = false,
+          error = null;
+
+      searchContext.showMoreFacets(myFacet, 'MyFacetName')
+        .then(
+          function(){ success = true;  },
+          function(err){ error = err; }
+        );
+
+      $httpBackend.flush();
+
+      expect( error ).toEqual(new Error('Can\'t get values for custom constraint MyFacetName'));
     });
   });
 

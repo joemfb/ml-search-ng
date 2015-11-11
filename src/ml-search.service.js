@@ -799,10 +799,14 @@
      * @return {Promise} a promise resolved once additional facets have been retrieved
      */
     showMoreFacets: function showMoreFacets(facet, facetName, step) {
+      if (facet.displayingAll) {
+        return $q.resolve();
+      }
+
       step = step || 5;
 
-      var start = facet.facetValues.length + 1,
-          limit = start + step - 1;
+      var start = facet.facetValues.length + 1;
+      var limit = start + step - 1;
 
       return this.valuesFromConstraint(facetName, { start: start, limit: limit })
       .then(function(resp) {
@@ -1203,8 +1207,12 @@
           return $q.reject(new Error('No constraint exists matching ' + name));
         }
 
-        if ( constraint.range && constraint.range.bucket ) {
+        if (constraint.range && (constraint.range.bucket || constraint.range['computed-bucket'])) {
           return $q.reject(new Error('Can\'t get values for bucketed constraint ' + name));
+        }
+
+        if (constraint.custom) {
+          return $q.reject(new Error('Can\'t get values for custom constraint ' + name));
         }
 
         var newOptions = valueOptionsFromConstraint(constraint);
@@ -1339,7 +1347,7 @@
             .value(); // thwart lazy evaluation
         }
 
-        if ( facet.type === 'bucketed' ) {
+        if ( facet.type === 'bucketed' || facet.type === 'custom' ) {
           facet.displayingAll = true;
         }
       });
@@ -1521,6 +1529,7 @@
 
   function valueOptionsFromConstraint(constraint) {
     var options = { constraint: asArray(constraint), values: asArray(_.cloneDeep(constraint)) };
+    // TODO: error if constraint.custom || constraint.range.bucket
     options.values[0]['values-option'] = constraint.range && constraint.range['facet-option'];
     return options;
   }
