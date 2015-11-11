@@ -2,7 +2,6 @@
   'use strict';
 
   angular.module('ml.search', ['ml.common']);
-
 }());
 
 /* global MLSearchController */
@@ -88,7 +87,7 @@ function MLRemoteSearchController($scope, $location, mlSearch, remoteInput) {
       if (self.qtext !== input) {
         self.qtext = input;
 
-        self.search.call(self);
+        self.search();
       }
     });
 
@@ -114,7 +113,6 @@ function MLRemoteSearchController($scope, $location, mlSearch, remoteInput) {
     this.remoteInput.setInput( this.qtext );
     return this;
   };
-
 })();
 
 /**
@@ -252,7 +250,7 @@ function MLSearchController($scope, $location, mlSearch) {
         this._search.bind(this),
         function() {
           if (shouldUpdate) {
-            self._search.call(self);
+            self._search();
           }
         }
       );
@@ -414,11 +412,9 @@ function MLSearchController($scope, $location, mlSearch) {
       return res.suggestions || [];
     });
   };
-
 })();
 
 (function() {
-
   'use strict';
 
   /**
@@ -466,13 +462,11 @@ function MLSearchController($scope, $location, mlSearch) {
   }
 
   function link($scope, element, attrs) {
-    $scope.truncateLength = parseInt(attrs.truncate) || 20;
+    $scope.truncateLength = parseInt(attrs.truncate, 10) || 20;
   }
-
 }());
 
 (function() {
-
   'use strict';
 
   /**
@@ -539,7 +533,7 @@ function MLSearchController($scope, $location, mlSearch) {
         minute: 'minute',
         minutes: 'minutes',
         second: 'second',
-        seconds: 'seconds',
+        seconds: 'seconds'
       };
 
       angular.extend(_options, options);
@@ -556,11 +550,9 @@ function MLSearchController($scope, $location, mlSearch) {
       });
 
       if (result.length > 1) {
-
         var last = result.splice(result.length - 1, 1);
         result = result.join(', ') + ', and ' + last[0];
         return result;
-
       } else {
         return result[0] || '0 seconds';
       }
@@ -609,10 +601,10 @@ function MLSearchController($scope, $location, mlSearch) {
         matches = duration.match(regex);
 
     return {
-      years:   parseFloat(matches[3])  || null,
-      months:  parseFloat(matches[5])  || null,
-      weeks:   parseFloat(matches[7])  || null,
-      days:    parseFloat(matches[9])  || null,
+      years:   parseFloat(matches[3]) || null,
+      months:  parseFloat(matches[5]) || null,
+      weeks:   parseFloat(matches[7]) || null,
+      days:    parseFloat(matches[9]) || null,
       hours:   parseFloat(matches[12]) || null,
       minutes: parseFloat(matches[14]) || null,
       seconds: parseFloat(matches[16]) || null,
@@ -621,11 +613,9 @@ function MLSearchController($scope, $location, mlSearch) {
       }
     };
   }
-
 }());
 
 (function() {
-
   'use strict';
 
   /**
@@ -684,7 +674,7 @@ function MLSearchController($scope, $location, mlSearch) {
   }
 
   function link($scope, element, attrs) {
-    $scope.truncateLength = parseInt(attrs.truncate) || 20;
+    $scope.truncateLength = parseInt(attrs.truncate, 10) || 20;
     $scope.shouldShowMore = !!attrs.showMore;
     $scope.shouldNegate = !!attrs.negate && !!attrs.activeFacets;
   }
@@ -692,11 +682,9 @@ function MLSearchController($scope, $location, mlSearch) {
   function mlFacetsController($scope, $filter) {
     $scope.filter = $filter('filter');
   }
-
 }());
 
 (function() {
-
   'use strict';
 
   /**
@@ -753,11 +741,9 @@ function MLSearchController($scope, $location, mlSearch) {
       $scope.search({ qtext: '' });
     };
   }
-
 }());
 
 (function() {
-
   'use strict';
 
   /**
@@ -840,11 +826,9 @@ function MLSearchController($scope, $location, mlSearch) {
       metrics: search.metrics
     };
   }
-
 }());
 
 (function() {
-
   'use strict';
 
   /**
@@ -949,11 +933,9 @@ function MLSearchController($scope, $location, mlSearch) {
       });
     };
   }
-
 }());
 
 (function() {
-
   'use strict';
 
   /**
@@ -1003,7 +985,7 @@ function MLSearchController($scope, $location, mlSearch) {
   }
 
   function link(scope, element, attrs) {
-    //default link fn
+    // default link fn
     if ( !attrs.link ) {
       scope.link = function(result) {
         // directive methods require objects
@@ -1011,7 +993,7 @@ function MLSearchController($scope, $location, mlSearch) {
       };
     }
 
-    //default label fn
+    // default label fn
     if ( !attrs.label ) {
       scope.label = function(result) {
         // directive methods require objects
@@ -1026,11 +1008,9 @@ function MLSearchController($scope, $location, mlSearch) {
       });
     });
   }
-
 }());
 
 (function() {
-
   'use strict';
 
   angular.module('ml.search')
@@ -1182,9 +1162,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
       return route.originalPath;
     };
-
   }
-
 }());
 
 (function() {
@@ -1267,9 +1245,9 @@ function MLSearchController($scope, $location, mlSearch) {
 
   angular.extend(MLSearchContext.prototype, {
 
-    /************************************************************/
-    /**************** MLSearchContext properties ****************/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ************** MLSearchContext properties ************** */
+    /* ******************************************************** */
 
     /**
      * pass an object to `new MLSearchContext()` or {@link MLSearchFactory#newContext}
@@ -1314,13 +1292,13 @@ function MLSearchController($scope, $location, mlSearch) {
         page: 'p',
         prefix: null,
         prefixSeparator: null
-        //TODO: queryOptions?
+        // TODO: queryOptions?
       }
     },
 
-    /************************************************************/
-    /******** MLSearchContext instance getters/setters **********/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ****** MLSearchContext instance getters/setters ******** */
+    /* ******************************************************** */
 
     /**
      * Gets the object repesenting active facet selections
@@ -1533,7 +1511,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * @return {Number} search page
      */
     getPage: function getPage() {
-      //TODO: $window.Math
+      // TODO: $window.Math
       var page = Math.floor(this.start / this.options.pageLength) + 1;
       return page;
     },
@@ -1546,14 +1524,14 @@ function MLSearchController($scope, $location, mlSearch) {
      * @return {MLSearchContext} `this`
      */
     setPage: function setPage(page) {
-      page = parseInt(page) || 1;
+      page = parseInt(page, 10) || 1;
       this.start = 1 + (page - 1) * this.options.pageLength;
       return this;
     },
 
-    /************************************************************/
-    /********* MLSearchContext options getters/setters **********/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ******* MLSearchContext options getters/setters ******** */
+    /* ******************************************************** */
 
     /**
      * Gets the current queryOptions (name of stored params)
@@ -1681,7 +1659,7 @@ function MLSearchController($scope, $location, mlSearch) {
      * @return {MLSearchContext} `this`
      */
     setFacetMode: function setFacetMode(facetMode) {
-      //TODO: validate facetMode
+      // TODO: validate facetMode
       this.options.facetMode = facetMode;
       return this;
     },
@@ -1732,11 +1710,11 @@ function MLSearchController($scope, $location, mlSearch) {
       return prefix;
     },
 
-    //TODO: setParamsConfig ?
+    // TODO: setParamsConfig ?
 
-    /************************************************************/
-    /************** MLSearchContext query builders **************/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ************ MLSearchContext query builders ************ */
+    /* ******************************************************** */
 
     /**
      * Constructs a structured query from the current state
@@ -1850,9 +1828,9 @@ function MLSearchController($scope, $location, mlSearch) {
       });
     },
 
-    /************************************************************/
-    /************** MLSearchContext facet methods ***************/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ************ MLSearchContext facet methods ************* */
+    /* ******************************************************** */
 
     /**
      * Check if the facet/value combination is already selected
@@ -1883,7 +1861,7 @@ function MLSearchController($scope, $location, mlSearch) {
       }
       var facet = _.find(active.values, { value: value });
 
-      if (!!facet) {
+      if (facet) {
         return facet.negated;
       } else {
         return false;
@@ -1988,10 +1966,14 @@ function MLSearchController($scope, $location, mlSearch) {
      * @return {Promise} a promise resolved once additional facets have been retrieved
      */
     showMoreFacets: function showMoreFacets(facet, facetName, step) {
+      if (facet.displayingAll) {
+        return $q.resolve();
+      }
+
       step = step || 5;
 
-      var start = facet.facetValues.length + 1,
-          limit = start + step - 1;
+      var start = facet.facetValues.length + 1;
+      var limit = start + step - 1;
 
       return this.valuesFromConstraint(facetName, { start: start, limit: limit })
       .then(function(resp) {
@@ -2011,9 +1993,9 @@ function MLSearchController($scope, $location, mlSearch) {
       });
     },
 
-    /************************************************************/
-    /************ MLSearchContext URL params methods ************/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ********** MLSearchContext URL params methods ********** */
+    /* ******************************************************** */
 
     /**
      * Construct a URL query params object from the current state
@@ -2081,7 +2063,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
         name = constraint['constraint-name'];
 
-        _.each( constraint.value || constraint.uri, function(value) {
+        _.each( constraint.value || constraint.uri || constraint.text, function(value) {
           // quote values with spaces
           if (/\s+/.test(value) && !/^"(.*)"$/.test(value)) {
             value = '"' + value + '"';
@@ -2164,7 +2146,7 @@ function MLSearchController($scope, $location, mlSearch) {
       }
 
       // if facet type information is available, options can be undefined
-      optionPromise = !!self.results.facets ?
+      optionPromise = self.results.facets ?
                       $q.resolve(undefined) :
                       self.getStoredOptions();
 
@@ -2255,7 +2237,7 @@ function MLSearchController($scope, $location, mlSearch) {
     getFacetConfig: function getFacetConfig(name, storedOptions) {
       var config = null;
 
-      if ( !!storedOptions ) {
+      if ( storedOptions ) {
         config = _.chain( storedOptions.options.constraint )
           .where({ name: name })
           .first()
@@ -2297,9 +2279,9 @@ function MLSearchController($scope, $location, mlSearch) {
       return this.fromParams(params);
     },
 
-    /************************************************************/
-    /********** MLSearchContext data retrieval methods **********/
-    /************************************************************/
+    /* ******************************************************** */
+    /* ******** MLSearchContext data retrieval methods ******** */
+    /* ******************************************************** */
 
     /**
      * Retrieves stored search options, caching the result in `this.storedOptions`
@@ -2319,7 +2301,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
       return mlRest.queryConfig(name)
       .then(function(response) {
-        //TODO: transform?
+        // TODO: transform?
         self.storedOptions[name] = response.data;
         return self.storedOptions[name];
       });
@@ -2392,8 +2374,12 @@ function MLSearchController($scope, $location, mlSearch) {
           return $q.reject(new Error('No constraint exists matching ' + name));
         }
 
-        if ( constraint.range && constraint.range.bucket ) {
+        if (constraint.range && (constraint.range.bucket || constraint.range['computed-bucket'])) {
           return $q.reject(new Error('Can\'t get values for bucketed constraint ' + name));
+        }
+
+        if (constraint.custom) {
+          return $q.reject(new Error('Can\'t get values for custom constraint ' + name));
         }
 
         var newOptions = valueOptionsFromConstraint(constraint);
@@ -2440,8 +2426,6 @@ function MLSearchController($scope, $location, mlSearch) {
      *
      * If an object is passed as the `adhoc` parameter, the search will be run as a `POST`
      * with a combined query, and the results will not be saved to `MLSearchContext.results`.
-     * If `adhoc` is a combined query, or a search options object, the `options` URL parameter
-     * will not be included (ignoring stored search options).
      *
      * @method MLSearchContext#search
      *
@@ -2449,23 +2433,20 @@ function MLSearchController($scope, $location, mlSearch) {
      * @return {Promise} a promise resolved with search results
      */
     search: function search(adhoc) {
-      var self = this,
-          combined = null,
-          includeOptionsParam = true,
-          params = {
-            start: this.start,
-            pageLength: this.options.pageLength,
-            transform: this.searchTransform
-          };
+      var self = this;
+      var params = {
+        start: this.start,
+        pageLength: this.getPageLength(),
+        transform: this.getTransform(),
+        options: this.getQueryOptions()
+      };
 
       if ( adhoc ) {
-        combined = this.getCombinedQuerySync();
+        var combined = this.getCombinedQuerySync();
 
         if ( adhoc.search ) {
-          includeOptionsParam = false;
           combined.search = adhoc.search;
         } else if ( adhoc.options ) {
-          includeOptionsParam = false;
           combined.search.options = adhoc.options;
         } else if ( adhoc.query ) {
           combined.search.query = adhoc.query;
@@ -2475,10 +2456,6 @@ function MLSearchController($scope, $location, mlSearch) {
       } else {
         params.structuredQuery = this.getQuery();
         params.q = this.getText();
-      }
-
-      if ( includeOptionsParam ) {
-        params.options = this.getQueryOptions();
       }
 
       return mlRest.search(params, combined)
@@ -2528,7 +2505,7 @@ function MLSearchController($scope, $location, mlSearch) {
             .value(); // thwart lazy evaluation
         }
 
-        if ( facet.type === 'bucketed' ) {
+        if ( facet.type === 'bucketed' || facet.type === 'custom' ) {
           facet.displayingAll = true;
         }
       });
@@ -2582,10 +2559,9 @@ function MLSearchController($scope, $location, mlSearch) {
             ];
 
             if ( _.contains(numberTypes, facetType) ) {
-
               newOptions.values.aggregate = newOptions.values.aggregate.concat([
                 { apply: 'sum' },
-                { apply: 'avg' },
+                { apply: 'avg' }
                 // TODO: allow enabling these from config?
                 // { apply: 'median' },
                 // { apply: 'stddev' },
@@ -2593,7 +2569,6 @@ function MLSearchController($scope, $location, mlSearch) {
                 // { apply: 'variance' },
                 // { apply: 'variance-population' }
               ]);
-
             }
 
             promises.push(
@@ -2607,8 +2582,7 @@ function MLSearchController($scope, $location, mlSearch) {
               })
             );
           });
-        }
-        catch (err) {
+        } catch (err) {
           return $q.reject(err);
         }
 
@@ -2713,11 +2687,12 @@ function MLSearchController($scope, $location, mlSearch) {
 
   function valueOptionsFromConstraint(constraint) {
     var options = { constraint: asArray(constraint), values: asArray(_.cloneDeep(constraint)) };
+    // TODO: error if constraint.custom || constraint.range.bucket
     options.values[0]['values-option'] = constraint.range && constraint.range['facet-option'];
     return options;
   }
 
-  //TODO: move to util module
+  // TODO: move to util module
   function asArray() {
     var args;
 
@@ -2734,5 +2709,4 @@ function MLSearchController($scope, $location, mlSearch) {
 
     return args;
   }
-
 })();
