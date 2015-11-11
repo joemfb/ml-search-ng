@@ -1268,23 +1268,20 @@
      * @return {Promise} a promise resolved with search results
      */
     search: function search(adhoc) {
-      var self = this,
-          combined = null,
-          includeOptionsParam = true,
-          params = {
-            start: this.start,
-            pageLength: this.options.pageLength,
-            transform: this.searchTransform
-          };
+      var self = this;
+      var params = {
+        start: this.start,
+        pageLength: this.getPageLength(),
+        transform: this.getTransform(),
+        options: this.getQueryOptions()
+      };
 
       if ( adhoc ) {
-        combined = this.getCombinedQuerySync();
+        var combined = this.getCombinedQuerySync();
 
         if ( adhoc.search ) {
-          includeOptionsParam = false;
           combined.search = adhoc.search;
         } else if ( adhoc.options ) {
-          includeOptionsParam = false;
           combined.search.options = adhoc.options;
         } else if ( adhoc.query ) {
           combined.search.query = adhoc.query;
@@ -1294,10 +1291,6 @@
       } else {
         params.structuredQuery = this.getQuery();
         params.q = this.getText();
-      }
-
-      if ( includeOptionsParam ) {
-        params.options = this.getQueryOptions();
       }
 
       return mlRest.search(params, combined)

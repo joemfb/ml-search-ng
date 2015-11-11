@@ -1802,7 +1802,7 @@ describe('MLSearchContext#mock-service', function () {
     expect( mockMLRest.search ).toHaveBeenCalled();
 
     var args = mockMLRest.search.calls.mostRecent().args;
-    expect( args[0].options ).toBe(undefined);
+    expect( args[0].options ).toEqual('all');
     expect( args[0].start ).toEqual(1);
     expect( args[1].search ).not.toBe(undefined);
     expect( args[1].search.query ).not.toBe(undefined);
@@ -1829,7 +1829,7 @@ describe('MLSearchContext#mock-service', function () {
     expect( mockMLRest.search ).toHaveBeenCalled();
 
     var args = mockMLRest.search.calls.mostRecent().args;
-    expect( args[0].options ).toBe(undefined);
+    expect( args[0].options ).toEqual('all');
     expect( args[0].start ).toEqual(1);
     expect( args[1].search ).not.toBe(undefined);
     expect( args[1].search.query ).not.toBe(undefined);
