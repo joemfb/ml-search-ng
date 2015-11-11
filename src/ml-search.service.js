@@ -1259,8 +1259,6 @@
      *
      * If an object is passed as the `adhoc` parameter, the search will be run as a `POST`
      * with a combined query, and the results will not be saved to `MLSearchContext.results`.
-     * If `adhoc` is a combined query, or a search options object, the `options` URL parameter
-     * will not be included (ignoring stored search options).
      *
      * @method MLSearchContext#search
      *
