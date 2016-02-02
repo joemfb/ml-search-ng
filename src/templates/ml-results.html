@@ -5,7 +5,10 @@
   <div class="matches">
     <div class="match" ng-repeat="match in result.matches">
       <em ng-repeat="text in match['match-text'] track by $index">
-        <span ng-class="{ highlight: !!text.highlight }">{{ text.highlight || text }}</span>
+        <span ng-class="{ highlight: text.highlight !== undefined }">
+          <span ng-if="text.highlight !== undefined">{{ text.highlight }}</span>
+          <span ng-if="text.highlight === undefined">{{ text }}</span>
+        </span>
       </em>
     </div>
   </div>

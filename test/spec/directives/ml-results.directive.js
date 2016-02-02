@@ -11,6 +11,8 @@ describe('ml-results', function () {
     { uri: '/docs/doc3.xml' }
   ];
 
+
+
   beforeEach(module('ml.search'));
   beforeEach(module('ml.search.tpls'));
 
@@ -57,6 +59,25 @@ describe('ml-results', function () {
       expect(elem.find('h4 a')[0].innerHTML).toEqual('doc1.xml');
     });
 
+    it('should handle falsy matches', function() {
+      results.push({
+        uri: "/docs/doc4.xml",
+        matches: [{
+          path: 'fn:doc("/docs/doc4.xml")/elem',
+          'match-text': [{ highlight: 0 }]
+        }]
+      });
+
+      $scope.$digest();
+
+      expect(
+        angular.element(
+          angular.element(
+            elem.find('> div').get(3)
+          ).find('.matches em span')[0]
+        ).text()
+      ).toMatch(/^\s*0\s*$/)
+    });
   });
 
   describe('#link-function', function () {
