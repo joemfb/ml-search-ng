@@ -1,5 +1,5 @@
 <div class="facet-list">
-  <ml-chiclets ng-if="shouldNegate" active-facets="activeFacets" toggle="toggle({facet:facet, value:value})" truncate="truncateLength"></ml-chiclets>
+  <ml-chiclets ng-if="shouldNegate" active-facets="activeFacets" toggle="toggle({facet:facet, value:value})" truncate="{{ truncateLength }}"></ml-chiclets>
   <div class="chiclets" ng-if="!shouldNegate">
     <div ng-repeat="(index, facet) in facets | object2Array | filter:{selected: true}">
       <div class="btn btn-primary" ng-repeat="value in facet.facetValues | filter:{selected: true}">

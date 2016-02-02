@@ -83,6 +83,25 @@ describe('ml-facets', function () {
 
   });
 
+  describe('#truncate', function () {
+
+    beforeEach(function() {
+      elem = angular.element(
+        '<ml-facets facets="facets" toggle="toggleFacet(facet, value)" truncate="30"' +
+                  'negate="toggleNegatedFacet(facet, value)" ' +
+                  'active-facets="activeFacets" ' +
+                  'show-more="showMoreFacets(facet, facetName)"></ml-facets>');
+      $compile(elem)($scope);
+      $scope.$digest();
+    });
+
+    it('should passthru truncate length', function() {
+      expect(elem.isolateScope().truncateLength).toEqual(
+        elem.find('ml-chiclets').isolateScope().truncateLength
+      );
+    });
+  });
+
   describe('#negatedSupport', function() {
     beforeEach(function() {
       elem = angular.element(
