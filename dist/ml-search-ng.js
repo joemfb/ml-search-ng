@@ -1,7 +1,8 @@
 (function() {
   'use strict';
 
-  angular.module('ml.search', ['ml.common']);
+  angular.module('ml.search', ['ml.common'])
+    .constant('ml.search.version', '0.2.5');
 }());
 
 /* global MLSearchController */
@@ -947,6 +948,7 @@ function MLSearchController($scope, $location, mlSearch) {
    *
    * - `search`: a reference to the search results object from {@link MLSearchContext#search}
    * - `link`: optional. a function that accepts a `result` object, and returns a URL to be used as the link target in the search results display
+   * - `click`: optional. a function that accepts a `result` object. if present, will be used as the click-handler for each result (`link` will be ignored)
    * - `template`: optional. A URL referencing a template to be used with the directive. If empty, the default bootstrap template will be used.
    *
    * Example:
@@ -964,6 +966,7 @@ function MLSearchController($scope, $location, mlSearch) {
       restrict: 'E',
       scope: {
         results: '=',
+        click: '&',
         link: '&',
         label: '&'
       },
@@ -985,6 +988,8 @@ function MLSearchController($scope, $location, mlSearch) {
   }
 
   function link(scope, element, attrs) {
+    scope.shouldClick = !!attrs.click;
+
     // default link fn
     if ( !attrs.link ) {
       scope.link = function(result) {
