@@ -203,6 +203,8 @@ Update dependencies:
 bower update
 ```
 
+Bump the version number in `package.json` and `bower.json`.
+
 Run the build script (building distribution assets in `dist/`), and confirm test coverage and lint compliance:
 
 ```sh
@@ -216,8 +218,6 @@ gulp docs
 ```
 
 Review `docs/generated/index.html`, checking changes, new features, formatting, etc.
-
-Bump the version number in `package.json` and `bower.json`.
 
 Release:
 
