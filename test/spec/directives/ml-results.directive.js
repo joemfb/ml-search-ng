@@ -11,8 +11,6 @@ describe('ml-results', function () {
     { uri: '/docs/doc3.xml' }
   ];
 
-
-
   beforeEach(module('ml.search'));
   beforeEach(module('ml.search.tpls'));
 
@@ -93,6 +91,29 @@ describe('ml-results', function () {
     it('should call custom link function', function() {
       expect( $scope.linkTarget ).toHaveBeenCalled();
       expect( $scope.linkTarget.calls.count() ).toEqual( results.length );
+    });
+  });
+
+  describe('#click-function', function () {
+
+    beforeEach(function() {
+      $scope.clickTarget = jasmine.createSpy('clickTarget');
+
+      elem = angular.element('<ml-results results="results" click="clickTarget(result)"></ml-results>');
+      $compile(elem)($scope);
+      $scope.$digest();
+    });
+
+    it('should not call custom click function', function() {
+      expect( $scope.clickTarget ).not.toHaveBeenCalled();
+    });
+
+    it('should handle clicks', function() {
+      angular.element(elem.find('a')[0]).click();
+
+      expect( $scope.clickTarget ).toHaveBeenCalled();
+      expect( $scope.clickTarget.calls.count() ).toEqual(1);
+      expect( $scope.clickTarget.calls.mostRecent().args[0] ).toEqual( results[0] );
     });
   });
 
