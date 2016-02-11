@@ -2,21 +2,21 @@
 
 'use strict';
 
-var gulp = require('gulp'),
-    gutil = require('gulp-util'),
-    concat = require('gulp-concat'),
-    html2Js = require('gulp-ng-html2js'),
-    eslint = require('gulp-eslint'),
-    Server = require('karma').Server,
-    minifyHtml = require('gulp-minify-html'),
-    less = require('gulp-less'),
-    path = require('path'),
-    rename = require('gulp-rename'),
-    uglify = require('gulp-uglify'),
-    rm = require('gulp-rm'),
-    ghpages = require('gulp-gh-pages'),
-    cp = require('child_process'),
-    coveralls = require('gulp-coveralls');
+var gulp = require('gulp');
+var gutil = require('gulp-util');
+var concat = require('gulp-concat');
+var html2Js = require('gulp-ng-html2js');
+var eslint = require('gulp-eslint');
+var Server = require('karma').Server;
+var minifyHtml = require('gulp-minify-html');
+var less = require('gulp-less');
+var path = require('path');
+var rename = require('gulp-rename');
+var uglify = require('gulp-uglify');
+var rm = require('gulp-rm');
+var ghpages = require('gulp-gh-pages');
+var cp = require('child_process');
+var coveralls = require('gulp-coveralls');
 
 // Command line option:
 //  --fatal=[warning|error|off]
