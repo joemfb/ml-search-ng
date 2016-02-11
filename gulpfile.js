@@ -5,6 +5,7 @@
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 var concat = require('gulp-concat');
+var replace = require('gulp-replace');
 var html2Js = require('gulp-ng-html2js');
 var eslint = require('gulp-eslint');
 var Server = require('karma').Server;
@@ -17,6 +18,8 @@ var rm = require('gulp-rm');
 var ghpages = require('gulp-gh-pages');
 var cp = require('child_process');
 var coveralls = require('gulp-coveralls');
+
+var version = require('./package.json').version;
 
 // Command line option:
 //  --fatal=[warning|error|off]
@@ -50,6 +53,7 @@ gulp.task('scripts', function() {
       './src/ml-search.js',
       './src/**/*.js'
     ])
+    .pipe(replace('@version', version))
     .pipe(concat('ml-search-ng.js'))
     .pipe(gulp.dest('dist'))
     .pipe(rename('ml-search-ng.min.js'))
