@@ -1,6 +1,7 @@
 <div ng-repeat="result in results">
   <h4>
-    <a ng-href="{{ result.link }}">{{ result.label || result.uri }}</a>
+    <a ng-if="shouldClick" ng-click="click({ result: result })">{{ result.label || result.uri }}</a>
+    <a ng-if="!shouldClick" ng-href="{{ result.link }}">{{ result.label || result.uri }}</a>
   </h4>
   <div class="matches">
     <div class="match" ng-repeat="match in result.matches">
