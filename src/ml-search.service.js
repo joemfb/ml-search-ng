@@ -766,7 +766,7 @@
       if ( this.isFacetActive(name, value) ) {
         this.clearFacet(name, value);
       } else {
-        config = this.getFacetConfig(name);
+        config = this.getFacetConfig(name) || {};
 
         this.selectFacet(name, value, config.type, isNegated);
       }
