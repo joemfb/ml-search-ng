@@ -2,7 +2,7 @@
   'use strict';
 
   angular.module('ml.search', ['ml.common'])
-    .constant('ml.search.version', '0.2.5');
+    .constant('ml.search.version', '0.2.6');
 }());
 
 /* global MLSearchController */
@@ -1938,7 +1938,7 @@ function MLSearchController($scope, $location, mlSearch) {
       if ( this.isFacetActive(name, value) ) {
         this.clearFacet(name, value);
       } else {
-        config = this.getFacetConfig(name);
+        config = this.getFacetConfig(name) || {};
 
         this.selectFacet(name, value, config.type, isNegated);
       }
