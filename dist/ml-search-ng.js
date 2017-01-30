@@ -2,7 +2,7 @@
   'use strict';
 
   angular.module('ml.search', ['ml.common'])
-    .constant('ml.search.version', '0.2.6');
+    .constant('ml.search.version', '0.2.8');
 }());
 
 /* global MLSearchController */
@@ -1151,7 +1151,7 @@ function MLSearchController($scope, $location, mlSearch) {
         return null;
       }
 
-      matches = _.where($route.routes, { controller: searchCtrl });
+      matches = _.filter($route.routes, { controller: searchCtrl });
 
       if ( matches.length === 0 ) {
         // TODO: get route from attr, or throw Error('can\t find Search controller') ?
@@ -1341,7 +1341,7 @@ function MLSearchController($scope, $location, mlSearch) {
           }
         })
         .compact()
-        .first()
+        .head()
         .value();
     },
 
@@ -1368,7 +1368,7 @@ function MLSearchController($scope, $location, mlSearch) {
      */
     setNamespaces: function setNamespaces(namespaces) {
       // TODO: this.clearNamespaces() first?
-      _.each(namespaces, this.addNamespace, this);
+      _.each(namespaces, _.bind(this.addNamespace, this));
       return this;
     },
 
@@ -2244,7 +2244,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
       if ( storedOptions ) {
         config = _.chain( storedOptions.options.constraint )
-          .where({ name: name })
+          .filter({ name: name })
           .first()
           .clone()
           .value();
@@ -2563,7 +2563,7 @@ function MLSearchController($scope, $location, mlSearch) {
               'xs:decimal'
             ];
 
-            if ( _.contains(numberTypes, facetType) ) {
+            if ( _.includes(numberTypes, facetType) ) {
               newOptions.values.aggregate = newOptions.values.aggregate.concat([
                 { apply: 'sum' },
                 { apply: 'avg' }
@@ -2606,7 +2606,7 @@ function MLSearchController($scope, $location, mlSearch) {
           metadata;
 
       if ( _.isArray(result) ) {
-        _.each(result, this.transformMetadata, self);
+        _.each(result, _.bind(this.transformMetadata, self));
         return;
       }
 
@@ -2687,7 +2687,7 @@ function MLSearchController($scope, $location, mlSearch) {
 
   function getConstraint(storedOptions, name) {
     return storedOptions && storedOptions.options && storedOptions.options.constraint &&
-           _.where(asArray(storedOptions.options.constraint), { name: name })[0];
+           _.filter(asArray(storedOptions.options.constraint), { name: name })[0];
   }
 
   function valueOptionsFromConstraint(constraint) {
