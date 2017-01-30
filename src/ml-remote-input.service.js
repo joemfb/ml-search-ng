@@ -134,7 +134,7 @@
         return null;
       }
 
-      matches = _.where($route.routes, { controller: searchCtrl });
+      matches = _.filter($route.routes, { controller: searchCtrl });
 
       if ( matches.length === 0 ) {
         // TODO: get route from attr, or throw Error('can\t find Search controller') ?
