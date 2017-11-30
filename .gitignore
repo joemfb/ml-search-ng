@@ -7,3 +7,7 @@ npm-debug.log
 Thumbs.db
 coverage
 .publish
+.idea/ml-search-ng.iml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
