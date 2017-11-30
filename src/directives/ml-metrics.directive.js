@@ -48,7 +48,6 @@
       replace: true,
       transclude: true,
       templateUrl: template,
-      // templateUrl: '/templates/ml-metrics.html',
       scope: {
         search: '=',
         showDuration: '=?'
