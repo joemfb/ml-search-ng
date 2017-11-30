@@ -66,7 +66,7 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/templates/ml-metrics.html',
-    '<div ng-show="total > 0" class="ml-metrics search-metrics">Showing {{ start }}-{{ pageEnd }} of {{ total | number:0 }}<span ng-hide="showDuration">.</span> <span ng-show="showDuration" ml-duration="metrics[\'total-time\']"><span>in {{ duration.seconds | number:3 }} seconds.</span></span></div>');
+    '<div ng-show="total > 0" class="ml-metrics search-metrics">Showing {{ start }}-{{ pageEnd }} of {{ total }}<span ng-hide="showDuration">.</span> <span ng-show="showDuration" ml-duration="metrics[\'total-time\']"><span>in {{ duration.seconds | number:3 }} seconds.</span></span></div>');
 }]);
 })();
 
