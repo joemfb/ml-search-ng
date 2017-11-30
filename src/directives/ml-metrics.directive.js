@@ -47,13 +47,26 @@
       restrict: 'E',
       replace: true,
       transclude: true,
-      templateUrl: '/templates/ml-metrics.html',
+      templateUrl: template,
+      // templateUrl: '/templates/ml-metrics.html',
       scope: {
         search: '=',
         showDuration: '=?'
       },
       link: link
     };
+  }
+
+  function template(element, attrs) {
+    var url;
+
+    if (attrs.template) {
+      url = attrs.template;
+    } else {
+      url = '/templates/ml-metrics.html';
+    }
+
+    return url;
   }
 
   function link($scope, element, attrs, ctrl, transclude) {
