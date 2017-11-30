@@ -1,7 +1,7 @@
  <form class="ml-search form-inline" role="search">
   <div class="form-group">
     <input ng-model="qtext" type="text" class="form-control" placeholder="Search..." autocomplete="off"
-        typeahead="suggestion for suggestion in suggest({ val: $viewValue })" typeahead-loading="loadingSuggestions"/>
+        uib-typeahead="suggestion for suggestion in suggest({ val: $viewValue })" typeahead-loading="loadingSuggestions"/>
   </div>
   <button type="submit" class="btn btn-default" ng-click="search({ qtext: qtext })">
     <span class="glyphicon glyphicon-search"></span>

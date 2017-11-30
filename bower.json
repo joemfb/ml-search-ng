@@ -1,6 +1,6 @@
 {
   "name": "ml-search-ng",
-  "version": "0.2.5",
+  "version": "0.2.8",
   "description": "An angular module for common search-app use cases",
   "main": [
     "dist/ml-search-ng.js",
@@ -8,7 +8,7 @@
   ],
   "dependencies": {
     "angular": "^1.4.1",
-    "lodash": ">= 2.4.x < 4",
+    "lodash": ">= 3.0.1 < 5",
     "ml-common-ng": ">= 0.1.1"
   },
   "devDependencies": {

@@ -169,7 +169,7 @@
           }
         })
         .compact()
-        .first()
+        .head()
         .value();
     },
 
@@ -196,7 +196,7 @@
      */
     setNamespaces: function setNamespaces(namespaces) {
       // TODO: this.clearNamespaces() first?
-      _.each(namespaces, this.addNamespace, this);
+      _.each(namespaces, _.bind(this.addNamespace, this));
       return this;
     },
 
@@ -766,7 +766,7 @@
       if ( this.isFacetActive(name, value) ) {
         this.clearFacet(name, value);
       } else {
-        config = this.getFacetConfig(name);
+        config = this.getFacetConfig(name) || {};
 
         this.selectFacet(name, value, config.type, isNegated);
       }
@@ -1072,7 +1072,7 @@
 
       if ( storedOptions ) {
         config = _.chain( storedOptions.options.constraint )
-          .where({ name: name })
+          .filter({ name: name })
           .first()
           .clone()
           .value();
@@ -1391,7 +1391,7 @@
               'xs:decimal'
             ];
 
-            if ( _.contains(numberTypes, facetType) ) {
+            if ( _.includes(numberTypes, facetType) ) {
               newOptions.values.aggregate = newOptions.values.aggregate.concat([
                 { apply: 'sum' },
                 { apply: 'avg' }
@@ -1434,7 +1434,7 @@
           metadata;
 
       if ( _.isArray(result) ) {
-        _.each(result, this.transformMetadata, self);
+        _.each(result, _.bind(this.transformMetadata, self));
         return;
       }
 
@@ -1515,7 +1515,7 @@
 
   function getConstraint(storedOptions, name) {
     return storedOptions && storedOptions.options && storedOptions.options.constraint &&
-           _.where(asArray(storedOptions.options.constraint), { name: name })[0];
+           _.filter(asArray(storedOptions.options.constraint), { name: name })[0];
   }
 
   function valueOptionsFromConstraint(constraint) {

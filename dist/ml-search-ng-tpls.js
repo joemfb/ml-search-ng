@@ -42,7 +42,7 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/templates/ml-input-fa.html',
-    '<form ng-submit="search({ qtext: qtext })" class="ml-input ml-search form-inline" role="search"><div class="input-group"><input ng-model="qtext" type="text" class="form-control" placeholder="Search..." autocomplete="off" typeahead="suggestion for suggestion in suggest({ val: $viewValue })" typeahead-suggest-on-select="true" typeahead-loading="loadingSuggestions"> <span ng-show="qtext" ng-click="clear()" class="search-input-icon search-input-clear form-control-feedback"><i class="fa fa-times-circle"></i></span> <span ng-show="loadingSuggestions" class="search-input-icon search-loading form-control-feedback"><i class="fa fa-refresh fa-spin"></i></span><div ng-click="search({ qtext: qtext })" class="input-group-addon search-submit"><i class="fa fa-search"></i></div></div></form>');
+    '<form ng-submit="search({ qtext: qtext })" class="ml-input ml-search form-inline" role="search"><div class="input-group"><input ng-model="qtext" type="text" class="form-control" placeholder="Search..." autocomplete="off" uib-typeahead="suggestion for suggestion in suggest({ val: $viewValue })" typeahead-suggest-on-select="true" typeahead-loading="loadingSuggestions"> <span ng-show="qtext" ng-click="clear()" class="search-input-icon search-input-clear form-control-feedback"><i class="fa fa-times-circle"></i></span> <span ng-show="loadingSuggestions" class="search-input-icon search-loading form-control-feedback"><i class="fa fa-refresh fa-spin"></i></span><div ng-click="search({ qtext: qtext })" class="input-group-addon search-submit"><i class="fa fa-search"></i></div></div></form>');
 }]);
 })();
 
@@ -54,7 +54,7 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/templates/ml-input.html',
-    '<form class="ml-search form-inline" role="search"><div class="form-group"><input ng-model="qtext" type="text" class="form-control" placeholder="Search..." autocomplete="off" typeahead="suggestion for suggestion in suggest({ val: $viewValue })" typeahead-loading="loadingSuggestions"></div><button type="submit" class="btn btn-default" ng-click="search({ qtext: qtext })"><span class="glyphicon glyphicon-search"></span></button> <button type="reset" class="btn btn-default" ng-show="qtext" ng-click="clear()"><span class="glyphicon glyphicon-remove"></span></button> <span ng-show="loadingSuggestions" class="glyphicon glyphicon-refresh"></span></form>');
+    '<form class="ml-search form-inline" role="search"><div class="form-group"><input ng-model="qtext" type="text" class="form-control" placeholder="Search..." autocomplete="off" uib-typeahead="suggestion for suggestion in suggest({ val: $viewValue })" typeahead-loading="loadingSuggestions"></div><button type="submit" class="btn btn-default" ng-click="search({ qtext: qtext })"><span class="glyphicon glyphicon-search"></span></button> <button type="reset" class="btn btn-default" ng-show="qtext" ng-click="clear()"><span class="glyphicon glyphicon-remove"></span></button> <span ng-show="loadingSuggestions" class="glyphicon glyphicon-refresh"></span></form>');
 }]);
 })();
 
